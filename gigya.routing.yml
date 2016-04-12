@@ -1,0 +1,7 @@
+gigya.admin.form
+  path: '/admin/config/gigya/keys'
+  defaults:
+    _form: 'Drupal\gigya\Form\GigyaKeysForm'
+    _title: 'Gigya Socialize keys settings'
+  requirements:
+    _permission: 'gigya major admin'

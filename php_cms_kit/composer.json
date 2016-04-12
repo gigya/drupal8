@@ -1,0 +1,19 @@
+{
+    "name": "gigya/cms-starter-kit",
+    "description": "A starter kit to help integrate gigya into php based cms",
+    "type": "library",
+    "require-dev": {
+        "phpunit/phpunit": "^5.3"
+    },
+    "license": "GPL-3.0+",
+    "authors": [
+        {
+            "name": "Yaniv Aran-Shamir",
+            "email": "yaniva@gigya-inc.com"
+        }
+    ],
+    "require": {},
+    "autoload": {
+      "psr-4" : {"Gigya\\": "src/"}
+    }
+}

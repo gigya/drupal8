@@ -13,3 +13,7 @@ use Drupal\User\RoleInterface;
 function gigya_install() {
 
 }
+
+function gigya_uninstall() {
+
+}

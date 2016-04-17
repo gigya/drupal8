@@ -1,4 +1,4 @@
-gigya.admin.form
+gigya.admin.form:
   path: '/admin/config/gigya/keys'
   defaults:
     _form: 'Drupal\gigya\Form\GigyaKeysForm'

@@ -1,4 +1,5 @@
 gigya:
-  api_key: ''
-  secret_key: ''
-  data_center: ''
+  gigya_api_key: ''
+  gigya_application_key: ''
+  gigya_application_secret_key: ''
+  gigya_data_center: 'us1.gigya.com'

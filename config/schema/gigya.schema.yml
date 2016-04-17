@@ -2,12 +2,12 @@ gigya.settings:
   type: mapping
   label: 'Gigya Socialize keys settings'
   mapping:
-    api_key:
+    gigya_application_key:
       type: text
-      label: 'Gigya API Key'
-    secret_key:
+      label: 'Gigya Application Key'
+    gigya_application_secret_key:
       type: text
-      label: 'Gigya Secret Key'
+      label: 'Gigya Application Secret Key'
     data_center:
       type: text
       label: 'Data Center'

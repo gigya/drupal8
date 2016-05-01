@@ -7,10 +7,13 @@
 
 namespace Drupal\gigya\Form;
 
+include_once "/var/www/d8dev/modules/gigya/vendor/autoload.php";
+
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use gigya\GigyaApiHelper;
-use gigya\sdk\GigyaApiRequest;
+use Gigya\sdk\GigyaApiRequest;
+
+//use Gigya\sdk\GigyaApiRequest;
 
 class GigyaKeysForm extends ConfigFormBase {
 

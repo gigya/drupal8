@@ -1,0 +1,21 @@
+{
+  "name": "gigya/drupal",
+  "description": "Gigya drupal module",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Yuval Perelman",
+      "email": "perelman.yuval@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "/var/www/packages/php_cms_kit"
+    }
+  ],
+  "require": {
+    "gigya/cms-starter-kit": "*"
+  }
+}

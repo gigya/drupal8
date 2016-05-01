@@ -12,6 +12,7 @@ include_once "/var/www/d8dev/modules/gigya/vendor/autoload.php";
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Gigya\sdk\GigyaApiRequest;
+use Gigya\sdk\GSApiException;
 
 //use Gigya\sdk\GigyaApiRequest;
 
@@ -46,7 +47,7 @@ class GigyaKeysForm extends ConfigFormBase {
 
     $form['gigya_application_secret_key'] = array('#type' => 'textfield', '#title' => $this->t('Gigya Application Secret Key'),
       '#description' => $this->t('Specify the Gigya Application Secret (Base64 encoded) key for this domain'),
-      '#default_value' => $config->get('gigya.gigya_application_key'), '#required' => TRUE);
+      '#default_value' => $config->get('gigya.gigya_application_secret_key'), '#required' => TRUE);
 
 
     $data_centers = array('us1.gigya.com' => 'US', 'eu1.gigya.com' => 'EU', 'au1.gigya.com' => 'AU', 'other' => "Other");
@@ -85,7 +86,6 @@ class GigyaKeysForm extends ConfigFormBase {
 
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
-
     //Default values string used to check if the secrets keys changed.
     //Since we output garbage to the text field we use this string to check if the user change the key
     $config = $this->config('gigya.settings');
@@ -130,11 +130,12 @@ class GigyaKeysForm extends ConfigFormBase {
 
     if ($_validate && !$form_state->getErrors()) {
 
-      $valid = $this->gigya_validate($_gigya_api_key, $_gigya_application_key, $_gigya_application_secret_key, $_gigya_data_center);
-      if ($valid !== TRUE) {
-        if (is_object($valid)) {
-          $code = $valid->getErrorCode();
-          $msg = $valid->getErrorMessage();
+      $res = $this->gigya_validate($_gigya_api_key, $_gigya_application_key, $_gigya_application_secret_key, $_gigya_data_center);
+      if ($res !== TRUE) {
+        if (is_object($res)) {
+          $code = $res->getErrorCode();
+          $msg = $res->getMessage();
+          //@TODO: see how we can print markup in the error messages.
           $form_state->setErrorByName('gigya_api_key', $this->t("Gigya API error: {$code} - {$msg}.") .
           "For more information please refer to <a href=http://developers.gigya.com/037_API_reference/zz_Response_Codes_and_Errors target=_blank>Response_Codes_and_Errors page</a>");
 //          watchdog('gigya', 'Error setting API key, error code: @code - @msg', array('@code' => $code, '@msg' => $msg));
@@ -155,25 +156,23 @@ class GigyaKeysForm extends ConfigFormBase {
    * most likely bad.
    */
   private function gigya_validate($api_key, $app_key, $app_secret, $data_center) {
-    $request = new GigyaApiRequest($api_key, $app_secret, 'shortenURL', NULL ,$data_center, TRUE, $app_key);
-    $request->setParam('url', 'http://gigya.com');
-    ini_set('arg_separator.output', '&');
-    $response = $request->send();
-    ini_restore('arg_separator.output');
-    $error = $response->getErrorCode();
-    if ($error == 0) {
+    try {
+      $request = new GigyaApiRequest($api_key, $app_secret, 'shortenURL', NULL, $data_center, TRUE, $app_key);
+      $request->setParam('url', 'http://gigya.com');
+      //@TODO: check if we need it.
+//      ini_set('arg_separator.output', '&');
+      $response = $request->send();
+      //@TODO: check if we need it.
+//      ini_restore('arg_separator.output');
+
 //        global $user;
 //        $account = clone $user;
 //        $datestr = Drupal::service('date.formatter')->format(time(), 'custom', 'Y-m-d H:i:s');
-//        watchdog('gigya', 'secret key has changed by @name date @date', array('@name' => $account->name, "@date" => $datestr), WATCHDOG_DEBUG);
-
       drupal_set_message($this->t('Gigya validated properly. This site is authorized to use Gigya services'));
       return TRUE;
+    } catch (GSApiException $e) {
+      return $e;
     }
-    else {
-      return $response;
-    }
-    return TRUE;
   }
 
 

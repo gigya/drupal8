@@ -1,0 +1,11 @@
+gigya:
+  language: 'Auto'
+  sessionExpiration : 0
+  gigyaDebugMode : false
+  globalParameters : [ a, b ]
+  enableRaaS : true
+  fieldMapping : { UID : uuid, profile.email : mail, profile.firstName : name }
+  loginScreensetID : "Default-RegistrationLogin"
+  loginScreenID : "gigya-login-screen"
+  registerScreenID : "gigya-register-screen"
+  profileScreensetID : "Default-ProfileUpdate"

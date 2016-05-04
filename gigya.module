@@ -1,7 +1,28 @@
 <?php
 
-use Drupal\Core\Routing\RouteMatchInterface;
+
 
 /**
- *
+ * Implements hook_page_attachments().
+ * @param array $attachments
  */
+function gigya_page_attachments(array &$attachments) {
+  // Add Settings.
+  $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = \Drupal::config('gigya.global')->get('gigya.globalParameters');
+
+  // Add Library.
+  $attachments['#attached']['library'][] = 'gigya/drupalGigya';
+  $attachments['#attached']['library'][] = 'gigya/gigyaCore';
+
+}
+
+/**
+ * Implements hook_library_info_alter().
+ */
+function gigya_library_info_alter(&$libraries, $extension) {
+  if ($extension == "gigya") {
+    $config = \Drupal::config('gigya.settings');
+    $libraries['gigyaCore']['js']["//cdn.gigya.com/js/gigya.js?apiKey=" . $config->get('gigya.gigya_api_key')] = array('type' => 'external', 'minified' => true);
+  }
+
+}

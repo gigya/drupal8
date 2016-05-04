@@ -11,13 +11,12 @@ include_once "/var/www/d8dev/modules/gigya/vendor/autoload.php";
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Gigya\sdk\GigyaApiRequest;
-use Gigya\sdk\GSApiException;
-
-//use Gigya\sdk\GigyaApiRequest;
+use Drupal\gigya\Helper\GigyaHelper;
 
 class GigyaKeysForm extends ConfigFormBase {
-
+  public static function c() {
+    return "A";
+  }
   /**
    * Gets the configuration names that will be editable.
    *
@@ -82,53 +81,57 @@ class GigyaKeysForm extends ConfigFormBase {
    */
   public function getFormId() {
     return 'gigya_admin_keys';
+
   }
 
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
-    //Default values string used to check if the secrets keys changed.
-    //Since we output garbage to the text field we use this string to check if the user change the key
+    //Check if the form has errors, if true we do not need to validate the user input because it has errors already.
+    if ($form_state->getErrors()) {
+      return;
+    }
+
     $config = $this->config('gigya.settings');
+
 
     $_validate = FALSE;
     // API key was changed ?
-    if ($form_state->getValue('gigya_api_key') != $config->get('gigya_api_key')) {
+    if ($form_state->getValue('gigya_api_key') != $config->get('gigya.gigya_api_key')) {
       $_gigya_api_key = $form_state->getValue('gigya_api_key');
       $_validate = TRUE;
     }
     else {
-      $_gigya_api_key = $config->get('gigya_api_key');
+      $_gigya_api_key = $config->get('gigya.gigya_api_key');
     }
 
     // APP key was changed ?
-
-    if ($form_state->getValue('gigya_application_key') != $config->get('gigya_application_key')) {
+    if ($form_state->getValue('gigya_application_key') != $config->get('gigya.gigya_application_key')) {
       $_gigya_application_key = $form_state->getValue('gigya_application_key');
       $_validate = TRUE;
     }
     else {
-      $_gigya_application_key = $config->get('gigya_application_key');
+      $_gigya_application_key = $config->get('gigya.gigya_application_key');
     }
 
     // APP secret key was changed ?
-    if ($form_state->getValue('gigya_application_secret_key') != $config->get('gigya_application_secret_key')) {
+    if ($form_state->getValue('gigya_application_secret_key') != $config->get('gigya.gigya_application_secret_key')) {
       $_gigya_application_secret_key = $form_state->getValue('gigya_application_secret_key');
       $_validate = TRUE;
     }
     else {
-      $_gigya_application_secret_key = $config->get('gigya_application_secret_key');
+      $_gigya_application_secret_key = $config->get('gigya.gigya_application_secret_key');
     }
 
     // Data Center was changed ?
-    if ($form_state->getValue('gigya_data_center') != $config->get('gigya_data_center')) {
+    if ($form_state->getValue('gigya_data_center') != $config->get('gigya.gigya_data_center')) {
       $_gigya_data_center = $form_state->getValue('gigya_data_center');
       $_validate = TRUE;
     }
     else {
-      $_gigya_data_center = $config->get('gigya_data_center');
+      $_gigya_data_center = $config->get('gigya.gigya_data_center');
     }
 
-    if ($_validate && !$form_state->getErrors()) {
+    if ($_validate) {
 
       $res = $this->gigya_validate($_gigya_api_key, $_gigya_application_key, $_gigya_application_secret_key, $_gigya_data_center);
       if ($res !== TRUE) {
@@ -144,6 +147,10 @@ class GigyaKeysForm extends ConfigFormBase {
           $form_state->setErrorByName('gigya_api_key', $this->t("Your API key or Secret key could not be validated. Please try again"));
         }
       }
+      else {
+        drupal_set_message($this->t('Gigya validated properly. This site is authorized to use Gigya services'));
+
+      }
     }
   }
 
@@ -151,28 +158,10 @@ class GigyaKeysForm extends ConfigFormBase {
   /**
    * Validates the Gigya session keys.
    *
-   * We use the site 'admin' username to find out the status. If it shows the
-   * user logged out, that's good, if it returns an error then our keys are
-   * most likely bad.
    */
   private function gigya_validate($api_key, $app_key, $app_secret, $data_center) {
-    try {
-      $request = new GigyaApiRequest($api_key, $app_secret, 'shortenURL', NULL, $data_center, TRUE, $app_key);
-      $request->setParam('url', 'http://gigya.com');
-      //@TODO: check if we need it.
-//      ini_set('arg_separator.output', '&');
-      $response = $request->send();
-      //@TODO: check if we need it.
-//      ini_restore('arg_separator.output');
+    return GigyaHelper::sendApiCall('shortenURL', $api_key, $app_key, $app_secret, $data_center);
 
-//        global $user;
-//        $account = clone $user;
-//        $datestr = Drupal::service('date.formatter')->format(time(), 'custom', 'Y-m-d H:i:s');
-      drupal_set_message($this->t('Gigya validated properly. This site is authorized to use Gigya services'));
-      return TRUE;
-    } catch (GSApiException $e) {
-      return $e;
-    }
   }
 
 

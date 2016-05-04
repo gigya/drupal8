@@ -2,9 +2,9 @@ gigya:
   language: 'Auto'
   sessionExpiration : 0
   gigyaDebugMode : false
-  globalParameters : [ a, b ]
+  globalParameters : { bypassCookiePolicy : never , enabledProviders : [ facebook , twitter ] }
   enableRaaS : true
-  fieldMapping : { UID : uuid, profile.email : mail, profile.firstName : name }
+  fieldMapping : { uuid : UID,  mail : profile.email, name : profile.firstName }
   loginScreensetID : "Default-RegistrationLogin"
   loginScreenID : "gigya-login-screen"
   registerScreenID : "gigya-register-screen"

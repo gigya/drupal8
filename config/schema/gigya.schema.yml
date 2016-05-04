@@ -2,6 +2,9 @@ gigya.settings:
   type: mapping
   label: 'Gigya Socialize keys settings'
   mapping:
+    gigya_api_key:
+      type: text
+      label: 'Gigya Api Key'
     gigya_application_key:
       type: text
       label: 'Gigya Application Key'

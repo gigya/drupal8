@@ -1,0 +1,47 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display a gigya rass links.
+ *
+ * Available variables:
+ * - links: Contents of the login block.
+ * - title: Title to display, if not suppressed.
+ *
+ * @ingroup themeable
+ */
+#}
+
+{#<div{{ attributes }}>#}
+    {#{{ title_prefix }}#}
+    {#{% if label %}#}
+        {#<h2{{ title_attributes }}>{{ label }}</h2>#}
+    {#{% endif %}#}
+    {#{{ title_suffix }}#}
+    {#{% block content %}#}
+        {#{{ content }}#}
+    {#{% endblock %}#}
+{#</div>#}
+
+
+<div>
+    {% if title %}
+        <h2> {{ title }}</h2>
+    {% endif %}
+    <div class="gigya-raas">
+        <span class="gigya-raas">
+            {% if links['login'] %}
+                {{ links['login'] }}
+            {% endif %}
+        </span>
+        <span class="gigya-raas">
+            {% if links['register'] %}
+                {{ links['register'] }}
+            {% endif %}
+        </span>
+        <span class="gigya-raas">
+            {% if links['profile'] %}
+                {{ links['profile'] }}
+            {% endif %}
+        </span>
+    </div>
+</div>

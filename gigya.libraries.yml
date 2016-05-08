@@ -1,13 +1,10 @@
 drupalGigya:
   version: VERSION
   js:
+    js/gigyaHelper.js: {}
     js/gigya.js: {}
   css:
     component:
       css/gigya.css: {}
   dependencies:
     - core/jquery
-    - core/drupalSettings
-
-gigyaCore:
-  version: VERSION

@@ -1,7 +1,5 @@
 <?php
 
-
-
 /**
  * Implements hook_page_attachments().
  * @param array $attachments
@@ -9,20 +7,24 @@
 function gigya_page_attachments(array &$attachments) {
   // Add Settings.
   $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = \Drupal::config('gigya.global')->get('gigya.globalParameters');
+  $attachments['#attached']['drupalSettings']['gigya']['apiKey'] = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
+  //@TODO: check config.
+  $attachments['#attached']['drupalSettings']['gigya']['lang'] = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
   // Add Library.
   $attachments['#attached']['library'][] = 'gigya/drupalGigya';
-  $attachments['#attached']['library'][] = 'gigya/gigyaCore';
-
 }
 
 /**
- * Implements hook_library_info_alter().
+ * Implements hook_theme().
  */
-function gigya_library_info_alter(&$libraries, $extension) {
-  if ($extension == "gigya") {
-    $config = \Drupal::config('gigya.settings');
-    $libraries['gigyaCore']['js']["//cdn.gigya.com/js/gigya.js?apiKey=" . $config->get('gigya.gigya_api_key')] = array('type' => 'external', 'minified' => true);
-  }
-
+function gigya_theme($existing, $type, $theme, $path) {
+  return array(
+    'gigya_raas_block' => array(
+      'variables' => array('links' => NULL, 'title' => NULL),
+    ),
+  );
 }
+
+
+

@@ -3,8 +3,8 @@
  * Provides a 'Gigya RaaS links' Block
  *
  * @Block(
- *   id = "gigya_rass",
- *   admin_label = @Translation("Gigya Login"),
+ *   id = "gigya_rass_links",
+ *   admin_label = @Translation("Gigya RaaS links"),
  *   category = @Translation("Gigya")
  * )
  */
@@ -17,7 +17,7 @@ use Drupal\Core\Url;
 use Drupal\Core\Utility\LinkGenerator;
 
 
-class GigyaRass extends BlockBase {
+class GigyaRassLinks extends BlockBase {
   /**
    * {@inheritdoc}
    */
@@ -43,7 +43,7 @@ class GigyaRass extends BlockBase {
     ));
     $links['register'] = Link::fromTextAndUrl($this->t('register'), $url);
     $build['block'] = array(
-      '#theme' => 'gigya_raas_block',
+      '#theme' => 'gigya_raas_links_block',
       '#links' => $links
     );
     return $build;

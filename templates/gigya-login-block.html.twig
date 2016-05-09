@@ -1,0 +1,17 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display a gigya login form.
+ *
+ * Available variables:
+ * - login_div: Contents of the login block.
+ * - title: Title to display, if not suppressed.
+ *
+ * @ingroup themeable
+ */
+#}
+
+{% if title %}
+    <h2> {{ title }}</h2>
+{% endif %}
+<div class="gigya-login">{{ login_div }}</div>

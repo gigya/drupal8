@@ -82,10 +82,10 @@ var gigyaHelper = {
     }
 };
 
-function onGigyaServiceReady(serviceName) {
-    gigyaHelper.checkLogout();
-    gigyaHelper.runGigyaCmsInit();
-    gigya.accounts.addEventHandlers(
-        {onLogin: gigyaHelper.onLoginHandler}
-    );
-}
+//function onGigyaServiceReady(serviceName) {
+//    gigyaHelper.checkLogout();
+//    gigyaHelper.runGigyaCmsInit();
+//    gigya.accounts.addEventHandlers(
+//        {onLogin: gigyaHelper.onLoginHandler}
+//    );
+//}

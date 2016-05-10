@@ -7,8 +7,11 @@ gigya.admin.form:
     _permission: 'gigya major admin'
 
 gigya.rass.login:
-  path: 'gigya/raas-login/{uid}/{uid_sig}/{sig_timestamp}'
+  path: 'gigya/raas-login'
   defaults:
     _controller: '\Drupal\gigya\GigyaController::gigyaRaasLoginAjax'
+  options:
+    _theme: ajax_base_page
   requirements:
     _permission: 'access content'
+

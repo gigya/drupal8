@@ -7,6 +7,7 @@
 
   'use strict';
 
+
   var initLoginUI = function () {
     if (typeof drupalSettings.gigya.loginUIParams !== 'undefined') {
       $.each(drupalSettings.gigya.loginUIParams, function (index, value) {
@@ -16,7 +17,11 @@
     }
   }
 
+  var onLoginHandler1  = function() {
+    debugger;
+  }
   var onLoginHandler = function (res) {
+    debugger;
     console.log('raasLogin');
 
     var data = {
@@ -27,12 +32,12 @@
 
     var ajaxSettings = {
       url: 'gigya/raas-login',
-      data: data
+      submit: data,
     };
     debugger;
     var myAjaxObject = Drupal.ajax(ajaxSettings);
-    var res = myAjaxObject.execute();
-    console.log(res);
+    var ajaxres = myAjaxObject.execute();
+    console.log(ajaxres);
 
 
   }

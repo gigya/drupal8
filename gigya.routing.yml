@@ -5,3 +5,10 @@ gigya.admin.form:
     _title: 'Gigya Socialize keys settings'
   requirements:
     _permission: 'gigya major admin'
+
+gigya.rass.login:
+  path: 'gigya/raas-login/{uid}/{uid_sig}/{sig_timestamp}'
+  defaults:
+    _controller: '\Drupal\gigya\GigyaController::gigyaRaasLoginAjax'
+  requirements:
+    _permission: 'access content'

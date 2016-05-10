@@ -17,12 +17,30 @@ define('GIGYA_DEFAULT_CONNECTUI_CAPTIONTEXT', 'Select social networks');
 function gigya_page_attachments(array &$attachments) {
   // Add Settings.
   $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = \Drupal::config('gigya.global')->get('gigya.globalParameters');
+  $attachments['#attached']['drupalSettings']['gigya']['enableRaaS'] = \Drupal::config('gigya.global')->get('gigya.enableRaaS');
   $attachments['#attached']['drupalSettings']['gigya']['apiKey'] = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
+
+
+  $raas_login = array(
+    'screenSet' =>  'Default-RegistrationLogin',
+    'mobileScreenSet' => 'DefaultMobile-RegistrationLogin',
+    'startScreen' => 'gigya-login-screen',
+  );
+  $raas_register = array(
+    'screenSet' => 'Default-RegistrationLogin',
+    'mobileScreenSet' => 'DefaultMobile-RegistrationLogin',
+    'startScreen' => 'gigya-register-screen',
+  );
+
+  $attachments['#attached']['drupalSettings']['gigya']['raas']['login'] = $raas_login;
+  $attachments['#attached']['drupalSettings']['gigya']['raas']['register'] = $raas_register;
+
   //@TODO: check config.
   $attachments['#attached']['drupalSettings']['gigya']['lang'] = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
   // Add Library.
   $attachments['#attached']['library'][] = 'gigya/drupalGigya';
+
 }
 
 /**

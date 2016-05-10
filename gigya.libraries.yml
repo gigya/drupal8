@@ -8,5 +8,7 @@ drupalGigya:
       css/gigya.css: {}
   dependencies:
     - core/jquery
+    - core/jquery.once
     - core/drupal
     - core/drupalSettings
+    - core/drupal.ajax

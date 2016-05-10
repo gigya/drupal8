@@ -6,34 +6,30 @@
  */
 
 namespace Drupal\gigya\Helper;
+use Gigya\GigyaApiHelper;
 use Gigya\sdk\GigyaApiRequest;
 use Gigya\sdk\GSApiException;
 
 
 class GigyaHelper {
-  public static function sendApiCall($method, $api_key = NULL, $app_key = NULL, $app_secret = NULL, $data_center = NULL) {
+
+  private static function getAccessParams() {
+    $access_params = array();
+    $access_params['api_key'] = Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
+    $access_params['app_secret'] = Drupal::config('gigya.settings')->get('gigya.gigya_application_secret_key');
+    $access_params['app_key'] = Drupal::config('gigya.settings')->get('gigya.gigya_application_key');
+    $access_params['data_center'] = Drupal::config('gigya.settings')->get('gigya.gigya_data_center');
+    return $access_params;
+  }
+
+  public static function sendApiCall($method, $access_params = false) {
     try {
-      //@TODO: load values from config.
-      if (!$api_key) {
-
+      if (!$access_params) {
+        $access_params = self::getAccessParams();
       }
-      if (!$app_key) {
-
-      }
-      if (!$app_secret) {
-
-      }
-      if (!$data_center) {
-
-      }
-      $request = new GigyaApiRequest($api_key, $app_secret, $method, NULL, $data_center, TRUE, $app_key);
-      $request->setParam('url', 'http://gigya.com');
-      //@TODO: check if we need it.
-//      ini_set('arg_separator.output', '&');
+      $request = new GigyaApiRequest($access_params['api_key'], $access_params['app_secret'], $method, NULL, $access_params['data_center'], TRUE, $access_params['app_key']);
+      $request->setParam('url', 'https://gigya.com');
       $request->send();
-      //@TODO: check if we need it.
-//      ini_restore('arg_separator.output');
-
 //        global $user;
 //        $account = clone $user;
 //        $datestr = \Drupal::service('date.formatter')->format(time(), 'custom', 'Y-m-d H:i:s');
@@ -43,4 +39,14 @@ class GigyaHelper {
     }
 
   }
+
+  public static function validateUid($uid, $uid_sig, $sig_timestamp) {
+    return self::getGigyaApiHelper()->validateUid($uid, $uid_sig, $sig_timestamp);
+  }
+
+  public static function getGigyaApiHelper() {
+    $access_params = self::getAccessParams();
+    return new GigyaApiHelper($access_params['api_key'], $access_params['app_key'], $access_params['app_secret'], $access_params['data_center']);
+  }
+
 }

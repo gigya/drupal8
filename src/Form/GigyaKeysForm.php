@@ -14,9 +14,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\gigya\Helper\GigyaHelper;
 
 class GigyaKeysForm extends ConfigFormBase {
-  public static function c() {
-    return "A";
-  }
   /**
    * Gets the configuration names that will be editable.
    *
@@ -133,7 +130,13 @@ class GigyaKeysForm extends ConfigFormBase {
 
     if ($_validate) {
 
-      $res = $this->gigya_validate($_gigya_api_key, $_gigya_application_key, $_gigya_application_secret_key, $_gigya_data_center);
+      $access_params = array();
+      $access_params['api_key'] = $_gigya_api_key;
+      $access_params['app_secret'] = $_gigya_application_secret_key;
+      $access_params['app_key'] = $_gigya_application_key;
+      $access_params['data_center'] = $_gigya_data_center;
+      $res = GigyaHelper::sendApiCall('shortenURL', $access_params);
+
       if ($res !== TRUE) {
         if (is_object($res)) {
           $code = $res->getErrorCode();
@@ -153,17 +156,6 @@ class GigyaKeysForm extends ConfigFormBase {
       }
     }
   }
-
-
-  /**
-   * Validates the Gigya session keys.
-   *
-   */
-  private function gigya_validate($api_key, $app_key, $app_secret, $data_center) {
-    return GigyaHelper::sendApiCall('shortenURL', $api_key, $app_key, $app_secret, $data_center);
-
-  }
-
 
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('gigya.settings');

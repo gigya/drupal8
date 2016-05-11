@@ -9,6 +9,7 @@ namespace Drupal\gigya\Helper;
 
 include_once "/var/www/d8dev/modules/gigya/vendor/autoload.php";
 
+use Behat\Mink\Exception\Exception;
 use Drupal;
 use Gigya\GigyaApiHelper;
 use Gigya\sdk\GigyaApiRequest;
@@ -41,6 +42,9 @@ class GigyaHelper {
     } catch (GSApiException $e) {
       return $e;
     }
+    catch (Exception $e) {
+      return $e;
+    }
 
   }
 
@@ -48,6 +52,9 @@ class GigyaHelper {
     try {
       return self::getGigyaApiHelper()->validateUid($uid, $uid_sig, $sig_timestamp);
     } catch (GSApiException $e) {
+      return $e;
+    }
+    catch (Exception $e) {
       return $e;
     }
   }

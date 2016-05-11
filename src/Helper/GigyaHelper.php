@@ -52,10 +52,10 @@ class GigyaHelper {
     try {
       return self::getGigyaApiHelper()->validateUid($uid, $uid_sig, $sig_timestamp);
     } catch (GSApiException $e) {
-      return $e;
+      return false;
     }
     catch (Exception $e) {
-      return $e;
+      return false;
     }
   }
 

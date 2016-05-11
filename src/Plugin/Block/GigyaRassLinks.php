@@ -23,7 +23,7 @@ class GigyaRassLinks extends BlockBase {
    */
   public function build() {
     $links = array();
-    $url = Url::fromUserInput("#");
+    $url = Url::fromUserInput("/#");
     $url->setOptions(array(
       'attributes' => array(
         'class' => 'gigya-raas-login',

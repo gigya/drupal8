@@ -36,6 +36,7 @@ class GigyaController extends ControllerBase {
     $uid_sig = $request->get('uid_sig');
 
     $response = new AjaxResponse();
+
     if ($uid = GigyaHelper::validateUid($uid, $uid_sig, $sig_timestamp)) {
       dpm($uid);
     }
@@ -48,7 +49,7 @@ class GigyaController extends ControllerBase {
       $response->addCommand(new AlertCommand($err_msg));
     }
     else {
-      $response->addCommand(new RedirectCommand(\Drupal::service('path.current')->getPath()));
+      $response->addCommand(new RedirectCommand("/"));
     }
     return $response;
   }

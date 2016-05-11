@@ -6,6 +6,10 @@
  */
 
 namespace Drupal\gigya\Helper;
+
+include_once "/var/www/d8dev/modules/gigya/vendor/autoload.php";
+
+use Drupal;
 use Gigya\GigyaApiHelper;
 use Gigya\sdk\GigyaApiRequest;
 use Gigya\sdk\GSApiException;
@@ -41,7 +45,11 @@ class GigyaHelper {
   }
 
   public static function validateUid($uid, $uid_sig, $sig_timestamp) {
-    return self::getGigyaApiHelper()->validateUid($uid, $uid_sig, $sig_timestamp);
+    try {
+      return self::getGigyaApiHelper()->validateUid($uid, $uid_sig, $sig_timestamp);
+    } catch (GSApiException $e) {
+      return $e;
+    }
   }
 
   public static function getGigyaApiHelper() {

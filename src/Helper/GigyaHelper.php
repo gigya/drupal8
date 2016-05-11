@@ -11,12 +11,51 @@ include_once "/var/www/d8dev/modules/gigya/vendor/autoload.php";
 
 use Behat\Mink\Exception\Exception;
 use Drupal;
+use Drupal\Component\Serialization\Json;
+use Drupal\Core\Database\Connection;
+use Drupal\user\Entity\User;
 use Gigya\GigyaApiHelper;
 use Gigya\sdk\GigyaApiRequest;
 use Gigya\sdk\GSApiException;
+use Gigya\user\GigyaProfile;
+use Gigya\user\GigyaUser;
 
 
 class GigyaHelper {
+  private static function getNestedValue($obj, $keys) {
+    while (!empty($keys)) {
+      $key = array_shift($keys);
+
+      if ($obj instanceof GigyaUser || $obj instanceof GigyaProfile) {
+        $method = "get" . strtoupper($key);
+        if (method_exists($obj, $method)) {
+          $obj = $obj->$method();
+        }
+        else {
+          //Wrong mapping return FALSE.
+          return FALSE;
+        }
+      }
+      else if (is_array($obj)) {
+        if (array_key_exists($key, $obj)) {
+          $obj = $obj[$key];
+        }
+        else {
+          return FALSE;
+        }
+      }
+      else {
+        return FALSE;
+      }
+    }
+    if (is_array($obj)) {
+      $obj = Json::encode($obj);
+    }
+    else if ($obj instanceof GigyaProfile) {
+      //@TODO: think if / how handle this.
+    }
+    return $obj;
+  }
 
   private static function getAccessParams() {
     $access_params = array();
@@ -27,18 +66,14 @@ class GigyaHelper {
     return $access_params;
   }
 
-  public static function sendApiCall($method, $access_params = false) {
+  public static function sendApiCall($method, $params = NULL, $access_params = FALSE) {
     try {
       if (!$access_params) {
         $access_params = self::getAccessParams();
       }
       $request = new GigyaApiRequest($access_params['api_key'], $access_params['app_secret'], $method, NULL, $access_params['data_center'], TRUE, $access_params['app_key']);
       $request->setParam('url', 'https://gigya.com');
-      $request->send();
-//        global $user;
-//        $account = clone $user;
-//        $datestr = \Drupal::service('date.formatter')->format(time(), 'custom', 'Y-m-d H:i:s');
-      return TRUE;
+      return $request->send();
     } catch (GSApiException $e) {
       return $e;
     }
@@ -64,4 +99,35 @@ class GigyaHelper {
     return new GigyaApiHelper($access_params['api_key'], $access_params['app_key'], $access_params['app_secret'], $access_params['data_center']);
   }
 
+  public static function saveUserLogoutCookie() {
+    user_cookie_save(array('gigya' => 'gigyaLogOut'));
+  }
+
+  public static function getUidByMail($mail) {
+    return \Drupal::entityQuery('user')
+      ->condition('mail', Connection::escapeLike($mail), 'LIKE')
+      ->execute();
+  }
+
+  public static function getUidByName($name) {
+    return \Drupal::entityQuery('user')
+      ->condition('name', Connection::escapeLike($name), 'LIKE')
+      ->execute();
+  }
+
+  public static function processFieldMapping(GigyaUser $gigya_user, User $drupal_user) {
+    $field_map = \Drupal::config('gigya.global')->get('gigya.fieldMapping');
+
+
+    foreach ($field_map as $drupal_field => $raas_field) {
+      $raas_field_parts = explode(".", $raas_field);
+      $val = self::getNestedValue($gigya_user, $raas_field_parts);
+      $drupal_user->set($drupal_field, $val);
+
+//      $val = gigya_get_nested_value($gigya_user, $raas_field_parts);
+//      $val = drupal_strlen($val) > $drupal_field_parts[1] ? drupal_substr($val, 0, $drupal_field_parts[1]) : $val;
+//      $edit[$drupal_field_parts[0]][LANGUAGE_NONE][0]['value'] = $val;
+    }
+
+  }
 }

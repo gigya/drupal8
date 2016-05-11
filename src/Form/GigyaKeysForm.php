@@ -134,7 +134,7 @@ class GigyaKeysForm extends ConfigFormBase {
       $access_params['app_secret'] = $_gigya_application_secret_key;
       $access_params['app_key'] = $_gigya_application_key;
       $access_params['data_center'] = $_gigya_data_center;
-      $res = GigyaHelper::sendApiCall('shortenURL', $access_params);
+      $res = GigyaHelper::sendApiCall('shortenURL', NULL, $access_params);
 
       if ($res !== TRUE) {
         if (is_object($res)) {

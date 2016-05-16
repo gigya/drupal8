@@ -50,8 +50,8 @@ class GigyaController extends ControllerBase {
               /* Set global variable so we would know the user as logged in
                  RaaS in other functions down the line.*/
 
-              $tempstore = \Drupal::service('user.private_tempstore')->get('gigya');
-              $tempstore->set('gigya_raas_uid', $guid);
+              \Drupal::service('user.private_tempstore')->get('gigya')->set('gigya_raas_uid', $guid);;
+
               //Log the user in.
               $user = User::load(array_shift($uids));
               user_login_finalize($user);

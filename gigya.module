@@ -20,21 +20,33 @@ function gigya_page_attachments(array &$attachments) {
   $attachments['#attached']['drupalSettings']['gigya']['enableRaaS'] = \Drupal::config('gigya.global')->get('gigya.enableRaaS');
   $attachments['#attached']['drupalSettings']['gigya']['apiKey'] = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
 
+  if (\Drupal::config('gigya.global')->get('gigya.enableRaaS') == TRUE) {
+    if (\Drupal::currentUser()->isAnonymous()) {
+      $raas_login = array(
+        'screenSet' =>  'Default-RegistrationLogin',
+        'mobileScreenSet' => 'DefaultMobile-RegistrationLogin',
+        'startScreen' => 'gigya-login-screen',
+      );
+      $raas_register = array(
+        'screenSet' => 'Default-RegistrationLogin',
+        'mobileScreenSet' => 'DefaultMobile-RegistrationLogin',
+        'startScreen' => 'gigya-register-screen',
+      );
+      //@TODO: add alter
 
-  $raas_login = array(
-    'screenSet' =>  'Default-RegistrationLogin',
-    'mobileScreenSet' => 'DefaultMobile-RegistrationLogin',
-    'startScreen' => 'gigya-login-screen',
-  );
-  $raas_register = array(
-    'screenSet' => 'Default-RegistrationLogin',
-    'mobileScreenSet' => 'DefaultMobile-RegistrationLogin',
-    'startScreen' => 'gigya-register-screen',
-  );
+      $attachments['#attached']['drupalSettings']['gigya']['raas']['login'] = $raas_login;
+      $attachments['#attached']['drupalSettings']['gigya']['raas']['register'] = $raas_register;
 
-  $attachments['#attached']['drupalSettings']['gigya']['raas']['login'] = $raas_login;
-  $attachments['#attached']['drupalSettings']['gigya']['raas']['register'] = $raas_register;
+    }
+    else {
+      $raas_profile = array(
+        'screenSet' =>  'Default-ProfileUpdate',
+        'mobileScreenSet' => 'DefaultMobile-ProfileUpdate'
+      );
+      $attachments['#attached']['drupalSettings']['gigya']['raas']['profile'] = $raas_profile;
 
+    }
+  }
   //@TODO: check config.
   $attachments['#attached']['drupalSettings']['gigya']['lang'] = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
@@ -51,105 +63,30 @@ function gigya_theme($existing, $type, $theme, $path) {
     'gigya_raas_links_block' => array(
       'variables' => array('links' => NULL, 'title' => NULL),
     ),
-    'gigya_login_block' => array(
-      'variables' => array('login_div' => NULL, 'title' => NULL),
+    'gigya_raas_login_block' => array(
+      'variables' => array('showDiv' => NULL),
     ),
+    'gigya_raas_register_block' => array(
+      'variables' => array('showDiv' => NULL),
+    ),
+    'gigya_raas_profile_block' => array(
+      'variables' => array('showDiv' => NULL),
+    )
   );
 }
 
 /**
- * Prepares variables for link templates.
- *
- * Default template: gigya-login-block.html.twig.
- *
- * @param array $variables
- *   An associative array containing:
- *     - login_div: Contents of the login block.
- *     - title: Title to display, if not suppressed.
+ * Implements hook_user_login().
  */
-function template_preprocess_gigya_login_block(&$variables) {
-//  @TODO: check if we need this check :)
-//  if (_gigya_is_component_enabled('login')) {
-    $variables['login_div'] = gigya_loginui_js();
-    if (!$variables['suppress_title']) {
-      $variables['title'] = t('Login using social networks');
+function gigya_user_login($account) {
+  if (\Drupal::config('gigya.global')->get('gigya.enableRaaS') == TRUE) {
+    if ($account->id() > 1 && !$account->hasPermission('bypass_gigya_raas')) {
+      // If user didn't login via RaaS.
+      // (if RaaS is enabled in Drupal admin, but a native login link was not disabled, and user still tried to login via Drupal login).
+      if (\Drupal::service('user.private_tempstore')->get('gigya')->get('gigya_raas_uid') == NULL) {
+        //@TODO: check if it is right.
+        user_logout();
+      }
     }
-//  }
-
-
-}
-
-/**
- * Gigya JavaScript settings for loginUI.
- *
- * Loads up the needed capabilities and variables for loginUI parameters.
- *
- * @return string
- *   The basic login ui if the gigya_login_advanced_raw variable
- *   is empty or the advanced login ui if not.
- */
-function gigya_loginui_js() {
-//  drupal_add_library('system', 'drupal.ajax');
-//  ctools_include('ajax');
-//  ctools_include('modal');
-//  ctools_modal_add_js();
-  static $index = 0;
-  $width = GIGYA_DEFAULT_LOGINUI_WIDTH;
-  $hieght = GIGYA_DEFAULT_LOGINUI_HEIGHT;
-//  $width = variable_get('gigya_login_plugin_width', GIGYA_DEFAULT_LOGINUI_WIDTH);
-//  $hieght = variable_get('gigya_login_plugin_height', GIGYA_DEFAULT_LOGINUI_HEIGHT);
-//  $gigya_login_params = array(
-//    'containerID' => variable_get('gigya_login_uiconfig_containerID', GIGYA_DEFAULT_LOGINUI_CONTAINERID),
-//    'buttonsStyle' => variable_get('gigya_login_buttons_style', 'standard'),
-//    'showTermsLink' => variable_get('gigya_login_uiconfig_terms', FALSE),
-//    'width' => GIGYA_DEFAULT_LOGINUI_WIDTH,
-//    'height' => GIGYA_DEFAULT_LOGINUI_HEIGHT,
-//    'version' => 2
-//  );
-  $gigya_login_params = array(
-    'containerID' => GIGYA_DEFAULT_LOGINUI_CONTAINERID,
-    'buttonsStyle' => 'standard',
-    'showTermsLink' => FALSE,
-    'width' => GIGYA_DEFAULT_LOGINUI_WIDTH,
-    'height' => GIGYA_DEFAULT_LOGINUI_HEIGHT,
-    'version' => 2
-  );
-//  if (variable_get('gigya_login_plugin_size', FALSE)) {
-//    $gigya_login_params['width'] = (int) $width;
-//    $gigya_login_params['height'] = (int) $hieght;
-//  }
-  if ($index > 0) {
-    $gigya_login_params['containerID'] .= '-' . $index;
   }
-//   Merge configuration from advanced configuration.
-//  $extra_login = variable_get('gigya_login_extra', array());
-//  if (!empty($extra_login)) {
-//    if (is_array($extra_login)) {
-//      foreach ($extra_login as $key => $parm) {
-//        $gigya_login_params[$key] = $parm;
-//      }
-//    }
-//    else {
-//      $gigya_login_params = array_merge($gigya_login_params, drupal_json_decode($extra_login));
-//    }
-//  }
-
-  // Allow modules to alter the object before adding the JS to the page.
-//  drupal_alter('gigya_loginui', $gigya_login_params);
-
-//  drupal_add_js(array('gigya' => array('loginUIParams' => array($index => $gigya_login_params))), 'setting');
-//  drupal_add_js(array('gigya' => array('loginDestination' => url('socialize-login', array('absolute' => TRUE)))), 'setting');
-
-//  $index++;
-
-
-  $build['div'] = array(
-    '#type' => 'inline_template',
-    '#template' => '<div class="gigya-social-login" id="{{ var }}"></div>',
-    '#context' => array(
-      'var' => GIGYA_DEFAULT_LOGINUI_CONTAINERID,
-    ),
-  );
-  $build['div']['#attached']['drupalSettings']['gigya']['loginUIParams'][$index] = $gigya_login_params;
-  return $build;
 }

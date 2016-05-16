@@ -28,13 +28,7 @@ class GigyaHelper {
 
       if ($obj instanceof GigyaUser || $obj instanceof GigyaProfile) {
         $method = "get" . strtoupper($key);
-        if (method_exists($obj, $method)) {
-          $obj = $obj->$method();
-        }
-        else {
-          //Wrong mapping return FALSE.
-          return FALSE;
-        }
+        $obj = $obj->$method();
       }
       else if (is_array($obj)) {
         if (array_key_exists($key, $obj)) {
@@ -118,15 +112,12 @@ class GigyaHelper {
   public static function processFieldMapping(GigyaUser $gigya_user, User $drupal_user) {
     $field_map = \Drupal::config('gigya.global')->get('gigya.fieldMapping');
 
-
     foreach ($field_map as $drupal_field => $raas_field) {
       $raas_field_parts = explode(".", $raas_field);
       $val = self::getNestedValue($gigya_user, $raas_field_parts);
-      $drupal_user->set($drupal_field, $val);
-
-//      $val = gigya_get_nested_value($gigya_user, $raas_field_parts);
-//      $val = drupal_strlen($val) > $drupal_field_parts[1] ? drupal_substr($val, 0, $drupal_field_parts[1]) : $val;
-//      $edit[$drupal_field_parts[0]][LANGUAGE_NONE][0]['value'] = $val;
+      if ($val !== NULL) {
+        $drupal_user->set($drupal_field, $val);
+      }
     }
 
   }

@@ -31,7 +31,7 @@
     };
 
     var ajaxSettings = {
-      url: 'gigya/raas-login',
+      url: '/gigya/raas-login',
       submit: data,
     };
     debugger;
@@ -41,6 +41,19 @@
 
 
   }
+
+
+  var profileUpdated = function (data) {
+    console.log(data);
+    var base = 'gigyaRequestForms',
+      element_settings = {};
+    element_settings.url = Drupal.settings.basePath + 'raas-profile-update';
+    element_settings.event = 'gigyaProfileUp';
+    var ajax = new Drupal.ajax(base, $('#' + base), element_settings);
+    ajax.options.data = data.profile;
+    $(ajax.element).trigger('gigyaProfileUp');
+  }
+
 
   var logoutCallback = function () {
     console.log('logoutCallback');
@@ -60,7 +73,7 @@
       });
       $('.gigya-raas-prof, a[href="/user"]').once('gigya-raas').click(function (e) {
         e.preventDefault();
-        //drupalSettings.gigya.raas.profile.onAfterSubmit = Drupal.gigya.profileUpdated;
+        drupalSettings.gigya.raas.profile.onAfterSubmit = profileUpdated;
         gigya.accounts.showScreenSet(drupalSettings.gigya.raas.profile);
       });
       var loginDiv = $('#gigya-raas-login-div');
@@ -80,7 +93,7 @@
       var profDiv = $('#gigya-raas-profile-div');
       if ((profDiv.size() > 0) && (typeof drupalSettings.gigya.raas.profile !== 'undefined')) {
         drupalSettings.gigya.raas.profile.containerID = profDiv.eq(0).attr('id');
-        drupalSettings.gigya.raas.profile.onAfterSubmit = Drupal.gigya.profileUpdated;
+        drupalSettings.gigya.raas.profile.onAfterSubmit = profileUpdated;
         gigya.accounts.showScreenSet(drupalSettings.gigya.raas.profile);
       }
     }
@@ -98,6 +111,7 @@
     }
 
     gigyaHelper.addGigyaScript(drupalSettings.gigya.apiKey, drupalSettings.gigya.lang)
+    drupalSettings.gigya.isInit = true;
   }
 
 
@@ -105,13 +119,15 @@
 
   Drupal.behaviors.gigyaInit = {
     attach: function (context, settings) {
-      window.onGigyaServiceReady = function (serviceName) {
-        gigyaHelper.checkLogout();
-        gigyaHelper.runGigyaCmsInit();
-        initLoginUI();
-        initRaas();
+      if (!('isInit' in drupalSettings.gigya)) {
+        window.onGigyaServiceReady = function (serviceName) {
+          gigyaHelper.checkLogout();
+          gigyaHelper.runGigyaCmsInit();
+          initLoginUI();
+          initRaas();
+        }
+        init();
       }
-      init();
     }
   };
 

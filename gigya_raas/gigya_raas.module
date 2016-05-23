@@ -20,8 +20,7 @@ function gigya_raas_page_attachments(array &$attachments) {
         'mobileScreenSet' => 'DefaultMobile-RegistrationLogin',
         'startScreen' => 'gigya-register-screen',
       );
-      //@TODO: add alter
-
+      \Drupal::moduleHandler()->alter('gigya_raas_settings', $raas_login, $raas_register);
       $attachments['#attached']['drupalSettings']['gigya']['raas']['login'] = $raas_login;
       $attachments['#attached']['drupalSettings']['gigya']['raas']['register'] = $raas_register;
 

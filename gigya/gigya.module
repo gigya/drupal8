@@ -6,11 +6,16 @@
  */
 function gigya_page_attachments(array &$attachments) {
   // Add Settings.
-  $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = \Drupal::config('gigya.global')->get('gigya.globalParameters');
+  $global_params = \Drupal::config('gigya.global')->get('gigya.globalParameters');
+  \Drupal::moduleHandler()->alter('gigya_global_parameters', $global_params);
+  $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
+
   $attachments['#attached']['drupalSettings']['gigya']['apiKey'] = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
 
   //@TODO: check config.
-  $attachments['#attached']['drupalSettings']['gigya']['lang'] = \Drupal::languageManager()->getCurrentLanguage()->getId();
+  $lang = \Drupal::languageManager()->getCurrentLanguage()->getId();
+  \Drupal::moduleHandler()->alter('gigya_lang', $lang);
+  $attachments['#attached']['drupalSettings']['gigya']['lang'] = $lang;
 
   // Add Library.
   $attachments['#attached']['library'][] = 'gigya/drupalGigya';

@@ -62,6 +62,7 @@ class GigyaHelper {
   private static function getEncryptKey() {
     $keypath = \Drupal::config('gigya.global')->get('gigya.keyPath');
     $key = file_get_contents($keypath);
+    return $key;
     //@TODO: error handle and logs.
   }
 

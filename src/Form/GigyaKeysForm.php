@@ -41,10 +41,20 @@ class GigyaKeysForm extends ConfigFormBase {
                                   '#description' => $this->t('Specify the Gigya Application key for this domain'),
                                   '#default_value' => $config->get('gigya.gigya_application_key'), '#required' => TRUE);
 
-    $form['gigya_application_secret_key'] = array('#type' => 'textfield', '#title' => $this->t('Gigya Application Secret Key'),
-      '#description' => $this->t('Specify the Gigya Application Secret (Base64 encoded) key for this domain'),
-      '#default_value' => $config->get('gigya.gigya_application_secret_key'), '#required' => TRUE);
+    $access_key = GigyaHelper::decrypt($config->get('gigya.gigya_application_secret_key'));
+    $form['gigya_application_secret_key'] = array('#type' => 'textfield', '#title' => $this->t('Gigya Application Secret Key'));
+    $form['gigya_application_secret_key']['#description'] = $this->t('Specify the Gigya Application Secret (Base64 encoded) key for this domain');
 
+    if (empty($access_key)) {
+      $form['gigya_application_secret_key']['#required'] = TRUE;
+    }
+    else {
+      $form['gigya_application_secret_key']['#required'] = FALSE;
+      $form['placeHolder'] = array('#type' => 'details', '#title' => $this->t('Gigya Application Secret Key'));
+      $form['gigya_application_secret_key']['#description'].= $this->t(",current key first and last letters are
+        @accessKey", array('@accessKey' => substr($access_key, 0, 2) . "****" .
+        substr($access_key, strlen($access_key) - 2, 2)));
+    }
 
     $data_centers = array('us1.gigya.com' => 'US', 'eu1.gigya.com' => 'EU', 'au1.gigya.com' => 'AU', 'other' => "Other");
     $form['gigya_data_center'] = array(
@@ -113,12 +123,13 @@ class GigyaKeysForm extends ConfigFormBase {
     }
 
     // APP secret key was changed ?
-    if ($form_state->getValue('gigya_application_secret_key') != $config->get('gigya.gigya_application_secret_key')) {
-      $_gigya_application_secret_key = $form_state->getValue('gigya_application_secret_key');
+    $temp_access_key = $form_state->getValue('gigya_application_secret_key');
+    if (!empty($temp_access_key)) {
+      $_gigya_application_secret_key = $temp_access_key;
       $_validate = TRUE;
     }
     else {
-      $_gigya_application_secret_key = $config->get('gigya.gigya_application_secret_key');
+      $_gigya_application_secret_key = GigyaHelper::decrypt($config->get('gigya.gigya_application_secret_key'));
     }
 
     // Data Center was changed ?
@@ -163,7 +174,10 @@ class GigyaKeysForm extends ConfigFormBase {
     $config = $this->config('gigya.settings');
     $config->set('gigya.gigya_application_key', $form_state->getValue('gigya_application_key'));
     $config->set('gigya.gigya_api_key', $form_state->getValue('gigya_api_key'));
-    $config->set('gigya.gigya_application_secret_key', GigyaHelper::enc($form_state->getValue('gigya_application_secret_key')));
+    $temp_access_key = $form_state->getValue('gigya_application_secret_key');
+    if (!empty($temp_access_key)) {
+      $config->set('gigya.gigya_application_secret_key', GigyaHelper::enc($temp_access_key));
+    }
     $config->set('gigya.gigya_data_center', $form_state->getValue('gigya_data_center'));
     $config->save();
     return parent::submitForm($form, $form_state);

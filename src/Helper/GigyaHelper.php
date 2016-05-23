@@ -51,11 +51,11 @@ class GigyaHelper {
   }
 
   public static function enc($str) {
-    \Gigya\GigyaApiHelper::enc($str, self::getEncryptKey());
+    return \Gigya\GigyaApiHelper::enc($str, self::getEncryptKey());
   }
 
-  private static function decrypt($str) {
-    \Gigya\GigyaApiHelper::decrypt($str, self::getEncryptKey());
+  public static function decrypt($str) {
+    return \Gigya\GigyaApiHelper::decrypt($str, self::getEncryptKey());
   }
 
 

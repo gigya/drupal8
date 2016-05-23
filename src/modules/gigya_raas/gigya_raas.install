@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * Installation functions for Gigya module.
+ */
+
+use Drupal\User\RoleInterface;
+
+/**
+ * Implements hook_install.
+ */
+function gigya_raas_install() {
+
+}
+
+function gigya_raas_uninstall() {
+
+}

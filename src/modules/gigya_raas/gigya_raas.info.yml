@@ -1,0 +1,7 @@
+name: Gigya RaaS
+type: module
+description: 'Gigya RaaS module'
+package: Gigya
+core: 8.x
+dependencies:
+  - gigya

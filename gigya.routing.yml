@@ -5,21 +5,3 @@ gigya.admin.form:
     _title: 'Gigya Socialize keys settings'
   requirements:
     _permission: 'gigya major admin'
-
-gigya.rass.login:
-  path: 'gigya/raas-login'
-  defaults:
-    _controller: '\Drupal\gigya\GigyaController::gigyaRaasLoginAjax'
-  options:
-    _theme: ajax_base_page
-  requirements:
-    _permission: 'access content'
-
-gigya.rass.profile:
-  path: 'gigya/raas-profile-update'
-  defaults:
-    _controller: '\Drupal\gigya\GigyaController::gigyaRaasProfileAjax'
-  options:
-    _theme: ajax_base_page
-  requirements:
-    _permission: 'access content'

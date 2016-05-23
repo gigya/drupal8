@@ -8,6 +8,7 @@
 namespace Drupal\gigya\Form;
 
 
+use Drupal;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\gigya\Helper\GigyaHelper;
@@ -54,6 +55,8 @@ class GigyaKeysForm extends ConfigFormBase {
       '#default_value' => array_key_exists($config->get('gigya.gigya_data_center'), $data_centers) ? $config->get('gigya.gigya_data_center') : 'other'
     );
 
+
+    //@TODO: save to db and add default value.
     $form['gigya_other_data_center'] = array(
       "#type" => "textfield",
       "#default_value" => '',
@@ -143,7 +146,7 @@ class GigyaKeysForm extends ConfigFormBase {
           //@TODO: see how we can print markup in the error messages.
           $form_state->setErrorByName('gigya_api_key', $this->t("Gigya API error: {$code} - {$msg}.") .
           "For more information please refer to <a href=http://developers.gigya.com/037_API_reference/zz_Response_Codes_and_Errors target=_blank>Response_Codes_and_Errors page</a>");
-//          watchdog('gigya', 'Error setting API key, error code: @code - @msg', array('@code' => $code, '@msg' => $msg));
+          Drupal::logger('gigya')->error('Error setting API key, error code: @code - @msg', array('@code' => $code, '@msg' => $msg));
         }
         else {
           $form_state->setErrorByName('gigya_api_key', $this->t("Your API key or Secret key could not be validated. Please try again"));
@@ -160,7 +163,7 @@ class GigyaKeysForm extends ConfigFormBase {
     $config = $this->config('gigya.settings');
     $config->set('gigya.gigya_application_key', $form_state->getValue('gigya_application_key'));
     $config->set('gigya.gigya_api_key', $form_state->getValue('gigya_api_key'));
-    $config->set('gigya.gigya_application_secret_key', $form_state->getValue('gigya_application_secret_key'));
+    $config->set('gigya.gigya_application_secret_key', GigyaHelper::enc($form_state->getValue('gigya_application_secret_key')));
     $config->set('gigya.gigya_data_center', $form_state->getValue('gigya_data_center'));
     $config->save();
     return parent::submitForm($form, $form_state);

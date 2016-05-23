@@ -7,8 +7,6 @@
 
 namespace Drupal\gigya\Helper;
 
-include_once "/var/www/d8dev/modules/gigya/vendor/autoload.php";
-
 use Behat\Mink\Exception\Exception;
 use Drupal;
 use Drupal\Component\Serialization\Json;
@@ -19,6 +17,7 @@ use Gigya\sdk\GigyaApiRequest;
 use Gigya\sdk\GSApiException;
 use Gigya\user\GigyaProfile;
 use Gigya\user\GigyaUser;
+use Gigya\user\GigyaUserFactory;
 
 
 class GigyaHelper {
@@ -51,10 +50,27 @@ class GigyaHelper {
     return $obj;
   }
 
+  public static function enc($str) {
+    \Gigya\GigyaApiHelper::enc($str, self::getEncryptKey());
+  }
+
+  private static function decrypt($str) {
+    \Gigya\GigyaApiHelper::decrypt($str, self::getEncryptKey());
+  }
+
+
+  private static function getEncryptKey() {
+    $keypath = \Drupal::config('gigya.global')->get('gigya.keyPath');
+    $key = file_get_contents($keypath);
+    //@TODO: error handle and logs.
+  }
+
   private static function getAccessParams() {
     $access_params = array();
+    $key = self::getEncryptKey();
+
     $access_params['api_key'] = Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
-    $access_params['app_secret'] = Drupal::config('gigya.settings')->get('gigya.gigya_application_secret_key');
+    $access_params['app_secret'] = \Gigya\GigyaApiHelper::decrypt(Drupal::config('gigya.settings')->get('gigya.gigya_application_secret_key'), $key);
     $access_params['app_key'] = Drupal::config('gigya.settings')->get('gigya.gigya_application_key');
     $access_params['data_center'] = Drupal::config('gigya.settings')->get('gigya.gigya_data_center');
     return $access_params;
@@ -67,11 +83,29 @@ class GigyaHelper {
       }
       $request = new GigyaApiRequest($access_params['api_key'], $access_params['app_secret'], $method, NULL, $access_params['data_center'], TRUE, $access_params['app_key']);
       $request->setParam('url', 'https://gigya.com');
-      return $request->send();
+
+      $result = $request->send();
+      if (Drupal::config('gigya.global')->get('gigya.gigyaDebugMode') == true) {
+
+        // on first module load, api & secret are empty, so no values in response
+        Drupal::logger('gigya')->debug('gigya', 'Response from gigya <br /><pre>callId : @callId,apicall:@method</pre>',
+                                                array('@callId' => $result->getCallId(), '@method' => $method));
+      }
+      return $result;
     } catch (GSApiException $e) {
+      //Always write error to log.
+      Drupal::logger('gigya')->error('<pre>gigya api error error code :' . $e->getErrorCode() . '</pre>');
+      if ($e->getCallId()) {
+
+        Drupal::logger('gigya')->error('gigya', 'Response from gigya <br /><pre>callId : @callId,apicall:@method
+                                                 ,Error:@error</pre>', array('@callId' => $e->getCallId(),
+                                                '@method' => $method, '@error' => $e->getErrorCode()));
+      }
+
       return $e;
     }
     catch (Exception $e) {
+      Drupal::logger('gigya')->error('<pre>gigya api error ' . $e->getMessage() . '</pre>');
       return $e;
     }
 
@@ -109,16 +143,28 @@ class GigyaHelper {
       ->execute();
   }
 
-  public static function processFieldMapping(GigyaUser $gigya_user, User $drupal_user) {
+  public static function processFieldMapping($gigya_data, User $drupal_user, $profileOnly = false) {
     $field_map = \Drupal::config('gigya.global')->get('gigya.fieldMapping');
-
+    \Drupal::moduleHandler()->alter('gigya_raas_map_data', $gigya_data, $drupal_user, $field_map);
     foreach ($field_map as $drupal_field => $raas_field) {
       $raas_field_parts = explode(".", $raas_field);
-      $val = self::getNestedValue($gigya_user, $raas_field_parts);
+      if ($profileOnly) {
+        if (isset($raas_field_parts[0]) && $raas_field_parts[0] == 'profile') {
+          array_shift($raas_field_parts);
+        }
+        else {
+          continue;
+        }
+      }
+      $val = self::getNestedValue($gigya_data, $raas_field_parts);
       if ($val !== NULL) {
         $drupal_user->set($drupal_field, $val);
       }
     }
 
+  }
+
+  public static function getGigyaUserFromArray($data) {
+    return GigyaUserFactory::createGigyaProfileFromArray($data);
   }
 }

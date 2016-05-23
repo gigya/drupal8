@@ -45,13 +45,13 @@
 
   var profileUpdated = function (data) {
     console.log(data);
-    var base = 'gigyaRequestForms',
-      element_settings = {};
-    element_settings.url = Drupal.settings.basePath + 'raas-profile-update';
-    element_settings.event = 'gigyaProfileUp';
-    var ajax = new Drupal.ajax(base, $('#' + base), element_settings);
-    ajax.options.data = data.profile;
-    $(ajax.element).trigger('gigyaProfileUp');
+    var ajaxSettings = {
+      url: '/gigya/raas-profile-update',
+      submit: {gigyaProfile : data.profile},
+    };
+    var myAjaxObject = Drupal.ajax(ajaxSettings);
+    var ajaxres = myAjaxObject.execute();
+    console.log(ajaxres);
   }
 
 

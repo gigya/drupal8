@@ -1,21 +1,14 @@
 <?php
 
-define('GIGYA_DEFAULT_LOGINUI_WIDTH', '210');
-define('GIGYA_DEFAULT_LOGINUI_HEIGHT', '110');
-define('GIGYA_DEFAULT_LOGINUI_CONTAINERID', 'divGigyaLogin');
-define('GIGYA_DEFAULT_CONNECTUI_WIDTH', '175');
-define('GIGYA_DEFAULT_CONNECTUI_HEIGHT', '85');
-define('GIGYA_DEFAULT_CONNECTUI_CONTAINERID', 'divConnect');
-define('GIGYA_DEFAULT_CONNECTUI_CAPTIONTEXT', 'Select social networks');
-
-
-
 /**
  * Implements hook_page_attachments().
  * @param array $attachments
  */
 function gigya_page_attachments(array &$attachments) {
   // Add Settings.
+
+
+
   $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = \Drupal::config('gigya.global')->get('gigya.globalParameters');
   $attachments['#attached']['drupalSettings']['gigya']['enableRaaS'] = \Drupal::config('gigya.global')->get('gigya.enableRaaS');
   $attachments['#attached']['drupalSettings']['gigya']['apiKey'] = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
@@ -83,8 +76,9 @@ function gigya_user_login($account) {
     if ($account->id() > 1 && !$account->hasPermission('bypass_gigya_raas')) {
       // If user didn't login via RaaS.
       // (if RaaS is enabled in Drupal admin, but a native login link was not disabled, and user still tried to login via Drupal login).
-      if (\Drupal::service('user.private_tempstore')->get('gigya')->get('gigya_raas_uid') == NULL) {
-        //@TODO: check if it is right.
+      global $rass_login;
+      if ($rass_login == NULL) {
+//        //@TODO: check if it is right.
         user_logout();
       }
     }

@@ -1,5 +1,6 @@
 gigya:
   language: 'Auto'
+  keyPath: '/a.key'
   sessionExpiration : 0
   gigyaDebugMode : false
   globalParameters : { bypassCookiePolicy : never , enabledProviders : * }

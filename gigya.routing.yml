@@ -15,3 +15,11 @@ gigya.rass.login:
   requirements:
     _permission: 'access content'
 
+gigya.rass.profile:
+  path: 'gigya/raas-profile-update'
+  defaults:
+    _controller: '\Drupal\gigya\GigyaController::gigyaRaasProfileAjax'
+  options:
+    _theme: ajax_base_page
+  requirements:
+    _permission: 'access content'

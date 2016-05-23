@@ -12,6 +12,7 @@ use Drupal\Core\Ajax\AlertCommand;
 use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\user\Entity\User;
+use Gigya\user\GigyaUserFactory;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\gigya\Helper\GigyaHelper;
 
@@ -21,7 +22,22 @@ use Drupal\gigya\Helper\GigyaHelper;
 class GigyaController extends ControllerBase {
 
   /**
-   * Returns an Ajax response to render a text field without transformation filters.
+   * Process gigya raas login.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The incoming request object.
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   The Ajax response
+   */
+  public function gigyaRaasProfileAjax(Request $request) {
+    $gigyaProfile = GigyaHelper::getGigyaUserFromArray($request->get('gigyaProfile'));
+    $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+    GigyaHelper::processFieldMapping($gigyaProfile, $user, TRUE);
+    $user->save();
+  }
+
+  /**
+   * Process gigya raas login.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The incoming request object.
@@ -49,14 +65,15 @@ class GigyaController extends ControllerBase {
             if ($gigyaUser->isRaasPrimaryUser($email)) {
               /* Set global variable so we would know the user as logged in
                  RaaS in other functions down the line.*/
-
-              \Drupal::service('user.private_tempstore')->get('gigya')->set('gigya_raas_uid', $guid);;
+              global $rass_login;
+              $rass_login = true;
 
               //Log the user in.
               $user = User::load(array_shift($uids));
-              user_login_finalize($user);
               GigyaHelper::processFieldMapping($gigyaUser, $user);
               $user->save();
+              user_login_finalize($user);
+
             }
             else {
               /**
@@ -64,14 +81,29 @@ class GigyaController extends ControllerBase {
                * (we don't want two different users with the same email)
                */
               GigyaHelper::sendApiCall('accounts.setAccountInfo', array('UID' => $gigyaUser->getUID(), 'isActive' => FALSE));
-
-//              watchdog('gigya', 'User tried to create a new account with an existing email. Please enable social link account in your RaaS policies. For more info, please refer to: http://developers.gigya.com/015_Partners/030_CMS_and_Ecommerce_Platforms/020_Drupal/010_RaaS#Gigya_Configuration', NULL, WATCHDOG_NOTICE);
               $err_msg = $this->t('We found your email in our system.<br />Please use your existing account to login to the site, or create a new account using a different email address.');
-
             }
           }
           else {
+            $user = User::create(array('name' => $email, 'pass' => user_password(), 'status' => 1));
 
+
+            GigyaHelper::processFieldMapping($gigyaUser, $user);
+            /* Allow other modules to modify the data before user
+            is created in drupal database. */
+
+            \Drupal::moduleHandler()->alter('gigya_raas_create_user', $gigya_account, $new_user);
+            \Drupal::service('user.private_tempstore')->get('gigya')->set('gigya_raas_uid', $guid);
+            try {
+              $user->save();
+              user_login_finalize($user);
+            } catch (Exception $e) {
+              session_destroy();
+              $err_msg = $this->t("Oops! Something went wrong during your registration process. You are registered to the site but
+            not logged-in. Please try to login again.");
+              user_cookie_save(array('gigya' => 'gigyaLogOut'));
+              $response->addCommand(new RedirectCommand("/"));
+            }
           }
         }
       }

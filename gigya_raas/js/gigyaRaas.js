@@ -1,12 +1,11 @@
 /**
  * @file
- * Handles AJAX submission and response in Views UI.
+ * Handles AJAX login and register events.
  */
 
 (function ($, Drupal, drupalSettings) {
 
   'use strict';
-
 
   var initLoginUI = function () {
     if (typeof drupalSettings.gigya.loginUIParams !== 'undefined') {
@@ -17,13 +16,7 @@
     }
   }
 
-  var onLoginHandler1  = function() {
-    debugger;
-  }
   var onLoginHandler = function (res) {
-    debugger;
-    console.log('raasLogin');
-
     var data = {
       "uid": res.UID,
       "uid_sig": res.UIDSignature,
@@ -34,12 +27,8 @@
       url: '/gigya/raas-login',
       submit: data,
     };
-    debugger;
     var myAjaxObject = Drupal.ajax(ajaxSettings);
-    var ajaxres = myAjaxObject.execute();
-    console.log(ajaxres);
-
-
+    myAjaxObject.execute();
   }
 
 
@@ -50,13 +39,12 @@
       submit: {gigyaProfile : data.profile},
     };
     var myAjaxObject = Drupal.ajax(ajaxSettings);
-    var ajaxres = myAjaxObject.execute();
-    console.log(ajaxres);
+    myAjaxObject.execute();
   }
 
 
   var logoutCallback = function () {
-    console.log('logoutCallback');
+    document.location = drupalSettings.path.basePath + 'user/logout';
   }
 
   var initRaas = function () {
@@ -100,9 +88,6 @@
   }
 
   var init = function () {
-    window.__gigyaConf = drupalSettings.gigya.globalParameters;
-    //@TODO: replace after debug.
-    window.__gigyaConf.enabledProviders = "*";
     if (drupalSettings.gigya.enableRaaS) {
       gigyaHelper.addGigyaFunctionCall('accounts.addEventHandlers', {
         onLogin: onLoginHandler,
@@ -110,16 +95,15 @@
       });
     }
 
-    gigyaHelper.addGigyaScript(drupalSettings.gigya.apiKey, drupalSettings.gigya.lang)
-    drupalSettings.gigya.isInit = true;
+    drupalSettings.gigya.isRaasInit = true;
   }
 
 
   //init();
 
-  Drupal.behaviors.gigyaInit = {
+  Drupal.behaviors.gigyaRaasInit = {
     attach: function (context, settings) {
-      if (!('isInit' in drupalSettings.gigya)) {
+      if (!('isRaasInit' in drupalSettings.gigya)) {
         window.onGigyaServiceReady = function (serviceName) {
           gigyaHelper.checkLogout();
           gigyaHelper.runGigyaCmsInit();

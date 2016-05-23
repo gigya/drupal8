@@ -1,0 +1,10 @@
+gigyaRaas:
+  version: VERSION
+  js:
+    js/gigyaRaas.js: {}
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupalSettings
+    - core/drupal.ajax

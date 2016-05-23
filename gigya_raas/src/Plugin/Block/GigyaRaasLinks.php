@@ -9,7 +9,7 @@
  * )
  */
 
-namespace Drupal\gigya\Plugin\Block;
+namespace Drupal\gigya_raas\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Link;

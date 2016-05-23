@@ -5,7 +5,7 @@
  * Contains \Drupal\gigya\GigyaController.
  */
 
-namespace Drupal\gigya;
+namespace Drupal\gigya_raas;
 
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\AlertCommand;

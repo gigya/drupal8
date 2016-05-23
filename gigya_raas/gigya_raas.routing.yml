@@ -1,7 +1,7 @@
 gigya.rass.login:
   path: 'gigya/raas-login'
   defaults:
-    _controller: '\Drupal\gigya\GigyaController::gigyaRaasLoginAjax'
+    _controller: '\Drupal\gigya_raas\GigyaController::gigyaRaasLoginAjax'
   options:
     _theme: ajax_base_page
   requirements:
@@ -10,7 +10,7 @@ gigya.rass.login:
 gigya.rass.profile:
   path: 'gigya/raas-profile-update'
   defaults:
-    _controller: '\Drupal\gigya\GigyaController::gigyaRaasProfileAjax'
+    _controller: '\Drupal\gigya_raas\GigyaController::gigyaRaasProfileAjax'
   options:
     _theme: ajax_base_page
   requirements:

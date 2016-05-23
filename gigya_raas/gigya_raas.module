@@ -33,6 +33,7 @@ function gigya_raas_page_attachments(array &$attachments) {
       );
       $attachments['#attached']['drupalSettings']['gigya']['raas']['profile'] = $raas_profile;
     }
+    $attachments['#attached']['library'][] = 'gigya_raas/gigyaRaas';
   }
 }
 

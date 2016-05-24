@@ -89,7 +89,7 @@ class GigyaHelper {
       if (Drupal::config('gigya.global')->get('gigya.gigyaDebugMode') == true) {
 
         // on first module load, api & secret are empty, so no values in response
-        Drupal::logger('gigya')->debug('gigya', 'Response from gigya <br /><pre>callId : @callId,apicall:@method</pre>',
+        Drupal::logger('gigya')->debug('Response from gigya <br /><pre>callId : @callId,apicall:@method</pre>',
                                                 array('@callId' => $result->getCallId(), '@method' => $method));
       }
       return $result;
@@ -98,7 +98,7 @@ class GigyaHelper {
       Drupal::logger('gigya')->error('<pre>gigya api error error code :' . $e->getErrorCode() . '</pre>');
       if ($e->getCallId()) {
 
-        Drupal::logger('gigya')->error('gigya', 'Response from gigya <br /><pre>callId : @callId,apicall:@method
+        Drupal::logger('gigya')->error('Response from gigya <br /><pre>callId : @callId,apicall:@method
                                                  ,Error:@error</pre>', array('@callId' => $e->getCallId(),
                                                 '@method' => $method, '@error' => $e->getErrorCode()));
       }

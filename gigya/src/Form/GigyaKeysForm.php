@@ -5,7 +5,7 @@
  * Contains \Drupal\gigya\Form\GigyaKeysForm.
  */
 
-namespace Drupal\gigya_raas\Form;
+namespace Drupal\gigya\Form;
 
 
 use Drupal;

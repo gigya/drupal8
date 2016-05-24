@@ -6,17 +6,21 @@
  */
 function gigya_page_attachments(array &$attachments) {
   // Add Settings.
-  $global_params = \Drupal::config('gigya.global')->get('gigya.globalParameters');
-  \Drupal::moduleHandler()->alter('gigya_global_parameters', $global_params);
-  $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
+  $api_key = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
+  if (!empty($api_key)) {
+    $global_params = \Drupal::config('gigya.global')->get('gigya.globalParameters');
+    \Drupal::moduleHandler()->alter('gigya_global_parameters', $global_params);
+    $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
 
-  $attachments['#attached']['drupalSettings']['gigya']['apiKey'] = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
 
-  //@TODO: check config.
-  $lang = \Drupal::languageManager()->getCurrentLanguage()->getId();
-  \Drupal::moduleHandler()->alter('gigya_lang', $lang);
-  $attachments['#attached']['drupalSettings']['gigya']['lang'] = $lang;
+    $attachments['#attached']['drupalSettings']['gigya']['apiKey'] = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
 
-  // Add Library.
-  $attachments['#attached']['library'][] = 'gigya/drupalGigya';
+    //@TODO: check config.
+    $lang = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    \Drupal::moduleHandler()->alter('gigya_lang', $lang);
+    $attachments['#attached']['drupalSettings']['gigya']['lang'] = $lang;
+
+    // Add Library.
+    $attachments['#attached']['library'][] = 'gigya/drupalGigya';
+  }
 }

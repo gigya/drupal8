@@ -82,8 +82,8 @@ class GigyaHelper {
       if (!$access_params) {
         $access_params = self::getAccessParams();
       }
-      $request = new GigyaApiRequest($access_params['api_key'], $access_params['app_secret'], $method, NULL, $access_params['data_center'], TRUE, $access_params['app_key']);
-      $request->setParam('url', 'https://gigya.com');
+      $request = new GigyaApiRequest($access_params['api_key'], $access_params['app_secret'], $method, $params, $access_params['data_center'], TRUE, $access_params['app_key']);
+
 
       $result = $request->send();
       if (Drupal::config('gigya.global')->get('gigya.gigyaDebugMode') == true) {
@@ -168,4 +168,21 @@ class GigyaHelper {
   public static function getGigyaUserFromArray($data) {
     return GigyaUserFactory::createGigyaProfileFromArray($data);
   }
+
+  public static function getGigyaLanguages() {
+
+    return array("en" => "English (default)","ar" => "Arabic","br" => "Bulgarian","ca" => "Catalan","hr" => "Croatian",
+                "cs" => "Czech","da" => "Danish","nl" => "Dutch","fi" => "Finnish","fr" => "French","de" => "German",
+                "el" => "Greek","he" => "Hebrew","hu" => "Hungarian","id" => "Indonesian (Bahasa)","it" => "Italian",
+                "ja" => "Japanese","ko" => "Korean","ms" => "Malay","no" => "Norwegian","fa" => "Persian (Farsi)",
+                "pl" => "Polish","pt" => "Portuguese","ro" => "Romanian","ru" => "Russian","sr" => "Serbian (Cyrillic)",
+                "sk" => "Slovak","sl" => "Slovenian","es" => "Spanish","sv" => "Swedish","tl" => "Tagalog","th" => "Thai",
+                "tr" => "Turkish","uk" => "Ukrainian","vi" => "Vietnamese","zh-cn" => "Chinese (Mandarin)","Chinese (Hong Kong)" => "zh-cn",
+                "zh-hk" => "Chinese (Hong Kong)","Chinese (Taiwan)" => "zh-hk","zh-tw" => "Chinese (Taiwan)","Croatian" => "zh-tw","nl-inf" => "Dutch Informal",
+                "Finnish" => "nl-inf","fr-inf" => "French Informal","German" => "fr-inf","de-inf" => "German Informal","Greek" => "de-inf",
+                "pt-br" => "Portuguese (Brazil)","Romanian" => "pt-br","es-inf" => "Spanish Informal","Spanish (Lat-Am)" => "es-inf",
+                "es-mx" => "Spanish (Lat-Am)","Swedish" => "es-mx");
+
+  }
+
 }

@@ -12,6 +12,8 @@ use Drupal;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\gigya\Helper\GigyaHelper;
+use Gigya\GigyaApiHelper;
+use Gigya\sdk\GSObject;
 
 class GigyaKeysForm extends ConfigFormBase {
   /**
@@ -29,9 +31,9 @@ class GigyaKeysForm extends ConfigFormBase {
 
   public function buildForm(array $form, FormStateInterface $form_state) {
     // Form constructor
+
     $form = parent::buildForm($form, $form_state);
     $config = $this->config('gigya.settings');
-
     $form['gigya_api_key'] = array('#type' => 'textfield', '#title' => $this->t('Gigya API Key'),
       '#description' => $this->t('Specify the Gigya API Key for this domain'),
       '#default_value' => $config->get('gigya.gigya_api_key'), '#required' => TRUE);
@@ -50,7 +52,6 @@ class GigyaKeysForm extends ConfigFormBase {
     }
     else {
       $form['gigya_application_secret_key']['#required'] = FALSE;
-      $form['placeHolder'] = array('#type' => 'details', '#title' => $this->t('Gigya Application Secret Key'));
       $form['gigya_application_secret_key']['#description'].= $this->t(",current key first and last letters are
         @accessKey", array('@accessKey' => substr($access_key, 0, 2) . "****" .
         substr($access_key, strlen($access_key) - 2, 2)));
@@ -129,6 +130,7 @@ class GigyaKeysForm extends ConfigFormBase {
       $_validate = TRUE;
     }
     else {
+
       $_gigya_application_secret_key = GigyaHelper::decrypt($config->get('gigya.gigya_application_secret_key'));
     }
 
@@ -142,15 +144,19 @@ class GigyaKeysForm extends ConfigFormBase {
     }
 
     if ($_validate) {
-
       $access_params = array();
       $access_params['api_key'] = $_gigya_api_key;
       $access_params['app_secret'] = $_gigya_application_secret_key;
       $access_params['app_key'] = $_gigya_application_key;
       $access_params['data_center'] = $_gigya_data_center;
-      $res = GigyaHelper::sendApiCall('shortenURL', NULL, $access_params);
-
-      if ($res !== TRUE) {
+      $params = new GSObject();
+      $params->put('url', 'http://gigya.com');
+      $res = GigyaHelper::sendApiCall('shortenURL', $params, $access_params);
+      $valid = FALSE;
+      if ($res->getErrorCode() == 0) {
+        $valid = TRUE;
+      }
+      if ($valid !== TRUE) {
         if (is_object($res)) {
           $code = $res->getErrorCode();
           $msg = $res->getMessage();
@@ -176,7 +182,8 @@ class GigyaKeysForm extends ConfigFormBase {
     $config->set('gigya.gigya_api_key', $form_state->getValue('gigya_api_key'));
     $temp_access_key = $form_state->getValue('gigya_application_secret_key');
     if (!empty($temp_access_key)) {
-      $config->set('gigya.gigya_application_secret_key', GigyaHelper::enc($temp_access_key));
+      $enc = GigyaHelper::enc($temp_access_key);
+      $config->set('gigya.gigya_application_secret_key', $enc);
     }
     $config->set('gigya.gigya_data_center', $form_state->getValue('gigya_data_center'));
     $config->save();

@@ -5,18 +5,28 @@
  * @param array $attachments
  */
 function gigya_page_attachments(array &$attachments) {
-  // Add Settings.
+  //Check for api key.
   $api_key = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
   if (!empty($api_key)) {
+    //Add gigya params to drupalSettings.
     $global_params = \Drupal::config('gigya.global')->get('gigya.globalParameters');
     \Drupal::moduleHandler()->alter('gigya_global_parameters', $global_params);
+
     $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
-
-
     $attachments['#attached']['drupalSettings']['gigya']['apiKey'] = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
 
-    //@TODO: check config.
-    $lang = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    $lang = \Drupal::config('gigya.global')->get('gigya.language');
+    //Check if lang is in auto mode.
+    if (strtolower($lang) == 'auto') {
+      $lang = \Drupal::languageManager()->getCurrentLanguage()->getId();
+      $languages = \Drupal\gigya\Helper\GigyaHelper::getGigyaLanguages();
+
+      if (!array_key_exists($lang, $languages)) {
+        //If we do not have the lang in gigya set the lang to the fallback.
+        $lang = \Drupal::config('gigya.global')->get('gigya.languageFallback');
+      }
+    }
+
     \Drupal::moduleHandler()->alter('gigya_lang', $lang);
     $attachments['#attached']['drupalSettings']['gigya']['lang'] = $lang;
 

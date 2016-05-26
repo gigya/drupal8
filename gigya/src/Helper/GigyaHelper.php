@@ -111,10 +111,10 @@ class GigyaHelper {
 
       return $e;
     }
-    catch (Exception $e) {
-      Drupal::logger('gigya')->error('<pre>gigya api error ' . $e->getMessage() . '</pre>');
-      return $e;
-    }
+//    catch (Exception $e) {
+//      Drupal::logger('gigya')->error('<pre>gigya api error ' . $e->getMessage() . '</pre>');
+//      return $e;
+//    }
 
   }
 

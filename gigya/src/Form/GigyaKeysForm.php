@@ -74,7 +74,7 @@ class GigyaKeysForm extends ConfigFormBase {
     //@TODO: save to db and add default value.
     $form['gigya_other_data_center'] = array(
       "#type" => "textfield",
-      "#default_value" => '',
+      "#default_value" => $config->get('gigya.gigya_data_center'),
       "#attributes" => array("id" => "gigya-other-data-center"),
       '#states' => array(
         'visible' => array(
@@ -144,14 +144,21 @@ class GigyaKeysForm extends ConfigFormBase {
     }
 
     // Data Center was changed ?
-    if ($form_state->getValue('gigya_data_center') != $config->get('gigya.gigya_data_center')) {
-      $_gigya_data_center = $form_state->getValue('gigya_data_center');
+
+
+
+    if ($form_state->getValue('gigya_data_center') != $config->get('gigya.gigya_data_center') || $form_state->getValue('gigya_other_data_center') != $config->get('gigya.gigya_other_data_center')) {
+      if ($form_state->getValue('gigya_data_center') == 'other') {
+        $_gigya_data_center = $form_state->getValue('gigya_other_data_center');
+      }
+      else {
+        $_gigya_data_center = $form_state->getValue('gigya_data_center');
+      }
       $_validate = TRUE;
     }
     else {
       $_gigya_data_center = $config->get('gigya.gigya_data_center');
     }
-
     if ($_validate) {
       $access_params = array();
       $access_params['api_key'] = $_gigya_api_key;
@@ -194,7 +201,14 @@ class GigyaKeysForm extends ConfigFormBase {
       $enc = GigyaHelper::enc($temp_access_key);
       $config->set('gigya.gigya_application_secret_key', $enc);
     }
-    $config->set('gigya.gigya_data_center', $form_state->getValue('gigya_data_center'));
+
+    if ($form_state->getValue('gigya_data_center') == 'other') {
+      $config->set('gigya.gigya_data_center', $form_state->getValue('gigya_other_data_center'));
+    }
+    else {
+      $config->set('gigya.gigya_data_center', $form_state->getValue('gigya_data_center'));
+    }
+
     $config->save();
     return parent::submitForm($form, $form_state);
   }

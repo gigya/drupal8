@@ -6,33 +6,36 @@
  */
 function gigya_raas_page_attachments(array &$attachments) {
   // Add Settings.
-  $attachments['#attached']['drupalSettings']['gigya']['enableRaaS'] = \Drupal::config('gigya.global')->get('gigya.enableRaaS');
+  $api_key = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
+  if (!empty($api_key)) {
+    $attachments['#attached']['drupalSettings']['gigya']['enableRaaS'] = \Drupal::config('gigya.global')->get('gigya.enableRaaS');
 
-  if (\Drupal::config('gigya.global')->get('gigya.enableRaaS') == TRUE) {
-    if (\Drupal::currentUser()->isAnonymous()) {
-      $raas_login = array(
-        'screenSet' =>  'Default-RegistrationLogin',
-        'mobileScreenSet' => 'DefaultMobile-RegistrationLogin',
-        'startScreen' => 'gigya-login-screen',
-      );
-      $raas_register = array(
-        'screenSet' => 'Default-RegistrationLogin',
-        'mobileScreenSet' => 'DefaultMobile-RegistrationLogin',
-        'startScreen' => 'gigya-register-screen',
-      );
-      \Drupal::moduleHandler()->alter('gigya_raas_settings', $raas_login, $raas_register);
-      $attachments['#attached']['drupalSettings']['gigya']['raas']['login'] = $raas_login;
-      $attachments['#attached']['drupalSettings']['gigya']['raas']['register'] = $raas_register;
+    if (\Drupal::config('gigya.global')->get('gigya.enableRaaS') == TRUE) {
+      if (\Drupal::currentUser()->isAnonymous()) {
+        $raas_login = array(
+          'screenSet' =>  'Default-RegistrationLogin',
+          'mobileScreenSet' => 'DefaultMobile-RegistrationLogin',
+          'startScreen' => 'gigya-login-screen',
+        );
+        $raas_register = array(
+          'screenSet' => 'Default-RegistrationLogin',
+          'mobileScreenSet' => 'DefaultMobile-RegistrationLogin',
+          'startScreen' => 'gigya-register-screen',
+        );
+        \Drupal::moduleHandler()->alter('gigya_raas_settings', $raas_login, $raas_register);
+        $attachments['#attached']['drupalSettings']['gigya']['raas']['login'] = $raas_login;
+        $attachments['#attached']['drupalSettings']['gigya']['raas']['register'] = $raas_register;
 
+      }
+      else {
+        $raas_profile = array(
+          'screenSet' =>  'Default-ProfileUpdate',
+          'mobileScreenSet' => 'DefaultMobile-ProfileUpdate'
+        );
+        $attachments['#attached']['drupalSettings']['gigya']['raas']['profile'] = $raas_profile;
+      }
+      $attachments['#attached']['library'][] = 'gigya_raas/gigyaRaas';
     }
-    else {
-      $raas_profile = array(
-        'screenSet' =>  'Default-ProfileUpdate',
-        'mobileScreenSet' => 'DefaultMobile-ProfileUpdate'
-      );
-      $attachments['#attached']['drupalSettings']['gigya']['raas']['profile'] = $raas_profile;
-    }
-    $attachments['#attached']['library'][] = 'gigya_raas/gigyaRaas';
   }
 }
 

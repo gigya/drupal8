@@ -47,7 +47,7 @@ class GigyaController extends ControllerBase {
   public function gigyaRaasLoginAjax(Request $request) {
 
     if (\Drupal::currentUser()->isAnonymous()) {
-
+      global $raas_login;
       $err_msg = FALSE;
       $sig_timestamp = $request->get('sig_timestamp');
       $guid = $request->get('uid');
@@ -65,8 +65,8 @@ class GigyaController extends ControllerBase {
             if ($gigyaUser->isRaasPrimaryUser($email)) {
               /* Set global variable so we would know the user as logged in
                  RaaS in other functions down the line.*/
-              global $rass_login;
-              $rass_login = true;
+
+              $raas_login = true;
 
               //Log the user in.
               $user = User::load(array_shift($uids));
@@ -96,7 +96,9 @@ class GigyaController extends ControllerBase {
             \Drupal::service('user.private_tempstore')->get('gigya')->set('gigya_raas_uid', $guid);
             try {
               $user->save();
+              $raas_login = TRUE;
               user_login_finalize($user);
+
             } catch (Exception $e) {
               session_destroy();
               $err_msg = $this->t("Oops! Something went wrong during your registration process. You are registered to the site but

@@ -16,6 +16,6 @@
     }
   ],
   "require": {
-    "gigya/cms-starter-kit": "~"
+    "gigya/cms-starter-kit": ">1.0.1"
   }
 }

@@ -4,3 +4,4 @@ description: 'Gigya core module'
 package: Gigya
 core: 8.x
 configure: gigya.admin.form
+version: 0.1

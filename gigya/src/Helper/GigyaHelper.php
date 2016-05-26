@@ -15,6 +15,7 @@ use Drupal\user\Entity\User;
 use Gigya\GigyaApiHelper;
 use Gigya\sdk\GigyaApiRequest;
 use Gigya\sdk\GSApiException;
+use Gigya\sdk\GSObject;
 use Gigya\user\GigyaProfile;
 use Gigya\user\GigyaUser;
 use Gigya\user\GigyaUserFactory;
@@ -71,19 +72,24 @@ class GigyaHelper {
     $key = self::getEncryptKey();
 
     $access_params['api_key'] = Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
-    $access_params['app_secret'] = \Gigya\GigyaApiHelper::decrypt(Drupal::config('gigya.settings')->get('gigya.gigya_application_secret_key'), $key);
+    $access_params['app_secret'] = GigyaApiHelper::decrypt(Drupal::config('gigya.settings')->get('gigya.gigya_application_secret_key'), $key);
     $access_params['app_key'] = Drupal::config('gigya.settings')->get('gigya.gigya_application_key');
     $access_params['data_center'] = Drupal::config('gigya.settings')->get('gigya.gigya_data_center');
     return $access_params;
   }
 
-  public static function sendApiCall($method, $params = NULL, $access_params = FALSE) {
+  public static function sendApiCall($method, $params = null, $access_params = FALSE) {
     try {
       if (!$access_params) {
         $access_params = self::getAccessParams();
       }
-      $request = new GigyaApiRequest($access_params['api_key'], $access_params['app_secret'], $method, $params, $access_params['data_center'], TRUE, $access_params['app_key']);
+      if ($params == null) {
+        $params = new GSObject();
+      }
 
+      $params->put('environment', self::getEnvString());
+
+      $request = new GigyaApiRequest($access_params['api_key'], $access_params['app_secret'], $method, $params, $access_params['data_center'], TRUE, $access_params['app_key']);
 
       $result = $request->send();
       if (Drupal::config('gigya.global')->get('gigya.gigyaDebugMode') == true) {
@@ -114,7 +120,8 @@ class GigyaHelper {
 
   public static function validateUid($uid, $uid_sig, $sig_timestamp) {
     try {
-      return self::getGigyaApiHelper()->validateUid($uid, $uid_sig, $sig_timestamp);
+      $params = array('environment' => self::getEnvString());
+      return self::getGigyaApiHelper()->validateUid($uid, $uid_sig, $sig_timestamp, NULL, NULL, $params);
     } catch (GSApiException $e) {
       return false;
     }
@@ -185,4 +192,12 @@ class GigyaHelper {
 
   }
 
+  /**
+   * @return string
+   *  the environment string to add to the API call.
+   */
+  private static function getEnvString() {
+    $info = system_get_info('module', 'gigya');
+    return "cms_version:Drupal_" . \Drupal::VERSION . ",gigya_version:Gigya_module_" .$info['version'];
+  }
 }

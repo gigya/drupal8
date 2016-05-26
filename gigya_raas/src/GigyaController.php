@@ -61,15 +61,18 @@ class GigyaController extends ControllerBase {
           $err_msg = $this->t('Email address is required by Drupal and is missing, please contact the site administrator.');
         }
         else {
-          if ($uids = GigyaHelper::getUidByMail($email)) {
+          $user = GigyaHelper::getUidByUUID($guid);
+          $uids = GigyaHelper::getUidByMail($email);
+          if ($user || $uids) {
             if ($gigyaUser->isRaasPrimaryUser($email)) {
               /* Set global variable so we would know the user as logged in
                  RaaS in other functions down the line.*/
 
               $raas_login = true;
-
+              if ($uids) {
+                $user = User::load(array_shift($uids));
+              }
               //Log the user in.
-              $user = User::load(array_shift($uids));
               GigyaHelper::processFieldMapping($gigyaUser, $user);
               $user->save();
               user_login_finalize($user);
@@ -93,8 +96,8 @@ class GigyaController extends ControllerBase {
             is created in drupal database. */
 
             \Drupal::moduleHandler()->alter('gigya_raas_create_user', $gigya_account, $new_user);
-            \Drupal::service('user.private_tempstore')->get('gigya')->set('gigya_raas_uid', $guid);
             try {
+              //@TODO: generate Unique user name.
               $user->save();
               $raas_login = TRUE;
               user_login_finalize($user);

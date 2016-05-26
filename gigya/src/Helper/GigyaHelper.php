@@ -145,6 +145,11 @@ class GigyaHelper {
       ->execute();
   }
 
+  public static function getUidByUUID($uuid) {
+    return  \Drupal::entityManager()->loadEntityByUuid('user', $uuid);
+  }
+
+
   public static function getUidByName($name) {
     return \Drupal::entityQuery('user')
       ->condition('name', Connection::escapeLike($name), 'LIKE')

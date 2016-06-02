@@ -110,7 +110,7 @@ class GigyaKeysForm extends ConfigFormBase {
     $_validate = FALSE;
     // API key was changed ?
     if ($this->getValue($form_state, 'gigya_api_key') != $config->get('gigya.gigya_api_key')) {
-      $_gigya_api_key = $form_state->getValue('gigya_api_key');
+      $_gigya_api_key = $this->getValue($form_state, 'gigya_api_key');
       $_validate = TRUE;
     }
     else {
@@ -119,7 +119,7 @@ class GigyaKeysForm extends ConfigFormBase {
 
     // APP key was changed ?
     if ($this->getValue($form_state, 'gigya_application_key') != $config->get('gigya.gigya_application_key')) {
-      $_gigya_application_key = $form_state->getValue('gigya_application_key');
+      $_gigya_application_key = $this->getValue($form_state, 'gigya_application_key');
       $_validate = TRUE;
     }
     else {
@@ -146,7 +146,7 @@ class GigyaKeysForm extends ConfigFormBase {
 
 
 
-    if ($this->getValue($form_state, 'gigya_data_center') != $config->get('gigya.gigya_data_center') || $form_state->getValue('gigya_other_data_center') != $config->get('gigya.gigya_other_data_center')) {
+    if ($this->getValue($form_state, 'gigya_data_center') != $config->get('gigya.gigya_data_center') || $this->getValue($form_state, 'gigya_other_data_center') != $config->get('gigya.gigya_other_data_center')) {
       if ($this->getValue($form_state, 'gigya_data_center') == 'other') {
         $_gigya_data_center = $this->getValue($form_state, 'gigya_other_data_center');
       }
@@ -201,7 +201,7 @@ class GigyaKeysForm extends ConfigFormBase {
       $config->set('gigya.gigya_application_secret_key', $enc);
     }
 
-    if ($form_state->getValue('gigya_data_center') == 'other') {
+    if ($this->getValue($form_state, 'gigya_data_center') == 'other') {
       $config->set('gigya.gigya_data_center', $this->getValue($form_state, 'gigya_other_data_center'));
     }
     else {

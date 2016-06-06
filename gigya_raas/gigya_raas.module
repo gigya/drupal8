@@ -1,4 +1,5 @@
 <?php
+use Drupal\gigya\Helper\GigyaHelper;
 
 /**
  * Implements hook_page_attachments().
@@ -11,7 +12,10 @@ function gigya_raas_page_attachments(array &$attachments) {
     $attachments['#attached']['drupalSettings']['gigya']['enableRaaS'] = \Drupal::config('gigya.global')->get('gigya.enableRaaS');
 
     if (\Drupal::config('gigya.global')->get('gigya.enableRaaS') == TRUE) {
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin'] = \Drupal::currentUser()->isAuthenticated();
       if (\Drupal::currentUser()->isAnonymous()) {
+        $attachments['#attached']['drupalSettings']['gigyaExtra']['bypassRaas'] = Drupal::currentUser()->hasPermission('bypass_gigya_raas');
+
         $raas_login = array(
           'screenSet' =>  'Default-RegistrationLogin',
           'mobileScreenSet' => 'DefaultMobile-RegistrationLogin',
@@ -73,5 +77,11 @@ function gigya_raas_user_login($account) {
         user_logout();
       }
     }
+  }
+}
+
+function gigya_raas_user_logout($account) {
+  if (isset($account->gigya)) {
+    GigyaHelper::saveUserLogoutCookie();
   }
 }

@@ -9,10 +9,8 @@
 
   var init = function () {
     window.__gigyaConf = drupalSettings.gigya.globalParameters;
-    //@TODO: replace after debug.
-    window.__gigyaConf.enabledProviders = "*";
 
-    gigyaHelper.addGigyaScript(drupalSettings.gigya.apiKey, drupalSettings.gigya.lang)
+    gigyaHelper.addGigyaScript(drupalSettings.gigya.apiKey, drupalSettings.gigya.lang);
     drupalSettings.gigya.isInit = true;
   }
 

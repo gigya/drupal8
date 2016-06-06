@@ -25,7 +25,7 @@
 
     var ajaxSettings = {
       url: '/gigya/raas-login',
-      submit: data,
+      submit: data
     };
     var myAjaxObject = Drupal.ajax(ajaxSettings);
     myAjaxObject.execute();
@@ -106,6 +106,7 @@
       if (!('isRaasInit' in drupalSettings.gigya)) {
         window.onGigyaServiceReady = function (serviceName) {
           gigyaHelper.checkLogout();
+          gigyaHelper.gigyaCheckLoginStatus();
           gigyaHelper.runGigyaCmsInit();
           initLoginUI();
           initRaas();

@@ -15,35 +15,6 @@ var gigyaHelper = {
     gig.src = ('https:' == document.location.protocol ? 'https://cdns' : 'http://cdn') + '.gigya.com/js/gigya.js?apiKey=' + apiKey + '&lang=' + lang;
     document.getElementsByTagName('head')[0].appendChild(gig);
   },
-  gigyaCheckLoginStatus : function () {
-    try {
-      var getAccountInfoResponse = function (response) {
-        if (!response) {
-          return;
-        }
-        if (response.errorCode != 0) {
-          if (drupalSettings.gigyaExtra.isLogin == true) {
-            //Login in drupal but not in Gigya.
-            if (!drupalSettings.gigyaExtra.bypassRaas == true) {
-              //No bypass raas perm.
-              //Log out the user.
-              document.location = drupalSettings.path.basePath + 'user/logout';
-            }
-          }
-        }
-        else {
-          if (drupalSettings.gigyaExtra.isLogin == false) {
-            Drupal.gigya.raasRegLogin(response);
-          }
-        }
-      }
-      gigya.accounts.getAccountInfo({callback: getAccountInfoResponse});
-    } catch (e) {
-    } finally {
-    }
-
-
-  },
 
   checkLogout: function () {
     var logoutCookie = gigya.utils.cookie.get("gigyaLogout");

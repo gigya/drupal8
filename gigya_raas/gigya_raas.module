@@ -67,7 +67,7 @@ function gigya_raas_theme($existing, $type, $theme, $path) {
  */
 function gigya_raas_user_login($account) {
   if (\Drupal::config('gigya.global')->get('gigya.enableRaaS') == TRUE) {
-    if ($account->id() > 1 && !$account->hasPermission('bypass_gigya_raas')) {
+    if (!$account->hasPermission('bypass_gigya_raas')) {
       // If user didn't login via RaaS.
       // (if RaaS is enabled in Drupal admin, but a native login link was not disabled, and user still tried to login via Drupal login).
       global $raas_login;
@@ -80,7 +80,5 @@ function gigya_raas_user_login($account) {
 }
 
 function gigya_raas_user_logout($account) {
-  if (isset($account->gigya)) {
-    GigyaHelper::saveUserLogoutCookie();
-  }
+  GigyaHelper::saveUserLogoutCookie();
 }

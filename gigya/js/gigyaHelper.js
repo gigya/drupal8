@@ -16,12 +16,6 @@ var gigyaHelper = {
     document.getElementsByTagName('head')[0].appendChild(gig);
   },
 
-  checkLogout: function () {
-    var logoutCookie = gigya.utils.cookie.get("gigyaLogout");
-    if (logoutCookie) {
-      gigya.accouts.logout();
-    }
-  },
 
   addGigyaFunctionCall: function (method, params) {
     window.gigyaCmsInit = window.gigyaCmsInit || [];

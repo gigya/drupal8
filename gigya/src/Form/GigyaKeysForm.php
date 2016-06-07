@@ -73,7 +73,6 @@ class GigyaKeysForm extends ConfigFormBase {
     );
 
 
-    //@TODO: save to db and add default value.
     $form['gigya_other_data_center'] = array(
       "#type" => "textfield",
       "#default_value" => $config->get('gigya.gigya_data_center'),
@@ -112,8 +111,8 @@ class GigyaKeysForm extends ConfigFormBase {
 
     $_validate = FALSE;
     // API key was changed ?
-    if ($form_state->getValue('gigya_api_key') != $config->get('gigya.gigya_api_key')) {
-      $_gigya_api_key = $form_state->getValue('gigya_api_key');
+    if ($this->getValue($form_state, 'gigya_api_key') != $config->get('gigya.gigya_api_key')) {
+      $_gigya_api_key = $this->getValue($form_state, 'gigya_api_key');
       $_validate = TRUE;
     }
     else {
@@ -121,8 +120,8 @@ class GigyaKeysForm extends ConfigFormBase {
     }
 
     // APP key was changed ?
-    if ($form_state->getValue('gigya_application_key') != $config->get('gigya.gigya_application_key')) {
-      $_gigya_application_key = $form_state->getValue('gigya_application_key');
+    if ($this->getValue($form_state, 'gigya_application_key') != $config->get('gigya.gigya_application_key')) {
+      $_gigya_application_key = $this->getValue($form_state, 'gigya_application_key');
       $_validate = TRUE;
     }
     else {
@@ -130,7 +129,7 @@ class GigyaKeysForm extends ConfigFormBase {
     }
 
     // APP secret key was changed ?
-    $temp_access_key = $form_state->getValue('gigya_application_secret_key');
+    $temp_access_key = $this->getValue($form_state, 'gigya_application_secret_key');
     if (!empty($temp_access_key) && $temp_access_key !== "*********") {
       $_gigya_application_secret_key = $temp_access_key;
       $_validate = TRUE;
@@ -149,12 +148,12 @@ class GigyaKeysForm extends ConfigFormBase {
 
 
 
-    if ($form_state->getValue('gigya_data_center') != $config->get('gigya.gigya_data_center') || $form_state->getValue('gigya_other_data_center') != $config->get('gigya.gigya_other_data_center')) {
-      if ($form_state->getValue('gigya_data_center') == 'other') {
-        $_gigya_data_center = $form_state->getValue('gigya_other_data_center');
+    if ($this->getValue($form_state, 'gigya_data_center') != $config->get('gigya.gigya_data_center') || $this->getValue($form_state, 'gigya_other_data_center') != $config->get('gigya.gigya_other_data_center')) {
+      if ($this->getValue($form_state, 'gigya_data_center') == 'other') {
+        $_gigya_data_center = $this->getValue($form_state, 'gigya_other_data_center');
       }
       else {
-        $_gigya_data_center = $form_state->getValue('gigya_data_center');
+        $_gigya_data_center = $this->getValue($form_state, 'gigya_data_center');
       }
       $_validate = TRUE;
     }
@@ -196,22 +195,26 @@ class GigyaKeysForm extends ConfigFormBase {
 
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('gigya.settings');
-    $config->set('gigya.gigya_application_key', $form_state->getValue('gigya_application_key'));
-    $config->set('gigya.gigya_api_key', $form_state->getValue('gigya_api_key'));
-    $temp_access_key = $form_state->getValue('gigya_application_secret_key');
+    $config->set('gigya.gigya_application_key', $this->getValue($form_state, 'gigya_application_key'));
+    $config->set('gigya.gigya_api_key', $this->getValue($form_state, 'gigya_api_key'));
+    $temp_access_key = $this->getValue($form_state, 'gigya_application_secret_key');
     if (!empty($temp_access_key) && $temp_access_key !== "*********") {
       $enc = GigyaHelper::enc($temp_access_key);
       $config->set('gigya.gigya_application_secret_key', $enc);
     }
 
-    if ($form_state->getValue('gigya_data_center') == 'other') {
-      $config->set('gigya.gigya_data_center', $form_state->getValue('gigya_other_data_center'));
+    if ($this->getValue($form_state, 'gigya_data_center') == 'other') {
+      $config->set('gigya.gigya_data_center', $this->getValue($form_state, 'gigya_other_data_center'));
     }
     else {
-      $config->set('gigya.gigya_data_center', $form_state->getValue('gigya_data_center'));
+      $config->set('gigya.gigya_data_center', $this->getValue($form_state, 'gigya_data_center'));
     }
 
     $config->save();
     return parent::submitForm($form, $form_state);
+  }
+
+  private function getValue($form_state, $prop_name) {
+    return trim($form_state->getValue($prop_name));
   }
 }

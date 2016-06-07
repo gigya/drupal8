@@ -25,7 +25,7 @@
 
     var ajaxSettings = {
       url: '/gigya/raas-login',
-      submit: data,
+      submit: data
     };
     var myAjaxObject = Drupal.ajax(ajaxSettings);
     myAjaxObject.execute();
@@ -36,7 +36,7 @@
     console.log(data);
     var ajaxSettings = {
       url: '/gigya/raas-profile-update',
-      submit: {gigyaProfile : data.profile},
+      submit: {gigyaProfile : data.profile}
     };
     var myAjaxObject = Drupal.ajax(ajaxSettings);
     myAjaxObject.execute();
@@ -100,6 +100,37 @@
 
 
   //init();
+  var gigyaCheckLoginStatus = function () {
+    try {
+      var getAccountInfoResponse = function (response) {
+        if (!response) {
+          return;
+        }
+        if (response.errorCode != 0) {
+          if (drupalSettings.gigyaExtra.isLogin == true) {
+            //Login in drupal but not in Gigya.
+            if (!drupalSettings.gigyaExtra.bypassRaas == true) {
+              //No bypass raas perm.
+              //Log out the user.
+              document.location = drupalSettings.path.basePath + 'user/logout';
+            }
+          }
+        }
+        else {
+          if (drupalSettings.gigyaExtra.isLogin == false) {
+            Drupal.gigya.raasRegLogin(response);
+          }
+        }
+      }
+      gigya.accounts.getAccountInfo({callback: getAccountInfoResponse});
+    } catch (e) {
+    } finally {
+    }
+
+
+  }
+
+
 
   var gigyaCheckLoginStatus = function() {
     try {
@@ -128,6 +159,7 @@
       if (!('isRaasInit' in drupalSettings.gigya)) {
         window.onGigyaServiceReady = function (serviceName) {
           gigyaHelper.checkLogout();
+          gigyaCheckLoginStatus();
           gigyaHelper.runGigyaCmsInit();
           initLoginUI();
           initRaas();

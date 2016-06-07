@@ -106,7 +106,7 @@ class GigyaController extends ControllerBase {
               session_destroy();
               $err_msg = $this->t("Oops! Something went wrong during your registration process. You are registered to the site but
             not logged-in. Please try to login again.");
-              user_cookie_save(array('gigya' => 'gigyaLogOut'));
+              GigyaHelper::saveUserLogoutCookie();
               $response->addCommand(new RedirectCommand("/"));
             }
           }

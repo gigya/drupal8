@@ -47,7 +47,7 @@ function hook_gigya_global_parameters_alter(array &$gigya_global_parameters) {
  *
  * @see CKEditorPluginManager
  */
-function hook_gigya_global_lang_alter(&$lang) {
+function hook_gigya_lang_alter(&$lang) {
   if ($lang == "en") {
     $lang = "en2";
   }

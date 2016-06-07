@@ -12,7 +12,7 @@ function gigya_page_attachments(array &$attachments) {
     $global_params = \Drupal::config('gigya.global')->get('gigya.globalParameters');
     \Drupal::moduleHandler()->alter('gigya_global_parameters', $global_params);
 
-      $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
+    $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
     $attachments['#attached']['drupalSettings']['gigya']['apiKey'] = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
 
     $lang = \Drupal::config('gigya.global')->get('gigya.language');

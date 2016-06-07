@@ -101,6 +101,28 @@
 
   //init();
 
+  var gigyaCheckLoginStatus = function() {
+    try {
+      var getAccountInfoResponse = function(response) {
+        if (response.errorCode != 0) {
+
+          if (drupalSettings.gigyaExtra.isLogin == true) {
+            //Login in drupal but not in Gigya.
+            if (!drupalSettings.gigyaExtra.bypassRaas == true) {
+              //No bypass raas perm.
+              //Log out the user.
+              document.location = drupalSettings.path.baseUrl  + 'user/logout';
+            }
+          }
+        }
+      }
+      gigya.accounts.getAccountInfo({callback: getAccountInfoResponse});
+    } catch (e) {
+    } finally {
+    }
+
+  }
+
   Drupal.behaviors.gigyaRaasInit = {
     attach: function (context, settings) {
       if (!('isRaasInit' in drupalSettings.gigya)) {
@@ -109,8 +131,16 @@
           gigyaHelper.runGigyaCmsInit();
           initLoginUI();
           initRaas();
+          gigyaCheckLoginStatus();
         }
         init();
+      }
+    }
+  };
+
+  Drupal.behaviors.gigyaCheckLoginStatus = {
+    attach: function (context, settings) {
+      if (typeof gigya !== 'undefined') {
       }
     }
   };

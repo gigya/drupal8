@@ -59,11 +59,22 @@ class GigyaHelper {
     return \Gigya\GigyaApiHelper::decrypt($str, self::getEncryptKey());
   }
 
+  public static function checkEncryptKey() {
+
+    $keypath = \Drupal::config('gigya.global')->get('gigya.keyPath');
+    $key = file_get_contents($keypath);
+    if ($key) {
+      return TRUE;
+    }
+    else {
+      return FALSE;
+    }
+  }
 
   private static function getEncryptKey() {
     $keypath = \Drupal::config('gigya.global')->get('gigya.keyPath');
     $key = file_get_contents($keypath);
-    return $key;
+    return trim($key);
     //@TODO: error handle and logs.
   }
 
@@ -96,7 +107,7 @@ class GigyaHelper {
 
         // on first module load, api & secret are empty, so no values in response
         Drupal::logger('gigya')->debug('Response from gigya <br /><pre>callId : @callId,apicall:@method</pre>',
-                                                array('@callId' => $result->getCallId(), '@method' => $method));
+                                                array('@callId' => $result->getData()->getString('callId'), '@method' => $method));
       }
       return $result;
     } catch (GSApiException $e) {

@@ -25,9 +25,18 @@ function gigya_raas_page_attachments(array &$attachments) {
         \Drupal::moduleHandler()->alter('gigya_raas_settings', $raas_login, $raas_register);
         $attachments['#attached']['drupalSettings']['gigya']['raas']['login'] = $raas_login;
         $attachments['#attached']['drupalSettings']['gigya']['raas']['register'] = $raas_register;
-
+        $attachments['#attached']['drupalSettings']['gigyaExtra'] = array('isLogin' => FALSE);
       }
       else {
+
+        $bypass_raas = TRUE;
+
+        if (Drupal::currentUser()->id() > 1 && !Drupal::currentUser()->hasPermission('bypass_gigya_raas')) {
+          $bypass_raas = FALSE;
+        }
+
+        $attachments['#attached']['drupalSettings']['gigyaExtra'] = array('bypassRaas' => $bypass_raas, 'isLogin' => TRUE);
+
         $raas_profile = array(
           'screenSet' =>  'Default-ProfileUpdate',
           'mobileScreenSet' => 'DefaultMobile-ProfileUpdate'

@@ -31,7 +31,9 @@ class GigyaKeysForm extends ConfigFormBase {
 
   public function buildForm(array $form, FormStateInterface $form_state) {
     // Form constructor
-
+    if (!GigyaHelper::checkEncryptKey()) {
+      drupal_set_message($this->t('Cannot read encrypt key'), 'error');
+    }
     $form = parent::buildForm($form, $form_state);
     $config = $this->config('gigya.settings');
     $form['gigya_api_key'] = array('#type' => 'textfield', '#title' => $this->t('Gigya API Key'),

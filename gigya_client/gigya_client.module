@@ -22,3 +22,13 @@ function gigya_client_gigya_raas_settings_alter(array &$raas_login, array &$raas
   $raas_login['mobileScreenSet'] = 'DefaultMobile-RegistrationLogin';
   $raas_login['startScreen'] = 'gigya-login-screen';
 }
+
+/**
+ * Implements hook_gigya_raas_profile_settings_alter().
+ */
+/**
+ * Implements hook_gigya_raas_profile_settings_alter().
+ */
+function gigya_client_gigya_raas_profile_settings_alter(array &$raas_profile) {
+  $raas_profile['screenSet'] = 'Default-ProfileUpdate';
+}

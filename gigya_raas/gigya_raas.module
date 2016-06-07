@@ -35,6 +35,7 @@ function gigya_raas_page_attachments(array &$attachments) {
           'screenSet' =>  'Default-ProfileUpdate',
           'mobileScreenSet' => 'DefaultMobile-ProfileUpdate'
         );
+        \Drupal::moduleHandler()->alter('gigya_raas_profile_settings', $raas_profile);
         $attachments['#attached']['drupalSettings']['gigya']['raas']['profile'] = $raas_profile;
       }
       $attachments['#attached']['library'][] = 'gigya_raas/gigyaRaas';

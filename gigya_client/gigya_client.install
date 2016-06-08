@@ -5,15 +5,10 @@
  * Installation functions for gigya_client module.
  */
 
-use Drupal\User\RoleInterface;
-
-/**
- * Implements hook_install.
- */
-function gigya_install() {
+function gigya_client_install() {
 
 }
 
-function gigya_uninstall() {
+function gigya_client_uninstall() {
 
 }

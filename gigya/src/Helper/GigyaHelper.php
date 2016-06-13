@@ -7,11 +7,11 @@
 
 namespace Drupal\gigya\Helper;
 
-use Behat\Mink\Exception\Exception;
 use Drupal;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Database\Connection;
 use Drupal\user\Entity\User;
+use Exception;
 use Gigya\GigyaApiHelper;
 use Gigya\sdk\GigyaApiRequest;
 use Gigya\sdk\GSApiException;
@@ -21,8 +21,8 @@ use Gigya\user\GigyaUser;
 use Gigya\user\GigyaUserFactory;
 
 
-class GigyaHelper {
-  private static function getNestedValue($obj, $keys) {
+class GigyaHelper implements GigyaHelperInterface{
+  public function getNestedValue($obj, $keys) {
     while (!empty($keys)) {
       $key = array_shift($keys);
 
@@ -51,15 +51,15 @@ class GigyaHelper {
     return $obj;
   }
 
-  public static function enc($str) {
-    return \Gigya\GigyaApiHelper::enc($str, self::getEncryptKey());
+  public function enc($str) {
+    return \Gigya\GigyaApiHelper::enc($str, $this->getEncryptKey());
   }
 
-  public static function decrypt($str) {
-    return \Gigya\GigyaApiHelper::decrypt($str, self::getEncryptKey());
+  public function decrypt($str) {
+    return \Gigya\GigyaApiHelper::decrypt($str, $this->getEncryptKey());
   }
 
-  public static function checkEncryptKey() {
+  public function checkEncryptKey() {
 
     $keypath = \Drupal::config('gigya.global')->get('gigya.keyPath');
     $key = file_get_contents($keypath);
@@ -71,16 +71,18 @@ class GigyaHelper {
     }
   }
 
-  private static function getEncryptKey() {
+  public function getEncryptKey() {
     $keypath = \Drupal::config('gigya.global')->get('gigya.keyPath');
-    $key = file_get_contents($keypath);
-    return trim($key);
+    if ($key = file_get_contents($keypath)) {
+      return trim($key);
+    }
+    return FALSE;
     //@TODO: error handle and logs.
   }
 
-  private static function getAccessParams() {
+  public function getAccessParams() {
     $access_params = array();
-    $key = self::getEncryptKey();
+    $key = $this->getEncryptKey();
 
     $access_params['api_key'] = Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
     $access_params['app_secret'] = GigyaApiHelper::decrypt(Drupal::config('gigya.settings')->get('gigya.gigya_application_secret_key'), $key);
@@ -89,16 +91,16 @@ class GigyaHelper {
     return $access_params;
   }
 
-  public static function sendApiCall($method, $params = null, $access_params = FALSE) {
+  public function sendApiCall($method, $params = null, $access_params = FALSE) {
     try {
       if (!$access_params) {
-        $access_params = self::getAccessParams();
+        $access_params = $this->getAccessParams();
       }
       if ($params == null) {
         $params = new GSObject();
       }
 
-      $params->put('environment', self::getEnvString());
+      $params->put('environment', $this->getEnvString());
 
       $request = new GigyaApiRequest($access_params['api_key'], $access_params['app_secret'], $method, $params, $access_params['data_center'], TRUE, $access_params['app_key']);
 
@@ -129,10 +131,11 @@ class GigyaHelper {
 
   }
 
-  public static function validateUid($uid, $uid_sig, $sig_timestamp) {
+  public function validateUid($uid, $uid_sig, $sig_timestamp) {
     try {
-      $params = array('environment' => self::getEnvString());
-      return self::getGigyaApiHelper()->validateUid($uid, $uid_sig, $sig_timestamp, NULL, NULL, $params);
+      $params = array('environment' => $this->getEnvString());
+
+      return $this->getGigyaApiHelper()->validateUid($uid, $uid_sig, $sig_timestamp, NULL, NULL, $params);
     } catch (GSApiException $e) {
       return false;
     }
@@ -141,33 +144,33 @@ class GigyaHelper {
     }
   }
 
-  public static function getGigyaApiHelper() {
-    $access_params = self::getAccessParams();
+  public function getGigyaApiHelper() {
+    $access_params = $this->getAccessParams();
     return new GigyaApiHelper($access_params['api_key'], $access_params['app_key'], $access_params['app_secret'], $access_params['data_center']);
   }
 
-  public static function saveUserLogoutCookie() {
+  public function saveUserLogoutCookie() {
     user_cookie_save(array('gigya' => 'gigyaLogOut'));
   }
 
-  public static function getUidByMail($mail) {
+  public function getUidByMail($mail) {
     return \Drupal::entityQuery('user')
       ->condition('mail', Connection::escapeLike($mail), 'LIKE')
       ->execute();
   }
 
-  public static function getUidByUUID($uuid) {
+  public function getUidByUUID($uuid) {
     return  \Drupal::entityManager()->loadEntityByUuid('user', $uuid);
   }
 
 
-  public static function getUidByName($name) {
+  public function getUidByName($name) {
     return \Drupal::entityQuery('user')
       ->condition('name', Connection::escapeLike($name), 'LIKE')
       ->execute();
   }
 
-  public static function processFieldMapping($gigya_data, User $drupal_user, $profileOnly = false) {
+  public function processFieldMapping($gigya_data, User $drupal_user, $profileOnly = false) {
     $field_map = \Drupal::config('gigya.global')->get('gigya.fieldMapping');
     \Drupal::moduleHandler()->alter('gigya_raas_map_data', $gigya_data, $drupal_user, $field_map);
     foreach ($field_map as $drupal_field => $raas_field) {
@@ -180,7 +183,7 @@ class GigyaHelper {
           continue;
         }
       }
-      $val = self::getNestedValue($gigya_data, $raas_field_parts);
+      $val = $this->getNestedValue($gigya_data, $raas_field_parts);
       if ($val !== NULL) {
         $drupal_user->set($drupal_field, $val);
       }
@@ -188,11 +191,11 @@ class GigyaHelper {
 
   }
 
-  public static function getGigyaUserFromArray($data) {
+  public function getGigyaUserFromArray($data) {
     return GigyaUserFactory::createGigyaProfileFromArray($data);
   }
 
-  public static function getGigyaLanguages() {
+  public function getGigyaLanguages() {
 
     return array("en" => "English (default)","ar" => "Arabic","br" => "Bulgarian","ca" => "Catalan","hr" => "Croatian",
                 "cs" => "Czech","da" => "Danish","nl" => "Dutch","fi" => "Finnish","fr" => "French","de" => "German",
@@ -212,7 +215,7 @@ class GigyaHelper {
    * @return string
    *  the environment string to add to the API call.
    */
-  private static function getEnvString() {
+  public function getEnvString() {
     $info = system_get_info('module', 'gigya');
     return "cms_version:Drupal_" . \Drupal::VERSION . ",gigya_version:Gigya_module_" .$info['version'];
   }

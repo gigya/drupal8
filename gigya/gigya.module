@@ -1,4 +1,5 @@
 <?php
+use Drupal\gigya\Helper\GigyaHelper;
 
 /**
  * Implements hook_page_attachments().
@@ -19,7 +20,10 @@ function gigya_page_attachments(array &$attachments) {
     //Check if lang is in auto mode.
     if (strtolower($lang) == 'auto') {
       $lang = \Drupal::languageManager()->getCurrentLanguage()->getId();
-      $languages = \Drupal\gigya\Helper\GigyaHelper::getGigyaLanguages();
+
+      $helper = new GigyaHelper();
+
+      $languages = $helper->getGigyaLanguages();
 
       if (!array_key_exists($lang, $languages)) {
         //If we do not have the lang in gigya set the lang to the fallback.

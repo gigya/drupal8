@@ -12,10 +12,14 @@ use Drupal;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\gigya\Helper\GigyaHelper;
-use Gigya\GigyaApiHelper;
+use Drupal\gigya\Helper\GigyaHelperInterface;
 use Gigya\sdk\GSObject;
 
 class GigyaKeysForm extends ConfigFormBase {
+  /**
+   * @var Drupal\gigya\Helper\GigyaHelperInterface
+   */
+  public $helper = false;
   /**
    * Gets the configuration names that will be editable.
    *
@@ -29,9 +33,23 @@ class GigyaKeysForm extends ConfigFormBase {
     ];
   }
 
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  /**
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   * @param GigyaHelperInterface $helper
+   * @return array
+   */
+  public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL) {
     // Form constructor
-    if (!GigyaHelper::checkEncryptKey()) {
+
+
+    if ($helper == NULL) {
+      $this->helper = new GigyaHelper();
+    }
+    else {
+      $this->helper = $helper;
+    }
+    if (!$this->helper->checkEncryptKey()) {
       drupal_set_message($this->t('Cannot read encrypt key'), 'error');
     }
     $form = parent::buildForm($form, $form_state);
@@ -47,7 +65,7 @@ class GigyaKeysForm extends ConfigFormBase {
     $key = $config->get('gigya.gigya_application_secret_key');
     $access_key = "";
     if (!empty($key)) {
-      $access_key = GigyaHelper::decrypt($key);
+      $access_key = $this->helper->decrypt($key);
     }
 
     $form['gigya_application_secret_key'] = array('#type' => 'textfield', '#title' => $this->t('Gigya Application Secret Key'));
@@ -101,8 +119,14 @@ class GigyaKeysForm extends ConfigFormBase {
 
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
+    //Encrypt key error.
+    if (!$this->helper->checkEncryptKey()) {
+      $form_state->setErrorByName('gigya_api_key', "");
+      return;
+    }
     //Check if the form has errors, if true we do not need to validate the user input because it has errors already.
     if ($form_state->getErrors()) {
+
       return;
     }
 
@@ -137,7 +161,7 @@ class GigyaKeysForm extends ConfigFormBase {
     else {
       $key = $config->get('gigya.gigya_application_secret_key');
       if (!empty($key)) {
-        $_gigya_application_secret_key = GigyaHelper::decrypt($key);
+        $_gigya_application_secret_key = $this->helper->decrypt($key);
       }
       else {
         $_gigya_application_secret_key = "";
@@ -145,8 +169,6 @@ class GigyaKeysForm extends ConfigFormBase {
     }
 
     // Data Center was changed ?
-
-
 
     if ($this->getValue($form_state, 'gigya_data_center') != $config->get('gigya.gigya_data_center') || $this->getValue($form_state, 'gigya_other_data_center') != $config->get('gigya.gigya_other_data_center')) {
       if ($this->getValue($form_state, 'gigya_data_center') == 'other') {
@@ -168,7 +190,10 @@ class GigyaKeysForm extends ConfigFormBase {
       $access_params['data_center'] = $_gigya_data_center;
       $params = new GSObject();
       $params->put('url', 'http://gigya.com');
-      $res = GigyaHelper::sendApiCall('shortenURL', $params, $access_params);
+
+
+
+      $res = $this->helper->sendApiCall('shortenURL', $params, $access_params);
       $valid = FALSE;
       if ($res->getErrorCode() == 0) {
         $valid = TRUE;
@@ -178,6 +203,7 @@ class GigyaKeysForm extends ConfigFormBase {
           $code = $res->getErrorCode();
           $msg = $res->getMessage();
           //@TODO: see how we can print markup in the error messages.
+
           $form_state->setErrorByName('gigya_api_key', $this->t("Gigya API error: {$code} - {$msg}.") .
           "For more information please refer to <a href=http://developers.gigya.com/037_API_reference/zz_Response_Codes_and_Errors target=_blank>Response_Codes_and_Errors page</a>");
           Drupal::logger('gigya')->error('Error setting API key, error code: @code - @msg', array('@code' => $code, '@msg' => $msg));
@@ -199,7 +225,7 @@ class GigyaKeysForm extends ConfigFormBase {
     $config->set('gigya.gigya_api_key', $this->getValue($form_state, 'gigya_api_key'));
     $temp_access_key = $this->getValue($form_state, 'gigya_application_secret_key');
     if (!empty($temp_access_key) && $temp_access_key !== "*********") {
-      $enc = GigyaHelper::enc($temp_access_key);
+      $enc = $this->helper->enc($temp_access_key);
       $config->set('gigya.gigya_application_secret_key', $enc);
     }
 

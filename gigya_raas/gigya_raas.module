@@ -81,5 +81,6 @@ function gigya_raas_user_login($account) {
 }
 
 function gigya_raas_user_logout($account) {
-  GigyaHelper::saveUserLogoutCookie();
+  $helper = new GigyaHelper();
+  $helper->saveUserLogoutCookie();
 }

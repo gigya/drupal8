@@ -21,6 +21,19 @@ use Drupal\gigya\Helper\GigyaHelper;
  */
 class GigyaController extends ControllerBase {
 
+  protected $helper;
+
+
+  /**
+   * Construct method.
+   * @param bool $helper
+   */
+  public function __construct($helper = FALSE) {
+    if ($helper == FALSE) {
+      $this->helper = new GigyaHelper();
+    }
+  }
+
   /**
    * Process gigya raas login.
    *
@@ -30,9 +43,9 @@ class GigyaController extends ControllerBase {
    *   The Ajax response
    */
   public function gigyaRaasProfileAjax(Request $request) {
-    $gigyaProfile = GigyaHelper::getGigyaUserFromArray($request->get('gigyaProfile'));
+    $gigyaProfile = $this->helper->getGigyaUserFromArray($request->get('gigyaProfile'));
     $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
-    GigyaHelper::processFieldMapping($gigyaProfile, $user, TRUE);
+    $this->helper->processFieldMapping($gigyaProfile, $user, TRUE);
     $user->save();
   }
 
@@ -55,14 +68,14 @@ class GigyaController extends ControllerBase {
 
       $response = new AjaxResponse();
 
-      if ($gigyaUser = GigyaHelper::validateUid($guid, $uid_sig, $sig_timestamp)) {
+      if ($gigyaUser = $this->helper->validateUid($guid, $uid_sig, $sig_timestamp)) {
         $email = $gigyaUser->getProfile()->getEmail();
         if (empty($email)) {
           $err_msg = $this->t('Email address is required by Drupal and is missing, please contact the site administrator.');
         }
         else {
-          $user = GigyaHelper::getUidByUUID($guid);
-          $uids = GigyaHelper::getUidByMail($email);
+          $user = $this->helper->getUidByUUID($guid);
+          $uids = $this->helper->getUidByMail($email);
           if ($user || $uids) {
             if ($gigyaUser->isRaasPrimaryUser($email)) {
               /* Set global variable so we would know the user as logged in
@@ -73,7 +86,7 @@ class GigyaController extends ControllerBase {
                 $user = User::load(array_shift($uids));
               }
               //Log the user in.
-              GigyaHelper::processFieldMapping($gigyaUser, $user);
+              $this->helper->processFieldMapping($gigyaUser, $user);
               $user->save();
               user_login_finalize($user);
 
@@ -83,7 +96,7 @@ class GigyaController extends ControllerBase {
                * If this user is not the primary user account in gigya we disable the account.
                * (we don't want two different users with the same email)
                */
-              GigyaHelper::sendApiCall('accounts.setAccountInfo', array('UID' => $gigyaUser->getUID(), 'isActive' => FALSE));
+              $this->helper->sendApiCall('accounts.setAccountInfo', array('UID' => $gigyaUser->getUID(), 'isActive' => FALSE));
               $err_msg = $this->t('We found your email in our system.<br />Please use your existing account to login to the site, or create a new account using a different email address.');
             }
           }
@@ -91,7 +104,7 @@ class GigyaController extends ControllerBase {
             $user = User::create(array('name' => $email, 'pass' => user_password(), 'status' => 1));
 
 
-            GigyaHelper::processFieldMapping($gigyaUser, $user);
+            $this->helper->processFieldMapping($gigyaUser, $user);
             /* Allow other modules to modify the data before user
             is created in drupal database. */
 
@@ -106,14 +119,14 @@ class GigyaController extends ControllerBase {
               session_destroy();
               $err_msg = $this->t("Oops! Something went wrong during your registration process. You are registered to the site but
             not logged-in. Please try to login again.");
-              GigyaHelper::saveUserLogoutCookie();
+              $this->helper->saveUserLogoutCookie();
               $response->addCommand(new RedirectCommand("/"));
             }
           }
         }
       }
       else {
-        GigyaHelper::saveUserLogoutCookie();
+        $this->helper->saveUserLogoutCookie();
         $err_msg = $this->t("Oops! Something went wrong during your login/registration process. Please try to login/register again.");
       }
       if ($err_msg !== FALSE) {

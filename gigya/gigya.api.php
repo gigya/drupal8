@@ -25,7 +25,6 @@
  * @see CKEditorPluginManager
  */
 function hook_gigya_raas_map_data_alter(array &$gigya_data, User &$drupal_user, array &$field_map) {
-
   $field_map['name2'] = 'profile.name2';
 }
 

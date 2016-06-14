@@ -172,22 +172,28 @@ class GigyaHelper implements GigyaHelperInterface{
   }
 
   public function processFieldMapping($gigya_data, User $drupal_user, $profileOnly = false) {
-    $field_map = \Drupal::config('gigya.global')->get('gigya.fieldMapping');
-    \Drupal::moduleHandler()->alter('gigya_raas_map_data', $gigya_data, $drupal_user, $field_map);
-    foreach ($field_map as $drupal_field => $raas_field) {
-      $raas_field_parts = explode(".", $raas_field);
-      if ($profileOnly) {
-        if (isset($raas_field_parts[0]) && $raas_field_parts[0] == 'profile') {
-          array_shift($raas_field_parts);
+    try {
+      $field_map = \Drupal::config('gigya.global')->get('gigya.fieldMapping');
+      \Drupal::moduleHandler()
+        ->alter('gigya_raas_map_data', $gigya_data, $drupal_user, $field_map);
+      foreach ($field_map as $drupal_field => $raas_field) {
+        $raas_field_parts = explode(".", $raas_field);
+        if ($profileOnly) {
+          if (isset($raas_field_parts[0]) && $raas_field_parts[0] == 'profile') {
+            array_shift($raas_field_parts);
+          }
+          else {
+            continue;
+          }
         }
-        else {
-          continue;
+        $val = $this->getNestedValue($gigya_data, $raas_field_parts);
+        if ($val !== NULL) {
+          $drupal_user->set($drupal_field, $val);
         }
       }
-      $val = $this->getNestedValue($gigya_data, $raas_field_parts);
-      if ($val !== NULL) {
-        $drupal_user->set($drupal_field, $val);
-      }
+    } catch (Exception $e) {
+      Drupal::logger('gigya')->debug('processFieldMapping error @message',
+        array('@message' => $e->getMessage()));
     }
 
   }

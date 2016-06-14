@@ -137,7 +137,6 @@ class GigyaKeysForm extends ConfigFormBase {
     // API key was changed ?
     if ($this->getValue($form_state, 'gigya_api_key') != $config->get('gigya.gigya_api_key')) {
       $_gigya_api_key = $this->getValue($form_state, 'gigya_api_key');
-      $_validate = TRUE;
     }
     else {
       $_gigya_api_key = $config->get('gigya.gigya_api_key');
@@ -146,7 +145,6 @@ class GigyaKeysForm extends ConfigFormBase {
     // APP key was changed ?
     if ($this->getValue($form_state, 'gigya_application_key') != $config->get('gigya.gigya_application_key')) {
       $_gigya_application_key = $this->getValue($form_state, 'gigya_application_key');
-      $_validate = TRUE;
     }
     else {
       $_gigya_application_key = $config->get('gigya.gigya_application_key');
@@ -156,7 +154,6 @@ class GigyaKeysForm extends ConfigFormBase {
     $temp_access_key = $this->getValue($form_state, 'gigya_application_secret_key');
     if (!empty($temp_access_key) && $temp_access_key !== "*********") {
       $_gigya_application_secret_key = $temp_access_key;
-      $_validate = TRUE;
     }
     else {
       $key = $config->get('gigya.gigya_application_secret_key');
@@ -177,45 +174,41 @@ class GigyaKeysForm extends ConfigFormBase {
       else {
         $_gigya_data_center = $this->getValue($form_state, 'gigya_data_center');
       }
-      $_validate = TRUE;
     }
     else {
       $_gigya_data_center = $config->get('gigya.gigya_data_center');
     }
-    if ($_validate) {
-      $access_params = array();
-      $access_params['api_key'] = $_gigya_api_key;
-      $access_params['app_secret'] = $_gigya_application_secret_key;
-      $access_params['app_key'] = $_gigya_application_key;
-      $access_params['data_center'] = $_gigya_data_center;
-      $params = new GSObject();
-      $params->put('url', 'http://gigya.com');
+    $access_params = array();
+    $access_params['api_key'] = $_gigya_api_key;
+    $access_params['app_secret'] = $_gigya_application_secret_key;
+    $access_params['app_key'] = $_gigya_application_key;
+    $access_params['data_center'] = $_gigya_data_center;
+    $params = new GSObject();
+    $params->put('url', 'http://gigya.com');
 
 
+    $res = $this->helper->sendApiCall('shortenURL', $params, $access_params);
+    $valid = FALSE;
+    if ($res->getErrorCode() == 0) {
+      $valid = TRUE;
+    }
+    if ($valid !== TRUE) {
+      if (is_object($res)) {
+        $code = $res->getErrorCode();
+        $msg = $res->getMessage();
+        //@TODO: see how we can print markup in the error messages.
 
-      $res = $this->helper->sendApiCall('shortenURL', $params, $access_params);
-      $valid = FALSE;
-      if ($res->getErrorCode() == 0) {
-        $valid = TRUE;
-      }
-      if ($valid !== TRUE) {
-        if (is_object($res)) {
-          $code = $res->getErrorCode();
-          $msg = $res->getMessage();
-          //@TODO: see how we can print markup in the error messages.
-
-          $form_state->setErrorByName('gigya_api_key', $this->t("Gigya API error: {$code} - {$msg}.") .
-          "For more information please refer to <a href=http://developers.gigya.com/037_API_reference/zz_Response_Codes_and_Errors target=_blank>Response_Codes_and_Errors page</a>");
-          Drupal::logger('gigya')->error('Error setting API key, error code: @code - @msg', array('@code' => $code, '@msg' => $msg));
-        }
-        else {
-          $form_state->setErrorByName('gigya_api_key', $this->t("Your API key or Secret key could not be validated. Please try again"));
-        }
+        $form_state->setErrorByName('gigya_api_key', $this->t("Gigya API error: {$code} - {$msg}.") .
+        "For more information please refer to <a href=http://developers.gigya.com/037_API_reference/zz_Response_Codes_and_Errors target=_blank>Response_Codes_and_Errors page</a>");
+        Drupal::logger('gigya')->error('Error setting API key, error code: @code - @msg', array('@code' => $code, '@msg' => $msg));
       }
       else {
-        drupal_set_message($this->t('Gigya validated properly. This site is authorized to use Gigya services'));
-
+        $form_state->setErrorByName('gigya_api_key', $this->t("Your API key or Secret key could not be validated. Please try again"));
       }
+    }
+    else {
+      drupal_set_message($this->t('Gigya validated properly. This site is authorized to use Gigya services'));
+
     }
   }
 

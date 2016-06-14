@@ -105,8 +105,7 @@ class GigyaController extends ControllerBase {
           }
           else {
             $user = User::create(array('name' => $email, 'pass' => user_password(), 'status' => 1));
-
-
+            $user->save();
             $this->helper->processFieldMapping($gigyaUser, $user);
             /* Allow other modules to modify the data before user
             is created in drupal database. */

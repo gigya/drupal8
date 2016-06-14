@@ -32,6 +32,9 @@ class GigyaController extends ControllerBase {
     if ($helper == FALSE) {
       $this->helper = new GigyaHelper();
     }
+    else {
+      $this->helper = $helper;
+    }
   }
 
   /**
@@ -44,7 +47,7 @@ class GigyaController extends ControllerBase {
    */
   public function gigyaRaasProfileAjax(Request $request) {
     $gigyaProfile = $this->helper->getGigyaUserFromArray($request->get('gigyaProfile'));
-    $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+    $user = User::load(\Drupal::currentUser()->id());
     $this->helper->processFieldMapping($gigyaProfile, $user, TRUE);
     $user->save();
   }
@@ -130,6 +133,7 @@ class GigyaController extends ControllerBase {
         $err_msg = $this->t("Oops! Something went wrong during your login/registration process. Please try to login/register again.");
       }
       if ($err_msg !== FALSE) {
+
         $response->addCommand(new AlertCommand($err_msg));
       }
       else {

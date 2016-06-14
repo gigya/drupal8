@@ -77,7 +77,7 @@ class GigyaController extends ControllerBase {
           $err_msg = $this->t('Email address is required by Drupal and is missing, please contact the site administrator.');
         }
         else {
-          $user = $this->helper->getUidByUUID($guid);
+          $user = $this->helper->getUidByUUID($gigyaUser->getUID());
           $uids = $this->helper->getUidByMail($email);
           if ($user || $uids) {
             if ($gigyaUser->isRaasPrimaryUser($email)) {

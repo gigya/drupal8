@@ -154,8 +154,9 @@ class GigyaHelper implements GigyaHelperInterface{
   }
 
   public function getUidByMail($mail) {
+
     return \Drupal::entityQuery('user')
-      ->condition('mail', Connection::escapeLike($mail), 'LIKE')
+      ->condition('mail',  \Drupal\Core\Database\Database::getConnection()->escapeLike($mail), 'LIKE')
       ->execute();
   }
 
@@ -166,7 +167,7 @@ class GigyaHelper implements GigyaHelperInterface{
 
   public function getUidByName($name) {
     return \Drupal::entityQuery('user')
-      ->condition('name', Connection::escapeLike($name), 'LIKE')
+      ->condition('name',  \Drupal\Core\Database\Database::getConnection()->escapeLike($name), 'LIKE')
       ->execute();
   }
 

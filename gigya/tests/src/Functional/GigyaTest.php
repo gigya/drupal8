@@ -384,6 +384,8 @@ class GigyaTest extends BrowserTestBase {
 
     $this->key = $this->trueKey;
     $this->checkGoodLogin();
+    $this->drupalLogin($this->gigyaAdmin);
+    $this->drupalLogout();
   }
 
   public function checkBadForm($form_state) {
@@ -412,13 +414,65 @@ class GigyaTest extends BrowserTestBase {
 
   }
 
+  public function testUI() {
+    $this->drupalLogin($this->gigyaAdmin);
+    $this->drupalGet('admin/config/gigya/keys');
+    $this->assertSession()->statusCodeEquals('200');
+    $this->assertSession()->elementExists('css', '#edit-gigya-application-secret-key');
+    $this->assertSession()->elementExists('css', '#edit-gigya-api-key');
+    $this->assertSession()->elementExists('css', '#edit-gigya-application-key');
+
+    $form_state = new FormState();
+    $values['gigya_api_key'] = ' apikey ';
+    $values['gigya_application_key'] = ' appkey ';
+    $values['gigya_application_secret_key'] = ' appsecret ';
+    $values['gigya_data_center'] = 'us1.gigya.com';
+    $form_state->setValues($values);
+
+    \Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state, $this->helperMock);
+    $msg = drupal_get_messages();
+    $this->assertArrayNotHasKey('error', $msg);
+
+    $this->drupalLogout();
+
+    $this->checkGoodLogin();
+
+    $form_state = new FormState();
+    $values['gigya_api_key'] = 'apikey';
+    $values['gigya_application_key'] = 'appkey';
+    $values['gigya_application_secret_key'] = 'appsecret';
+    $values['gigya_data_center'] = 'other';
+    $form_state->setValues($values);
+
+    $this->checkBadForm($form_state);
+
+    $form_state = new FormState();
+    $values['gigya_api_key'] = 'apikey';
+    $values['gigya_application_key'] = 'appkey';
+    $values['gigya_application_secret_key'] = 'wrong';
+    $values['gigya_data_center'] = 'us1.gigya.com';
+    $form_state->setValues($values);
+
+    $this->checkBadForm($form_state);
 
 
-  /**
-   *  Test login
-   */
-  public function testLogin() {
-    ;
+    $form_state = new FormState();
+    $values['gigya_api_key'] = 'apikey';
+    $values['gigya_application_key'] = 'appkey';
+    $values['gigya_application_secret_key'] = 'wrong';
+    $values['gigya_data_center'] = 'us1.gigya.com';
+    $form_state->setValues($values);
+
+    $this->checkBadForm($form_state);
+
+    $form_state = new FormState();
+    $values['gigya_api_key'] = 'apikey';
+    $values['gigya_application_key'] = 'wrong';
+    $values['gigya_application_secret_key'] = 'appsecret';
+    $values['gigya_data_center'] = 'us1.gigya.com';
+    $form_state->setValues($values);
+
+    $this->checkBadForm($form_state);
 
   }
 

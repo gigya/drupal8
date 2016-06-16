@@ -16,12 +16,12 @@ function gigya_raas_page_attachments(array &$attachments) {
       if (\Drupal::currentUser()->isAnonymous()) {
         $raas_login = array(
           'screenSet' =>  'Default-RegistrationLogin',
-          'mobileScreenSet' => 'DefaultMobile-RegistrationLogin',
+          'mobileScreenSet' => '',
           'startScreen' => 'gigya-login-screen',
         );
         $raas_register = array(
           'screenSet' => 'Default-RegistrationLogin',
-          'mobileScreenSet' => 'DefaultMobile-RegistrationLogin',
+          'mobileScreenSet' => '',
           'startScreen' => 'gigya-register-screen',
         );
         \Drupal::moduleHandler()->alter('gigya_raas_settings', $raas_login, $raas_register);

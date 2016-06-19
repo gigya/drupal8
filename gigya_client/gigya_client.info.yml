@@ -1,6 +1,0 @@
-name: Gigya client
-type: module
-description: 'Gigya client test module'
-core: 8.x
-dependencies:
-  - gigya

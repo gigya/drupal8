@@ -94,14 +94,6 @@ class GigyaController extends ControllerBase {
               user_login_finalize($user);
 
             }
-            else {
-              /**
-               * If this user is not the primary user account in gigya we disable the account.
-               * (we don't want two different users with the same email)
-               */
-              $this->helper->sendApiCall('accounts.setAccountInfo', array('UID' => $gigyaUser->getUID(), 'isActive' => FALSE));
-              $err_msg = $this->t('We found your email in our system.<br />Please use your existing account to login to the site, or create a new account using a different email address.');
-            }
           }
           else {
             $user = User::create(array('name' => $email, 'pass' => user_password(), 'status' => 1));

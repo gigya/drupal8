@@ -80,23 +80,35 @@ class GigyaController extends ControllerBase {
           $user = $this->helper->getUidByUUID($gigyaUser->getUID());
           $uids = $this->helper->getUidByMail($email);
           if ($user || $uids) {
-            if ($gigyaUser->isRaasPrimaryUser($email)) {
-              /* Set global variable so we would know the user as logged in
-                 RaaS in other functions down the line.*/
+            /* Set global variable so we would know the user as logged in
+               RaaS in other functions down the line.*/
 
-              $raas_login = true;
-              if ($uids) {
-                $user = User::load(array_shift($uids));
-              }
-              //Log the user in.
-              $this->helper->processFieldMapping($gigyaUser, $user);
-              $user->save();
-              user_login_finalize($user);
-
+            $raas_login = true;
+            if ($uids) {
+              $user = User::load(array_shift($uids));
             }
+            //Log the user in.
+            $this->helper->processFieldMapping($gigyaUser, $user);
+            $user->save();
+            user_login_finalize($user);
           }
           else {
-            $user = User::create(array('name' => $email, 'pass' => user_password(), 'status' => 1));
+            $uname = !empty($gigya_account['profile']['username']) ? $gigya_account['profile']['username'] : $gigya_account['profile']['firstName'];
+            if (gigya_check_username_available($uname)) {
+              $username = $uname;
+            }
+            else {
+              // If user name is taken use first name if it is not empty.
+              if (!empty($gigya_account['profile']['firstName']) && gigya_check_username_available($gigya_account['profile']['firstName'])) {
+                $username = $gigya_account['profile']['firstName'];
+              }
+              else {
+                // When all fails add unique id  to the username so we could register the user.
+                $username = $uname . '_' . uniqid();
+              }
+            }
+
+            $user = User::create(array('name' => $username, 'pass' => user_password(), 'status' => 1));
             $user->save();
             $this->helper->processFieldMapping($gigyaUser, $user);
             /* Allow other modules to modify the data before user

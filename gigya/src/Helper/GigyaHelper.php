@@ -224,6 +224,6 @@ class GigyaHelper implements GigyaHelperInterface{
    */
   public function getEnvString() {
     $info = system_get_info('module', 'gigya');
-    return "cms_version:Drupal_" . \Drupal::VERSION . ",gigya_version:Gigya_module_" .$info['version'];
+    return '{"cms_version":"Drupal_' . \Drupal::VERSION . '","gigya_version":"Gigya_module_' .$info['version'] . '"}';
   }
 }

@@ -93,14 +93,16 @@ class GigyaController extends ControllerBase {
             user_login_finalize($user);
           }
           else {
-            $uname = !empty($gigya_account['profile']['username']) ? $gigya_account['profile']['username'] : $gigya_account['profile']['firstName'];
-            if (gigya_check_username_available($uname)) {
+
+
+            $uname = !empty($gigyaUser->getProfile()->getUsername()) ? $gigyaUser->getProfile()->getUsername() : $gigyaUser->getProfile()->getFirstName();
+            if (!$this->helper->getUidByName($uname)) {
               $username = $uname;
             }
             else {
               // If user name is taken use first name if it is not empty.
-              if (!empty($gigya_account['profile']['firstName']) && gigya_check_username_available($gigya_account['profile']['firstName'])) {
-                $username = $gigya_account['profile']['firstName'];
+              if (!empty($gigyaUser->getProfile()->getFirstName()) && (!$this->helper->getUidByName($gigyaUser->getProfile()->getFirstName()))) {
+                $username = $gigyaUser->getProfile()->getFirstName();
               }
               else {
                 // When all fails add unique id  to the username so we could register the user.
@@ -111,6 +113,7 @@ class GigyaController extends ControllerBase {
             $user = User::create(array('name' => $username, 'pass' => user_password(), 'status' => 1));
             $user->save();
             $this->helper->processFieldMapping($gigyaUser, $user);
+            $user->set('name', $username);
             /* Allow other modules to modify the data before user
             is created in drupal database. */
 

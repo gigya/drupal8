@@ -42,7 +42,6 @@ class GigyaKeysForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL) {
     // Form constructor
 
-
     if ($helper == NULL) {
       $this->helper = new GigyaHelper();
     }
@@ -133,7 +132,6 @@ class GigyaKeysForm extends ConfigFormBase {
     $config = $this->config('gigya.settings');
 
 
-    $_validate = FALSE;
     // API key was changed ?
     if ($this->getValue($form_state, 'gigya_api_key') != $config->get('gigya.gigya_api_key')) {
       $_gigya_api_key = $this->getValue($form_state, 'gigya_api_key');

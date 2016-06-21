@@ -1,6 +1,6 @@
 gigya.settings:
   type: mapping
-  label: 'Gigya Socialize keys settings'
+  label: 'Gigya credentials settings'
   mapping:
     gigya_api_key:
       type: text

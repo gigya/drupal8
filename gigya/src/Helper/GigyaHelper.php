@@ -12,14 +12,15 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Database\Connection;
 use Drupal\user\Entity\User;
 use Exception;
-use Gigya\GigyaApiHelper;
-use Gigya\sdk\GigyaApiRequest;
-use Gigya\sdk\GSApiException;
-use Gigya\sdk\GSObject;
+
+use Gigya\CmsStarterKit\GigyaApiHelper;
+use Gigya\CmsStarterKit\sdk\GigyaApiRequest;
+use Gigya\CmsStarterKit\sdk\GSApiException;
+use Gigya\CmsStarterKit\sdk\GSObject;
+
 use Gigya\user\GigyaProfile;
 use Gigya\user\GigyaUser;
 use Gigya\user\GigyaUserFactory;
-
 
 class GigyaHelper implements GigyaHelperInterface{
   public function getNestedValue($obj, $keys) {
@@ -50,13 +51,13 @@ class GigyaHelper implements GigyaHelperInterface{
     }
     return $obj;
   }
-
+  
   public function enc($str) {
-    return \Gigya\GigyaApiHelper::enc($str, $this->getEncryptKey());
+    return \Gigya\CmsStarterKit\GigyaApiHelper::enc($str, $this->getEncryptKey());
   }
 
   public function decrypt($str) {
-    return \Gigya\GigyaApiHelper::decrypt($str, $this->getEncryptKey());
+    return \Gigya\CmsStarterKit\GigyaApiHelper::decrypt($str, $this->getEncryptKey());
   }
 
   public function checkEncryptKey() {

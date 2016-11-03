@@ -12,15 +12,14 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Database\Connection;
 use Drupal\user\Entity\User;
 use Exception;
-
 use Gigya\CmsStarterKit\GigyaApiHelper;
 use Gigya\CmsStarterKit\sdk\GigyaApiRequest;
 use Gigya\CmsStarterKit\sdk\GSApiException;
 use Gigya\CmsStarterKit\sdk\GSObject;
+use Gigya\CmsStarterKit\user\GigyaProfile;
+use Gigya\CmsStarterKit\user\GigyaUser;
+use Gigya\CmsStarterKit\user\GigyaUserFactory;
 
-use Gigya\user\GigyaProfile;
-use Gigya\user\GigyaUser;
-use Gigya\user\GigyaUserFactory;
 
 class GigyaHelper implements GigyaHelperInterface{
   public function getNestedValue($obj, $keys) {
@@ -51,18 +50,19 @@ class GigyaHelper implements GigyaHelperInterface{
     }
     return $obj;
   }
-  
+
   public function enc($str) {
-    return \Gigya\CmsStarterKit\GigyaApiHelper::enc($str, $this->getEncryptKey());
+    return GigyaApiHelper::enc($str, $this->getEncryptKey());
   }
 
   public function decrypt($str) {
-    return \Gigya\CmsStarterKit\GigyaApiHelper::decrypt($str, $this->getEncryptKey());
+    return GigyaApiHelper::decrypt($str, $this->getEncryptKey());
   }
 
   public function checkEncryptKey() {
 
     $keypath = \Drupal::config('gigya.global')->get('gigya.keyPath');
+
     $key = file_get_contents($keypath);
     if ($key) {
       return TRUE;

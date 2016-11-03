@@ -12,7 +12,6 @@ use Drupal\Core\Ajax\AlertCommand;
 use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\user\Entity\User;
-use Gigya\user\GigyaUserFactory;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\gigya\Helper\GigyaHelper;
 

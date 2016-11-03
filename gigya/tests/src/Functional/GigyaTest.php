@@ -14,11 +14,9 @@ use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Form\FormState;
 use Drupal\gigya_raas\GigyaController;
 use Drupal\simpletest\BrowserTestBase;
-use Gigya\GigyaApiHelper;
-use Gigya\sdk\GSApiException;
-use Gigya\sdk\GSObject;
-use Gigya\sdk\GSResponse;
-use Gigya\user\GigyaUserFactory;
+use Gigya\CmsStarterKit\sdk\GSApiException;
+use Gigya\CmsStarterKit\sdk\GSResponse;
+use Gigya\CmsStarterKit\user\GigyaUserFactory;
 use Symfony\Component\HttpFoundation\Request;
 
 /**

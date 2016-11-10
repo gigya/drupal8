@@ -49,6 +49,7 @@ class GigyaController extends ControllerBase {
     $user = User::load(\Drupal::currentUser()->id());
     $this->helper->processFieldMapping($gigyaProfile, $user, TRUE);
     $user->save();
+    return new AjaxResponse();
   }
 
   /**

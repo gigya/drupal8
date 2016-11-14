@@ -27,7 +27,7 @@ class GigyaHelper implements GigyaHelperInterface{
       $key = array_shift($keys);
 
       if ($obj instanceof GigyaUser || $obj instanceof GigyaProfile) {
-        $method = "get" . strtoupper($key);
+      $method = "get" . ucfirst($key);
         $obj = $obj->$method();
       }
       else if (is_array($obj)) {

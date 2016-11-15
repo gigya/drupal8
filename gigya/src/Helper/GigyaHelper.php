@@ -189,6 +189,9 @@ class GigyaHelper implements GigyaHelperInterface{
         }
         $val = $this->getNestedValue($gigya_data, $raas_field_parts);
         if ($val !== NULL) {
+          if (is_bool($val)) {
+            $val = intval($val);
+          }
           $drupal_user->set($drupal_field, $val);
         }
       }

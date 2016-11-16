@@ -14,7 +14,7 @@
         gigya.services.socialize.showLoginUI(value);
       });
     }
-  }
+  };
 
   var onLoginHandler = function (res) {
     var data = {
@@ -29,7 +29,7 @@
     };
     var myAjaxObject = Drupal.ajax(ajaxSettings);
     myAjaxObject.execute();
-  }
+  };
 
 
   var profileUpdated = function (data) {
@@ -40,23 +40,21 @@
     };
     var myAjaxObject = Drupal.ajax(ajaxSettings);
     myAjaxObject.execute();
-  }
+  };
 
   var checkLogout = function () {
 
     var logoutCookie = gigya.utils.cookie.get('Drupal.visitor.gigya');
     if (logoutCookie == 'gigyaLogOut') {
       gigya.accounts.logout();
-      $.cookie('Drupal.visitor.gigya', null);
-      gigya.accounts.logout();
+      gigya.utils.cookie.remove('Drupal.visitor.gigya');
     }
-  }
+  };
 
 
   var logoutCallback = function () {
-    debugger;
     document.location = drupalSettings.path.baseUrl + 'user/logout';
-  }
+  };
 
   var initRaas = function () {
     if (drupalSettings.gigya.enableRaaS) {
@@ -96,7 +94,7 @@
         gigya.accounts.showScreenSet(drupalSettings.gigya.raas.profile);
       }
     }
-  }
+  };
 
   var init = function () {
     if (drupalSettings.gigya.enableRaaS) {
@@ -107,7 +105,7 @@
     }
 
     drupalSettings.gigya.isRaasInit = true;
-  }
+  };
 
 
   //init();
@@ -132,14 +130,14 @@
             onLoginHandler(response);
           }
         }
-      }
+      };
       gigya.accounts.getAccountInfo({callback: getAccountInfoResponse});
     } catch (e) {
     } finally {
     }
 
 
-  }
+  };
 
   Drupal.behaviors.gigyaRaasInit = {
     attach: function (context, settings) {
@@ -150,7 +148,7 @@
           gigyaCheckLoginStatus();
           initLoginUI();
           initRaas();
-        }
+        };
         init();
       }
     }

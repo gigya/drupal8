@@ -62,8 +62,7 @@ class GigyaHelper implements GigyaHelperInterface{
   public function checkEncryptKey() {
 
     $keypath = \Drupal::config('gigya.global')->get('gigya.keyPath');
-
-    $key = file_get_contents($keypath);
+    $key = $this->getEncKeyFile($keypath);
     if ($key) {
       return TRUE;
     }
@@ -73,7 +72,8 @@ class GigyaHelper implements GigyaHelperInterface{
   }
 
   public function getEncryptKey() {
-    $keypath = \Drupal::config('gigya.global')->get('gigya.keyPath');
+    $path = \Drupal::config('gigya.global')->get('gigya.keyPath');
+    $keypath = $this->getEncKeyFile($path);
     if ($key = file_get_contents($keypath)) {
       return trim($key);
     }
@@ -229,5 +229,14 @@ class GigyaHelper implements GigyaHelperInterface{
   public function getEnvString() {
     $info = system_get_info('module', 'gigya');
     return '{"cms_name":"Drupal","cms_version":"Drupal_' . \Drupal::VERSION . '","gigya_version":"Gigya_module_' .$info['version'] . '"}';
+  }
+
+  protected function getEncKeyFile($uri) {
+    /** @var Drupal\Core\StreamWrapper\StreamWrapperInterface $stream */
+    $stream = \Drupal::service('stream_wrapper_manager')->getViaUri($uri);
+    if ($stream == FALSE) {
+      return realpath($uri);
+    }
+    return $stream->realpath();
   }
 }

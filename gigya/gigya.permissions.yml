@@ -1,4 +1,6 @@
 bypass gigya raas:
   title: 'Bypass Registration-as-a-Service'
+  restrict access: true
 gigya major admin:
   title: 'Gigya Major Admin'
+  restrict access: true

@@ -162,7 +162,7 @@ class GigyaHelper implements GigyaHelperInterface{
   }
 
   public function getUidByUUID($uuid) {
-    return  \Drupal::entityManager()->loadEntityByUuid('user', $uuid);
+    return \Drupal::service('entity.repository')->loadEntityByUuid ('user', $uuid);
   }
 
 

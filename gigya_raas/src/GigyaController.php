@@ -12,6 +12,7 @@ use Drupal\Core\Ajax\AlertCommand;
 use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\gigya\Helper\GigyaHelper;
 
@@ -20,6 +21,7 @@ use Drupal\gigya\Helper\GigyaHelper;
  */
 class GigyaController extends ControllerBase {
 
+  /** @var GigyaHelper */
   protected $helper;
 
 
@@ -78,24 +80,36 @@ class GigyaController extends ControllerBase {
           $this->helper->saveUserLogoutCookie();
         }
         else {
+          /** @var UserInterface $user */
           $user = $this->helper->getUidByUUID($gigyaUser->getUID());
-          $uids = $this->helper->getUidByMail($email);
-          if ($user || $uids) {
+          if ($user) {
+            /** if a user has the a permission of bypass gigya raas (admin user)
+             *  they can't login via gigya
+             */
+            if ($user->hasPermission('bypass gigya raas')) {
+              \Drupal::logger('gigya_raas')->notice("User with email " . $user->getEmail() . " that has 'bypass gigya raas' permission tried to login via gigya");
+              $this->helper->saveUserLogoutCookie();
+              $err_msg = $this->t("Oops! Something went wrong during your login/registration process. Please try to login/register again.");
+              $response->addCommand(new AlertCommand($err_msg));
+              return $response;
+            }
             /* Set global variable so we would know the user as logged in
                RaaS in other functions down the line.*/
-
             $raas_login = true;
-            if ($uids) {
-              $user = User::load(array_shift($uids));
-            }
             //Log the user in.
             $this->helper->processFieldMapping($gigyaUser, $user);
             $user->save();
             user_login_finalize($user);
           }
           else {
-
-
+            $uids = $this->helper->getUidByMail($email);
+            if (!empty($uids)) {
+              \Drupal::logger('gigya_raas')->notice("User with email " . $email . " that already exists tried to register via gigya");
+              $this->helper->saveUserLogoutCookie();
+              $err_msg = $this->t("Oops! Something went wrong during your login/registration process. Please try to login/register again.");
+              $response->addCommand(new AlertCommand($err_msg));
+              return $response;
+            }
             $uname = !empty($gigyaUser->getProfile()->getUsername()) ? $gigyaUser->getProfile()->getUsername() : $gigyaUser->getProfile()->getFirstName();
             if (!$this->helper->getUidByName($uname)) {
               $username = $uname;

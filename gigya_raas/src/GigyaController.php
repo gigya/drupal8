@@ -74,7 +74,10 @@ class GigyaController extends ControllerBase {
       $response = new AjaxResponse();
 
       if ($gigyaUser = $this->helper->validateUid($guid, $uid_sig, $sig_timestamp)) {
+
+        \Drupal::logger('gigya_raas')->notice(print_r($gigyaUser->ggetProfile(), true));
         $email = $gigyaUser->getProfile()->getEmail();
+
         if (empty($email)) {
           $err_msg = $this->t('Email address is required by Drupal and is missing, please contact the site administrator.');
           $this->helper->saveUserLogoutCookie();

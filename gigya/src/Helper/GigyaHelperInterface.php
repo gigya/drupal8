@@ -16,6 +16,7 @@ interface GigyaHelperInterface {
 
   public function decrypt($str);
 
+
   public function checkEncryptKey();
 
   public function getEncryptKey();

@@ -23,6 +23,7 @@ class GigyaController extends ControllerBase {
 
   /** @var GigyaHelper */
   protected $helper;
+  protected $session_lead;
 
 
   /**
@@ -36,6 +37,9 @@ class GigyaController extends ControllerBase {
     else {
       $this->helper = $helper;
     }
+    $this->session_lead = \Drupal::config('gigya.global')->get('gigya.sessionManagement');
+
+
   }
 
   /**
@@ -63,7 +67,6 @@ class GigyaController extends ControllerBase {
    *   The Ajax response
    */
   public function gigyaRaasLoginAjax(Request $request) {
-
     if (\Drupal::currentUser()->isAnonymous()) {
       global $raas_login;
       $err_msg = FALSE;
@@ -132,7 +135,7 @@ class GigyaController extends ControllerBase {
             /* Allow other modules to modify the data before user
             is created in drupal database. */
 
-            \Drupal::moduleHandler()->alter('gigya_raas_create_user', $gigya_account, $new_user);
+            \Drupal::moduleHandler()->alter('gigya_raas_create_user', $gigyaUser, $user);
             try {
               //@TODO: generate Unique user name.
               $user->save();

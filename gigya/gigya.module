@@ -11,6 +11,14 @@ function gigya_page_attachments(array &$attachments) {
   if (!empty($api_key)) {
     //Add gigya params to drupalSettings.
     $global_params = \Drupal::config('gigya.global')->get('gigya.globalParameters');
+
+    $cookie_params = session_get_cookie_params();
+    $expire = $cookie_params['lifetime'] ? $cookie_params['lifetime'] : 0;
+
+    if (\Drupal::config('gigya.global')->get('gigya.sessionManagement') == 'drupal') {
+      $gigya_js_settings['sessionExpiration'] = $expire;
+    }
+
     \Drupal::moduleHandler()->alter('gigya_global_parameters', $global_params);
 
     $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
@@ -36,5 +44,46 @@ function gigya_page_attachments(array &$attachments) {
 
     // Add Library.
     $attachments['#attached']['library'][] = 'gigya/drupalGigya';
+
+    $session_mode = \Drupal::config('gigya.global')->get('gigya.sessionManagement');
+    // If the user is logged in then attach the Gigya object to the
+    // user object.
+    if (\Drupal::currentUser()->isAuthenticated()) {
+      global $user;
+      // Attach the Gigya object to the user object.
+      GigyaUser::load($user);
+      $bypass_raas = Drupal::currentUser()->hasPermission('bypass gigya raas');
+      if ($session_mode == 'drupal') {
+        $gigya_apikey = trim(Drupal::config('gigya.settings')->get('gigya.gigya_api_key'));
+        if (!isset($_COOKIE["glt_$gigya_apikey"])) {
+          //User is log in to drupal but not to gigya.
+          //Need to notify login.
+
+          $gigya_helper = new GigyaHelper();
+          $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+          if ($guid = $user->uuid->value) {
+            if (isset($gigya_js_settings['sessionExpiration']) && is_numeric($gigya_js_settings['sessionExpiration'])) {
+              $session_expire = $gigya_js_settings['sessionExpiration'];
+            }
+            else {
+              $session_expire = $expire;
+            }
+
+            $res = $gigya_helper->sendApiCall('accounts.notifyLogin', array('siteUID' => $guid, 'sessionExpiration' => $session_expire, 'cid' => 'cms relogin'));
+            if (isset($res['sessionInfo'])) {
+              setcookie($res['sessionInfo']['cookieName'], $res['sessionInfo']['cookieValue']);
+            }
+          }
+        }
+      }
+
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin'] = TRUE;
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['bypassRaas'] = $bypass_raas;
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['sessionMode'] = $session_mode;
+    }
+    else {
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin'] = FALSE;
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['sessionMode'] = $session_mode;
+    }
   }
 }

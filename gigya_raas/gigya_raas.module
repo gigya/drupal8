@@ -12,7 +12,9 @@ function gigya_raas_page_attachments(array &$attachments) {
     $attachments['#attached']['drupalSettings']['gigya']['enableRaaS'] = \Drupal::config('gigya.global')->get('gigya.enableRaaS');
 
     if (\Drupal::config('gigya.global')->get('gigya.enableRaaS') == TRUE) {
+      $session_mode = \Drupal::config('gigya.global')->get('gigya.sessionManagement');
       $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin'] = \Drupal::currentUser()->isAuthenticated();
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['sessionMode'] = $session_mode;
       if (\Drupal::currentUser()->isAnonymous()) {
         $raas_login = array(
           'screenSet' =>  'Default-RegistrationLogin',
@@ -30,6 +32,7 @@ function gigya_raas_page_attachments(array &$attachments) {
         $attachments['#attached']['drupalSettings']['gigyaExtra'] = array('isLogin' => FALSE);
       }
       else {
+
         $attachments['#attached']['drupalSettings']['gigyaExtra']['bypassRaas'] = Drupal::currentUser()->hasPermission('bypass gigya raas');
         $raas_profile = array(
           'screenSet' =>  'Default-ProfileUpdate',
@@ -37,6 +40,35 @@ function gigya_raas_page_attachments(array &$attachments) {
         );
         \Drupal::moduleHandler()->alter('gigya_raas_profile_settings', $raas_profile);
         $attachments['#attached']['drupalSettings']['gigya']['raas']['profile'] = $raas_profile;
+
+        if ($session_mode == 'drupal') {
+          $gigya_apikey = trim(Drupal::config('gigya.settings')->get('gigya.gigya_api_key'));
+          if (!isset($_COOKIE["glt_$gigya_apikey"])) {
+            //User is log in to drupal but not to gigya.
+            //Need to notify login.
+
+            $gigya_helper = new GigyaHelper();
+            $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+
+            if ($guid = $user->uuid->value) {
+              $cookie_params = session_get_cookie_params();
+              $expire = $cookie_params['lifetime'] ? $cookie_params['lifetime'] : 0;
+              $global_params = \Drupal::config('gigya.global')->get('gigya.globalParameters');
+              if (isset($global_params['sessionExpiration']) && is_numeric($global_params['sessionExpiration'])) {
+                $session_expire = $global_params['sessionExpiration'];
+              }
+              else {
+                $session_expire = $expire;
+              }
+
+              $res = $gigya_helper->sendApiCall('accounts.notifyLogin', array('siteUID' => $guid, 'sessionExpiration' => $session_expire, 'cid' => 'cms relogin'));
+              if (isset($res['sessionInfo'])) {
+                setcookie($res['sessionInfo']['cookieName'], $res['sessionInfo']['cookieValue']);
+              }
+            }
+          }
+        }
+
       }
       $attachments['#attached']['library'][] = 'gigya_raas/gigyaRaas';
     }

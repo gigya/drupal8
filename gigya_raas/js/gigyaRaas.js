@@ -115,19 +115,21 @@
         if (!response) {
           return;
         }
-        if (response.errorCode != 0) {
-          if (drupalSettings.gigyaExtra.isLogin == true) {
-            //Login in drupal but not in Gigya.
+
+        var isGigyaLogedIn = response.errorCode === 0;
+        if (drupalSettings.gigyaExtra.sessionMode == 'drupal') {
+          if (isGigyaLogedIn && !drupalSettings.gigyaExtra.isLogin) {
+            gigya.accounts.logout();
+          }
+        } else {
+          if (isGigyaLogedIn && !drupalSettings.gigyaExtra.isLogin) {
+            onLoginHandler(response);
+          } else if (!isGigyaLogedIn && drupalSettings.gigyaExtra.isLogin) {
             if (!drupalSettings.gigyaExtra.bypassRaas == true) {
               //No bypass raas perm.
               //Log out the user.
               document.location = drupalSettings.path.baseUrl + 'user/logout';
             }
-          }
-        }
-        else {
-          if (drupalSettings.gigyaExtra.isLogin == false) {
-            onLoginHandler(response);
           }
         }
       };

@@ -76,7 +76,7 @@ class GigyaController extends ControllerBase {
       if ($gigyaUser = $this->helper->validateUid($guid, $uid_sig, $sig_timestamp)) {
         $email = $gigyaUser->getProfile()->getEmail();
         if (empty($email)) {
-          $err_msg = $this->t('Email address is required by Drupal and is missing, please contact the site administrator.');
+          $err_ms gg = $this->t('Email address is required by Drupal and is missing, please contact the site administrator.');
           $this->helper->saveUserLogoutCookie();
         }
         else {
@@ -132,7 +132,7 @@ class GigyaController extends ControllerBase {
             /* Allow other modules to modify the data before user
             is created in drupal database. */
 
-            \Drupal::moduleHandler()->alter('gigya_raas_create_user', $gigya_account, $new_user);
+            \Drupal::moduleHandler()->alter('gigya_raas_create_user', $gigyaUser, $user);
             try {
               //@TODO: generate Unique user name.
               $user->save();

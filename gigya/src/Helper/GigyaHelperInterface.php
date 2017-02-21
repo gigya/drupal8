@@ -36,7 +36,7 @@ interface GigyaHelperInterface {
 
   public function getUidByName($name);
 
-  public function processFieldMapping($gigya_data, User $drupal_user, $profileOnly = false);
+  public function processFieldMapping($gigya_data, User $drupal_user);
 
   public function getGigyaUserFromArray($data);
 

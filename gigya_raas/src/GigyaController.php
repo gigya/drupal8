@@ -47,10 +47,14 @@ class GigyaController extends ControllerBase {
    *   The Ajax response
    */
   public function gigyaRaasProfileAjax(Request $request) {
-    $gigyaProfile = $this->helper->getGigyaUserFromArray($request->get('gigyaProfile'));
-    $user = User::load(\Drupal::currentUser()->id());
-    $this->helper->processFieldMapping($gigyaProfile, $user, TRUE);
-    $user->save();
+    $gigya_data = $request->get('gigyaData');
+    if ($gigyaUser = $this->helper->validateUid($gigya_data['UID'], $gigya_data['signatureTimestamp'], $gigya_data['UIDSignature'])) {
+      if ($user = $this->helper->getUidByUUID($gigyaUser->getUID())) {
+        $this->helper->processFieldMapping($gigyaUser, $user);
+        \Drupal::moduleHandler()->alter('gigya_profile_update', $gigyaUser, $user);
+        $user->save();
+      }
+    }
     return new AjaxResponse();
   }
 
@@ -76,7 +80,7 @@ class GigyaController extends ControllerBase {
       if ($gigyaUser = $this->helper->validateUid($guid, $uid_sig, $sig_timestamp)) {
         $email = $gigyaUser->getProfile()->getEmail();
         if (empty($email)) {
-          $err_ms gg = $this->t('Email address is required by Drupal and is missing, please contact the site administrator.');
+          $err_msg = $this->t('Email address is required by Drupal and is missing, please contact the site administrator.');
           $this->helper->saveUserLogoutCookie();
         }
         else {

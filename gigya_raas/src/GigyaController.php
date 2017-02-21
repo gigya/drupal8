@@ -48,7 +48,7 @@ class GigyaController extends ControllerBase {
    */
   public function gigyaRaasProfileAjax(Request $request) {
     $gigya_data = $request->get('gigyaData');
-    if ($gigyaUser = $this->helper->validateUid($gigya_data['UID'], $gigya_data['signatureTimestamp'], $gigya_data['UIDSignature'])) {
+    if ($gigyaUser = $this->helper->validateUid($gigya_data['UID'], $gigya_data['UIDSignature'], $gigya_data['signatureTimestamp'])) {
       if ($user = $this->helper->getUidByUUID($gigyaUser->getUID())) {
         $this->helper->processFieldMapping($gigyaUser, $user);
         \Drupal::moduleHandler()->alter('gigya_profile_update', $gigyaUser, $user);

@@ -1,6 +1,6 @@
 <?php
 use Drupal\gigya\Helper\GigyaHelper;
-
+use Gigya\CmsStarterKit\sdk\GSObject;
 /**
  * Implements hook_page_attachments().
  * @param array $attachments
@@ -41,15 +41,14 @@ function gigya_raas_page_attachments(array &$attachments) {
         \Drupal::moduleHandler()->alter('gigya_raas_profile_settings', $raas_profile);
         $attachments['#attached']['drupalSettings']['gigya']['raas']['profile'] = $raas_profile;
 
-        if ($session_mode == 'drupal') {
-          $gigya_apikey = trim(Drupal::config('gigya.settings')->get('gigya.gigya_api_key'));
+        if ($session_mode == 'drupal' && !$attachments['#attached']['drupalSettings']['gigyaExtra']['bypassRaas']) {
+          $gigya_apikey = trim(\Drupal::config('gigya.settings')->get('gigya.gigya_api_key'));
           if (!isset($_COOKIE["glt_$gigya_apikey"])) {
             //User is log in to drupal but not to gigya.
             //Need to notify login.
 
             $gigya_helper = new GigyaHelper();
             $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
-
             if ($guid = $user->uuid->value) {
               $cookie_params = session_get_cookie_params();
               $expire = $cookie_params['lifetime'] ? $cookie_params['lifetime'] : 0;
@@ -60,10 +59,17 @@ function gigya_raas_page_attachments(array &$attachments) {
               else {
                 $session_expire = $expire;
               }
+              $params = new GSObject();
+              $params->put('siteUID', $guid);
+              $params->put('sessionExpiration', $session_expire);
+              $params->put('cid', 'cms relogin');
 
-              $res = $gigya_helper->sendApiCall('accounts.notifyLogin', array('siteUID' => $guid, 'sessionExpiration' => $session_expire, 'cid' => 'cms relogin'));
-              if (isset($res['sessionInfo'])) {
-                setcookie($res['sessionInfo']['cookieName'], $res['sessionInfo']['cookieValue']);
+              $res = $gigya_helper->sendApiCall('accounts.notifyLogin', $params);
+
+              if (!(get_class($res) == 'Gigya\CmsStarterKit\sdk\GSApiException')) {
+                if (isset($res['sessionInfo'])) {
+                  setcookie($res['sessionInfo']['cookieName'], $res['sessionInfo']['cookieValue']);
+                }
               }
             }
           }

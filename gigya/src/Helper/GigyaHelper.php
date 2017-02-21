@@ -174,21 +174,13 @@ class GigyaHelper implements GigyaHelperInterface{
       ->execute();
   }
 
-  public function processFieldMapping($gigya_data, User $drupal_user, $profileOnly = false) {
+  public function processFieldMapping($gigya_data, User $drupal_user) {
     try {
       $field_map = \Drupal::config('gigya.global')->get('gigya.fieldMapping');
       \Drupal::moduleHandler()
         ->alter('gigya_raas_map_data', $gigya_data, $drupal_user, $field_map);
       foreach ($field_map as $drupal_field => $raas_field) {
         $raas_field_parts = explode(".", $raas_field);
-        if ($profileOnly) {
-          if (isset($raas_field_parts[0]) && $raas_field_parts[0] == 'profile') {
-            array_shift($raas_field_parts);
-          }
-          else {
-            continue;
-          }
-        }
         $val = $this->getNestedValue($gigya_data, $raas_field_parts);
         if ($val !== NULL) {
           if (is_bool($val)) {

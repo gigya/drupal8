@@ -111,7 +111,6 @@ function gigya_raas_user_login($account) {
       // (if RaaS is enabled in Drupal admin, but a native login link was not disabled, and user still tried to login via Drupal login).
       global $raas_login;
       if ($raas_login == NULL) {
-//        //@TODO: check if it is right.
         user_logout();
       }
     }

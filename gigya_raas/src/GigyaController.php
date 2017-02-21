@@ -51,10 +51,14 @@ class GigyaController extends ControllerBase {
    *   The Ajax response
    */
   public function gigyaRaasProfileAjax(Request $request) {
-    $gigyaProfile = $this->helper->getGigyaUserFromArray($request->get('gigyaProfile'));
-    $user = User::load(\Drupal::currentUser()->id());
-    $this->helper->processFieldMapping($gigyaProfile, $user, TRUE);
-    $user->save();
+    $gigya_data = $request->get('gigyaData');
+    if ($gigyaUser = $this->helper->validateUid($gigya_data['UID'], $gigya_data['UIDSignature'], $gigya_data['signatureTimestamp'])) {
+      if ($user = $this->helper->getUidByUUID($gigyaUser->getUID())) {
+        $this->helper->processFieldMapping($gigyaUser, $user);
+        \Drupal::moduleHandler()->alter('gigya_profile_update', $gigyaUser, $user);
+        $user->save();
+      }
+    }
     return new AjaxResponse();
   }
 

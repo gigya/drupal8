@@ -33,13 +33,20 @@
 
 
   var profileUpdated = function (data) {
-    console.log(data);
-    var ajaxSettings = {
-      url: '/gigya/raas-profile-update',
-      submit: {gigyaProfile : data.profile}
-    };
-    var myAjaxObject = Drupal.ajax(ajaxSettings);
-    myAjaxObject.execute();
+    if (data.response.errorCode == 0) {
+      var gigyaData = {
+        UID: data.response.UID,
+        UIDSignature: data.response.UIDSignature,
+        signatureTimestamp: data.response.signatureTimestamp
+      };
+      var ajaxSettings = {
+        url: '/gigya/raas-profile-update',
+        submit: {gigyaData : gigyaData}
+      };
+      var myAjaxObject = Drupal.ajax(ajaxSettings);
+      myAjaxObject.execute();
+    }
+
   };
 
   var checkLogout = function () {

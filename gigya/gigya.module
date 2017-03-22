@@ -11,12 +11,6 @@ function gigya_page_attachments(array &$attachments) {
   if (!empty($api_key)) {
     //Add gigya params to drupalSettings.
     $global_params = \Drupal::config('gigya.global')->get('gigya.globalParameters');
-    if (\Drupal::config('gigya.global')->get('gigya.sessionManagement') == 'drupal') {
-      $cookie_params = session_get_cookie_params();
-      $expire = $cookie_params['lifetime'] ? $cookie_params['lifetime'] : 0;
-      $global_params['sessionExpiration'] = $expire;
-    }
-
     \Drupal::moduleHandler()->alter('gigya_global_parameters', $global_params);
 
     $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
@@ -42,6 +36,5 @@ function gigya_page_attachments(array &$attachments) {
 
     // Add Library.
     $attachments['#attached']['library'][] = 'gigya/drupalGigya';
-
   }
 }

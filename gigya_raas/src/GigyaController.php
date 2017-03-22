@@ -23,7 +23,6 @@ class GigyaController extends ControllerBase {
 
   /** @var GigyaHelper */
   protected $helper;
-  protected $session_lead;
 
 
   /**
@@ -37,9 +36,6 @@ class GigyaController extends ControllerBase {
     else {
       $this->helper = $helper;
     }
-    $this->session_lead = \Drupal::config('gigya.global')->get('gigya.sessionManagement');
-
-
   }
 
   /**
@@ -71,6 +67,7 @@ class GigyaController extends ControllerBase {
    *   The Ajax response
    */
   public function gigyaRaasLoginAjax(Request $request) {
+
     if (\Drupal::currentUser()->isAnonymous()) {
       global $raas_login;
       $err_msg = FALSE;

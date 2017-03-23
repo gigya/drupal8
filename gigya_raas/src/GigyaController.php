@@ -78,8 +78,7 @@ class GigyaController extends ControllerBase {
       $response = new AjaxResponse();
 
       if ($gigyaUser = $this->helper->validateUid($guid, $uid_sig, $sig_timestamp)) {
-        $email = $gigyaUser->getProfile()->getEmail();
-        if (empty($email)) {
+        if (empty($gigyaUser->getLoginIds['emails'])) {
           $err_msg = $this->t('Email address is required by Drupal and is missing, please contact the site administrator.');
           $this->helper->saveUserLogoutCookie();
         }
@@ -97,6 +96,18 @@ class GigyaController extends ControllerBase {
               $response->addCommand(new AlertCommand($err_msg));
               return $response;
             }
+            if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, $user->id())) {
+              if ($user->mail !== $unique_email) {
+                $user->setEmail($unique_email);
+                $user->save();
+              }
+            }
+            else {
+              $this->helper->saveUserLogoutCookie();
+              $err_msg = $this->t("Email already exists");
+              $response->addCommand(new AlertCommand($err_msg));
+              return $response;
+            }
             /* Set global variable so we would know the user as logged in
                RaaS in other functions down the line.*/
             $raas_login = true;
@@ -106,14 +117,24 @@ class GigyaController extends ControllerBase {
             user_login_finalize($user);
           }
           else {
-            $uids = $this->helper->getUidByMail($email);
+            $uids = $this->helper->getUidByMails($gigyaUser->getLoginIds['emails']);
             if (!empty($uids)) {
-              \Drupal::logger('gigya_raas')->notice("User with email " . $email . " that already exists tried to register via gigya");
+              \Drupal::logger('gigya_raas')->notice("User with uid " . $guid . " that already exists tried to register via gigya");
               $this->helper->saveUserLogoutCookie();
               $err_msg = $this->t("Oops! Something went wrong during your login/registration process. Please try to login/register again.");
               $response->addCommand(new AlertCommand($err_msg));
               return $response;
             }
+            if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, 0)) {
+              $email = $unique_email;
+            }
+            else {
+              $this->helper->saveUserLogoutCookie();
+              $err_msg = $this->t("Email already exists");
+              $response->addCommand(new AlertCommand($err_msg));
+              return $response;
+            }
+
             $uname = !empty($gigyaUser->getProfile()->getUsername()) ? $gigyaUser->getProfile()->getUsername() : $gigyaUser->getProfile()->getFirstName();
             if (!$this->helper->getUidByName($uname)) {
               $username = $uname;
@@ -129,10 +150,9 @@ class GigyaController extends ControllerBase {
               }
             }
 
-            $user = User::create(array('name' => $username, 'pass' => user_password(), 'status' => 1));
+            $user = User::create(array('name' => $username, 'pass' => user_password(), 'status' => 1, 'mail' => $email));
             $user->save();
             $this->helper->processFieldMapping($gigyaUser, $user);
-            $user->set('name', $username);
             /* Allow other modules to modify the data before user
             is created in drupal database. */
 

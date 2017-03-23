@@ -60,7 +60,6 @@ class GigyaHelper implements GigyaHelperInterface{
   }
 
   public function checkEncryptKey() {
-
     $keypath = \Drupal::config('gigya.global')->get('gigya.keyPath');
     $key = $this->getEncKeyFile($keypath);
     if ($key) {
@@ -159,12 +158,45 @@ class GigyaHelper implements GigyaHelperInterface{
   public function getUidByMail($mail) {
 
     return \Drupal::entityQuery('user')
-      ->condition('mail',  \Drupal\Core\Database\Database::getConnection()->escapeLike($mail), 'LIKE')
+      ->condition('mail',  $mail)
+      ->execute();
+  }
+
+  public function getUidByMails($mails) {
+
+    return \Drupal::entityQuery('user')
+      ->condition('mail',  $mails)
       ->execute();
   }
 
   public function getUidByUUID($uuid) {
-    return \Drupal::service('entity.repository')->loadEntityByUuid ('user', $uuid);
+    return \Drupal::service('entity.repository')->loadEntityByUuid('user', $uuid);
+  }
+  public function checkEmailsUniqueness($gigyaUser, $uid) {
+    if ($this->checkProfileEmail($gigyaUser->getProfile()->getEmail(), $gigyaUser->getLoginIDs()['emails'])) {
+      $uid_check = $this->getUidByMail($gigyaUser->getProfile()->getEmail());
+      if (empty($uid_check) || isset($uid_check[$uid])) {
+        return $gigyaUser->getProfile()->getEmail();
+      }
+    }
+
+    foreach ($gigyaUser->getloginIDs()['emails'] as $id) {
+      $uid_check = $this->getUidByMail($id);
+      if (empty($uid_check) || isset($uid_check[$uid])) {
+        return $id;
+      }
+    }
+    return FALSE;
+  }
+
+  public function checkProfileEmail($profile_email, $loginIds) {
+    $exists = FALSE;
+    foreach ($loginIds as $id) {
+      if ($id == $profile_email) {
+        $exists = TRUE;
+      }
+    }
+    return $exists;
   }
 
 
@@ -180,6 +212,9 @@ class GigyaHelper implements GigyaHelperInterface{
       \Drupal::moduleHandler()
         ->alter('gigya_raas_map_data', $gigya_data, $drupal_user, $field_map);
       foreach ($field_map as $drupal_field => $raas_field) {
+        if ($drupal_field == 'mail') {
+          continue;
+        }
         $raas_field_parts = explode(".", $raas_field);
         $val = $this->getNestedValue($gigya_data, $raas_field_parts);
         if ($val !== NULL) {

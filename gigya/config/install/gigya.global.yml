@@ -3,6 +3,6 @@ gigya:
   languageFallback: 'en'
   keyPath: '/var/tmp/key.txt'
   gigyaDebugMode : false
-  globalParameters : { bypassCookiePolicy : 'never' , enabledProviders : '*', sessionExpiration : 100 }
+  globalParameters : { bypassCookiePolicy : 'never' , enabledProviders : '*', sessionExpiration : 0 }
   enableRaaS : true
   fieldMapping : { uuid : 'UID', name : 'profile.firstName' }

@@ -50,6 +50,12 @@ class GigyaController extends ControllerBase {
     $gigya_data = $request->get('gigyaData');
     if ($gigyaUser = $this->helper->validateUid($gigya_data['UID'], $gigya_data['UIDSignature'], $gigya_data['signatureTimestamp'])) {
       if ($user = $this->helper->getUidByUUID($gigyaUser->getUID())) {
+        if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, $user->id())) {
+          if ($user->mail !== $unique_email) {
+            $user->setEmail($unique_email);
+            $user->save();
+          }
+        }
         $this->helper->processFieldMapping($gigyaUser, $user);
         \Drupal::moduleHandler()->alter('gigya_profile_update', $gigyaUser, $user);
         $user->save();

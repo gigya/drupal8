@@ -1,0 +1,8 @@
+name: Gigya DS
+type: module
+description: 'Allows sites to utilize the Gigya DS API'
+package: Gigya
+core: 8.x
+dependencies:
+  - gigya
+  - gigya_raas

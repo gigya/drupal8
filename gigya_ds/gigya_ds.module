@@ -1,0 +1,185 @@
+<?php
+use Drupal\gigya\Helper\GigyaHelper;
+/**
+ * @file
+ * This module provides a link to Gigya DS data.
+ *
+ * Development of this module is sponsored by Gigya, Inc.
+ */
+
+/**
+ * @param $gigya_data
+ *   An array of all the gigya data.
+ * @param $drupal_user
+ *   An drupal user object.
+ *
+ * @param $field_map
+ *   An field map arrays.
+ */
+function gigya_ds_gigya_raas_map_data_alter(&$gigya_data, &$drupal_user, &$field_map) {
+  $ds_mapping = gigya_ds_retrieve_field_mappings();
+  if (!$ds_mapping) {
+    return;
+  }
+
+  foreach ($ds_mapping as $map) {
+    $field_map[$map['cmsName']] = $map['gigyaName'];
+  }
+
+  $res = gigya_ds_get_data($gigya_data->getUID());
+  $gigya_data->ds = $res;
+}
+
+function gigya_ds_get_data($uid) {
+  $mapping = gigya_ds_retrieve_field_mappings();
+  if (!$mapping) {
+    return;
+  }
+
+  $fields_map = _gigya_ds_get_map_keys($mapping);
+  $res = _gigya_ds_create_query($fields_map, $uid);
+
+  \Drupal::moduleHandler()->alter('gigya_ds_data', $res);
+  return $res;
+
+
+}
+
+
+function _gigya_ds_map_data(&$user_array ,$uid) {
+
+  $mapping = gigya_ds_retrieve_field_mappings();
+  if (!$mapping) {
+    return;
+  }
+
+  $fields_map = _gigya_ds_get_map_keys($mapping);
+  $res = _gigya_ds_create_query($fields_map, $uid);
+
+  $drupal_map = array();
+  foreach ($mapping as $map) {
+    if ($map['cmsType'] == 'string') {
+      $drupal_map[$map['gigyaName']] = $map['cmsName'] . "::255";
+    }
+    else {
+      $drupal_map[$map['gigyaName']] = $map['cmsName'] . "::" . $map['cmsType'];
+    }
+  }
+  if ($res) {
+    _process_field_map($drupal_map, array('ds' => $res), $user_array);
+  }
+}
+
+function _gigya_ds_get_map_keys($array) {
+  $cmsKeyedArray = array();
+  $gigyaKeyedArray = array();
+  foreach ($array as $confItem) {
+    $cmsKey = $confItem['cmsName'];
+    $gigyaKey = $confItem['gigyaName'];
+    $direction = empty($confItem['direction']) ? "g2cms" : $confItem['direction'];
+    switch ($direction) {
+      case "g2cms" :
+        $gigyaKeyedArray[$gigyaKey][] = $confItem;
+        break;
+      case "cms2g":
+        $cmsKeyedArray[$cmsKey][] = $confItem;
+        break;
+      default:
+        $gigyaKeyedArray[$gigyaKey][] = $confItem;
+        $cmsKeyedArray[$cmsKey][] = $confItem;
+        break;
+    }
+  }
+  return $gigyaKeyedArray;
+}
+
+
+function gigya_ds_retrieve_field_mappings() {
+  try {
+    $mappingJson = \Drupal::config('gigya_ds.settings')->get('gigya_ds.gigya_ds_mapping');
+    if ('' == $mappingJson) {
+      watchdog('gigya_ds', t('No mapping found'));
+      return FALSE;
+    }
+    return (_gigya_ds_process_mapping($mappingJson));
+  } catch (Exeption $e) {
+    watchdog('gigya_ds', t('No mapping file found'));
+    return FALSE;
+  }
+}
+
+function _gigya_ds_process_mapping($json) {
+  try {
+    $map = json_decode($json, TRUE);
+
+    return $map;
+  } catch (Exeption $e) {
+    return FALSE;
+  }
+}
+
+function _gigya_ds_create_query($gigya_keyed, $uid) {
+
+  $types = array();
+  foreach ($gigya_keyed as $key => $value) {
+    if (strpos($key, 'ds.') === 0) {
+      $keyArray = explode('.', $key, 3);
+      $type = $keyArray[1];
+      $fieldName = $keyArray[2];
+      $oids = _gigya_ds_extract_oids($value);
+      if (NULL == $types[$type]) {
+        $types[$type] = $oids;
+      }
+      else {
+        $types[$type] += $oids;
+      }
+      $dsFields[] = $fieldName;
+    }
+  }
+
+  if (!\Drupal::config('gigya_ds.settings')->get('gigya_ds.gigya_ds_use_search')) {
+    $res = _gigya_ds_do_ds_search($types, $dsFields, $uid);
+  }
+  else {
+    $res = _gigya_ds_do_ds_get($types, $dsFields, $uid);
+  }
+  return $res;
+}
+
+function _gigya_ds_do_ds_get($types, $fields, $uid) {
+  $helper = new GigyaHelper();
+  $data = array();
+  foreach ($types as $type => $oids) {
+    foreach ($oids as $oid) {
+      if (!isset($data[$type])) {
+        $data[$type] = $helper->doSingleDsGet($type, $oid, $fields, $uid);
+      } else {
+        $data[$type] += $helper->doSingleDsGet($type, $oid, $fields, $uid);
+      }
+    }
+  }
+  return $data;
+}
+
+
+function _gigya_ds_do_ds_search($types, $fields, $uid) {
+  $helper = new GigyaHelper();
+  $data = array();
+  foreach ($types as $type => $oid) {
+    $data[$type] = $helper->doSingleDsSearch($type, $fields, $uid);
+  }
+  return $data;
+}
+
+function _gigya_ds_extract_oids($confs) {
+  $oids = array();
+  foreach ($confs as $conf) {
+    $customConf = $conf['custom'];
+    /** @var string $oid */
+    $oid = $customConf['oid'];
+    if (!empty($oid)) {
+      $oids[$oid] = $oid;
+    }
+  }
+  return $oids;
+}

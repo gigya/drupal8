@@ -151,6 +151,50 @@ class GigyaHelper implements GigyaHelperInterface{
     return new GigyaApiHelper($access_params['api_key'], $access_params['app_key'], $access_params['app_secret'], $access_params['data_center']);
   }
 
+  public function getGigyaDsQuery() {
+    return new DsQueryObject($this->getGigyaApiHelper());
+  }
+
+  public function setDsData($uid, $type, $oid, $data) {
+    $params = [];
+    $params['type'] = $type;
+    $params['UID'] = $uid;
+    $params['oid'] = $oid;
+    $params['data'] = json_encode($data);
+    $res = $this->getGigyaApiHelper()->sendApiCall('ds.store', $params);
+    return $res;
+  }
+
+  public function doSingleDsGet($type, $oid, $fields, $uid) {
+    $dsQueryObj = $this->getGigyaDsQuery();
+    $dsQueryObj->setOid($oid);
+    $dsQueryObj->setTable($type);
+    $dsQueryObj->setUid($uid);
+    $dsQueryObj->setFields($fields);
+    $res = $dsQueryObj->dsGet();
+    return $res->serialize()['data'];
+  }
+
+  public function doSingleDsSearch($type, $fields, $uid) {
+    $dsQueryObj = $this->getGigyaDsQuery();
+    $dsQueryObj->setFields($fields);
+    $dsQueryObj->setTable($type);
+    $dsQueryObj->addWhere("UID", "=", $uid, "string");
+    $res = $dsQueryObj->dsSearch()->serialize()['results'];
+    return $this->dsProcessSearch($res);
+  }
+
+  private function dsProcessSearch($results) {
+    $processed = array();
+    foreach ($results as $result) {
+      if (isset($result['data']) && is_array($result['data'])) {
+        $processed += $result['data'];
+      }
+    }
+    return $processed;
+  }
+
+
   public function saveUserLogoutCookie() {
     user_cookie_save(array('gigya' => 'gigyaLogOut'));
   }

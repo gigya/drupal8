@@ -19,7 +19,7 @@ use Gigya\CmsStarterKit\sdk\GSObject;
 use Gigya\CmsStarterKit\user\GigyaProfile;
 use Gigya\CmsStarterKit\user\GigyaUser;
 use Gigya\CmsStarterKit\user\GigyaUserFactory;
-
+use Gigya\CmsStarterKit\ds\DsQueryObject;
 
 class GigyaHelper implements GigyaHelperInterface{
   public function getNestedValue($obj, $keys) {

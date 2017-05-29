@@ -8,11 +8,11 @@
 
 
 var gigyaHelper = {
-  addGigyaScript: function (apiKey, lang) {
+  addGigyaScript: function (apiKey, lang, apiDomain) {
     var gig = document.createElement('script');
     gig.type = 'text/javascript';
     gig.async = true;
-    gig.src = ('https:' == document.location.protocol ? 'https://cdns' : 'http://cdn') + '.gigya.com/js/gigya.js?apiKey=' + apiKey + '&lang=' + lang;
+    gig.src = ('https:' == document.location.protocol ? 'https://cdns' : 'http://cdn') + '.' + apiDomain + '/js/gigya.js?apiKey=' + apiKey + '&lang=' + lang;
     document.getElementsByTagName('head')[0].appendChild(gig);
   },
 

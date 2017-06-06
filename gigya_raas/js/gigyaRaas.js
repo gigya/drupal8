@@ -7,6 +7,15 @@
 
   'use strict';
 
+   Drupal.behaviors.gigyaRassDynamicSession = {
+     attach: function (context, settings)
+     {
+         if ('dynamic' === settings.gigyaExtra.sessionType) {
+             Drupal.ajax({url:'/gigya/extcookie'}).execute();
+         }
+     }
+   };
+
   var initLoginUI = function () {
     if (typeof drupalSettings.gigya.loginUIParams !== 'undefined') {
       $.each(drupalSettings.gigya.loginUIParams, function (index, value) {

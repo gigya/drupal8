@@ -27,6 +27,7 @@ class GigyaController extends ControllerBase {
 
   /**
    * Construct method.
+   *
    * @param bool $helper
    */
   public function __construct($helper = FALSE) {
@@ -43,12 +44,16 @@ class GigyaController extends ControllerBase {
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The incoming request object.
+   *
    * @return \Drupal\Core\Ajax\AjaxResponse
    *   The Ajax response
    */
   public function gigyaRaasProfileAjax(Request $request) {
     $gigya_data = $request->get('gigyaData');
-    if ($gigyaUser = $this->helper->validateUid($gigya_data['UID'], $gigya_data['UIDSignature'], $gigya_data['signatureTimestamp'])) {
+    if ($gigyaUser = $this->helper->validateUid(
+      $gigya_data['UID'], $gigya_data['UIDSignature'], $gigya_data['signatureTimestamp']
+    )
+    ) {
       if ($user = $this->helper->getUidByUUID($gigyaUser->getUID())) {
         if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, $user->id())) {
           if ($user->mail !== $unique_email) {
@@ -69,6 +74,7 @@ class GigyaController extends ControllerBase {
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The incoming request object.
+   *
    * @return \Drupal\Core\Ajax\AjaxResponse
    *   The Ajax response
    */
@@ -76,16 +82,18 @@ class GigyaController extends ControllerBase {
 
     if (\Drupal::currentUser()->isAnonymous()) {
       global $raas_login;
-      $err_msg = FALSE;
+      $err_msg       = FALSE;
       $sig_timestamp = $request->get('sig_timestamp');
-      $guid = $request->get('uid');
-      $uid_sig = $request->get('uid_sig');
+      $guid          = $request->get('uid');
+      $uid_sig       = $request->get('uid_sig');
 
       $response = new AjaxResponse();
 
       if ($gigyaUser = $this->helper->validateUid($guid, $uid_sig, $sig_timestamp)) {
         if (empty($gigyaUser->getLoginIds['emails'])) {
-          $err_msg = $this->t('Email address is required by Drupal and is missing, please contact the site administrator.');
+          $err_msg = $this->t(
+            'Email address is required by Drupal and is missing, please contact the site administrator.'
+          );
           $this->helper->saveUserLogoutCookie();
         }
         else {
@@ -96,9 +104,14 @@ class GigyaController extends ControllerBase {
              *  they can't login via gigya
              */
             if ($user->hasPermission('bypass gigya raas')) {
-              \Drupal::logger('gigya_raas')->notice("User with email " . $user->getEmail() . " that has 'bypass gigya raas' permission tried to login via gigya");
+              \Drupal::logger('gigya_raas')->notice(
+                "User with email " . $user->getEmail()
+                . " that has 'bypass gigya raas' permission tried to login via gigya"
+              );
               $this->helper->saveUserLogoutCookie();
-              $err_msg = $this->t("Oops! Something went wrong during your login/registration process. Please try to login/register again.");
+              $err_msg = $this->t(
+                "Oops! Something went wrong during your login/registration process. Please try to login/register again."
+              );
               $response->addCommand(new AlertCommand($err_msg));
               return $response;
             }
@@ -116,18 +129,23 @@ class GigyaController extends ControllerBase {
             }
             /* Set global variable so we would know the user as logged in
                RaaS in other functions down the line.*/
-            $raas_login = true;
+            $raas_login = TRUE;
             //Log the user in.
             $this->helper->processFieldMapping($gigyaUser, $user);
+            $this->gigyaRaasExtCookieAjax($request, $raas_login);
             $user->save();
             user_login_finalize($user);
           }
           else {
             $uids = $this->helper->getUidByMails($gigyaUser->getLoginIds['emails']);
             if (!empty($uids)) {
-              \Drupal::logger('gigya_raas')->notice("User with uid " . $guid . " that already exists tried to register via gigya");
+              \Drupal::logger('gigya_raas')->notice(
+                "User with uid " . $guid . " that already exists tried to register via gigya"
+              );
               $this->helper->saveUserLogoutCookie();
-              $err_msg = $this->t("Oops! Something went wrong during your login/registration process. Please try to login/register again.");
+              $err_msg = $this->t(
+                "Oops! Something went wrong during your login/registration process. Please try to login/register again."
+              );
               $response->addCommand(new AlertCommand($err_msg));
               return $response;
             }
@@ -141,13 +159,18 @@ class GigyaController extends ControllerBase {
               return $response;
             }
 
-            $uname = !empty($gigyaUser->getProfile()->getUsername()) ? $gigyaUser->getProfile()->getUsername() : $gigyaUser->getProfile()->getFirstName();
+            $uname = !empty($gigyaUser->getProfile()->getUsername()) ? $gigyaUser->getProfile()->getUsername()
+              : $gigyaUser->getProfile()->getFirstName();
             if (!$this->helper->getUidByName($uname)) {
               $username = $uname;
             }
             else {
               // If user name is taken use first name if it is not empty.
-              if (!empty($gigyaUser->getProfile()->getFirstName()) && (!$this->helper->getUidByName($gigyaUser->getProfile()->getFirstName()))) {
+              if (!empty($gigyaUser->getProfile()->getFirstName())
+                && (!$this->helper->getUidByName(
+                  $gigyaUser->getProfile()->getFirstName()
+                ))
+              ) {
                 $username = $gigyaUser->getProfile()->getFirstName();
               }
               else {
@@ -156,7 +179,9 @@ class GigyaController extends ControllerBase {
               }
             }
 
-            $user = User::create(array('name' => $username, 'pass' => user_password(), 'status' => 1, 'mail' => $email));
+            $user = User::create(
+              array('name' => $username, 'pass' => user_password(), 'status' => 1, 'mail' => $email)
+            );
             $user->save();
             $this->helper->processFieldMapping($gigyaUser, $user);
             /* Allow other modules to modify the data before user
@@ -167,12 +192,15 @@ class GigyaController extends ControllerBase {
               //@TODO: generate Unique user name.
               $user->save();
               $raas_login = TRUE;
+              $this->gigyaRaasExtCookieAjax($request, $raas_login);
               user_login_finalize($user);
 
             } catch (Exception $e) {
               session_destroy();
-              $err_msg = $this->t("Oops! Something went wrong during your registration process. You are registered to the site but
-            not logged-in. Please try to login again.");
+              $err_msg = $this->t(
+                "Oops! Something went wrong during your registration process. You are registered to the site but
+            not logged-in. Please try to login again."
+              );
               $this->helper->saveUserLogoutCookie();
               $response->addCommand(new RedirectCommand("/"));
             }
@@ -181,7 +209,9 @@ class GigyaController extends ControllerBase {
       }
       else {
         $this->helper->saveUserLogoutCookie();
-        $err_msg = $this->t("Oops! Something went wrong during your login/registration process. Please try to login/register again.");
+        $err_msg = $this->t(
+          "Oops! Something went wrong during your login/registration process. Please try to login/register again."
+        );
       }
       if ($err_msg !== FALSE) {
 
@@ -196,6 +226,60 @@ class GigyaController extends ControllerBase {
     }
 
 
+  }
+
+  /**
+   * Process gigya dynamic cookie request.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The incoming request object.
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   The Ajax response
+   */
+  public function gigyaRaasExtCookieAjax(Request $request, $login = FALSE) {
+    if ($this->shouldAddExtCookie($request, $login)) {
+      $gigya_conf  = \Drupal::config('gigya.settings');
+      $session_ttl = \Drupal::config('gigya_raas.settings')->get('dynamic_session');
+      $api_key     = $gigya_conf->get('gigya.gigya_api_key');
+      $glt_cookie  = $request->cookies->get('glt_' . $api_key);
+      $token       = (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL;
+      $now         = $_SERVER['REQUEST_TIME'];
+      $expiration  = strval($now + $session_ttl);
+      $helper      = new GigyaHelper();
+      if (!empty($token)) {
+        $session_sig = $this->calcDynamicSessionSig(
+          $token, $expiration, $gigya_conf->get('gigya.gigya_application_key'),
+          $helper->decrypt($gigya_conf->get('gigya.gigya_application_secret_key'))
+        );
+        setrawcookie('gltexp_' . $api_key, rawurlencode($session_sig), $expiration, '/', $request->getHost());
+      }
+    }
+    return new AjaxResponse();
+  }
+
+  private function shouldAddExtCookie($request, $login) {
+    if ('dynamic' != \Drupal::config('gigya_raas.settings')->get('session_type')) {
+      return FALSE;
+    }
+    if ($login) {
+      return TRUE;
+    }
+    $current_user = \Drupal::currentUser();
+    if ($current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas')) {
+      $gigya_conf    = \Drupal::config('gigya.settings');
+      $api_key       = $gigya_conf->get('gigya.gigya_api_key');
+      $gltexp_cookie = $request->cookies->get('gltexp_' . $api_key);
+      return !empty($gltexp_cookie);
+    }
+    return TRUE;
+  }
+
+  private function calcDynamicSessionSig($token, $expiration, $userKey, $secret) {
+    $unsignedExpString = utf8_encode($token . "_" . $expiration . "_" . $userKey);
+    $rawHmac           = hash_hmac("sha1", utf8_encode($unsignedExpString), base64_decode($secret), TRUE);
+    $sig               = base64_encode($rawHmac);
+    return $expiration . '_' . $userKey . '_' . $sig;
   }
 
 }

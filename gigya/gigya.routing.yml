@@ -5,3 +5,4 @@ gigya.admin.form:
     _title: 'Gigya credentials settings'
   requirements:
     _permission: 'gigya major admin'
+

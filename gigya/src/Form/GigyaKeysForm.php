@@ -80,7 +80,7 @@ class GigyaKeysForm extends ConfigFormBase {
         substr($access_key, strlen($access_key) - 2, 2)));
     }
 
-    $data_centers = array('us1.gigya.com' => 'US', 'eu1.gigya.com' => 'EU', 'au1.gigya.com' => 'AU', 'other' => "Other");
+    $data_centers = array('us1.gigya.com' => 'US', 'eu1.gigya.com' => 'EU', 'au1.gigya.com' => 'AU' ,'ru1.gigya.com' => 'RU','cn1.gigya-api.cn' => 'CN', 'other' => "Other");
     $form['gigya_data_center'] = array(
       '#type' => 'select',
       '#title' => $this->t('Data Center'),

@@ -1,5 +1,3 @@
 gigya_raas:
   session_type: ''
-  fixed_session: ''
-  dynamic_session: ''
   session_time: ''

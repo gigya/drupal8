@@ -55,26 +55,26 @@ class GigyaSessionForm extends ConfigFormBase {
       '#options' => array('fixed' => $this->t('Fixed session'), 'dynamic' => $this->t('Dynamic session')),
       '#default_value' => $config->get('session_type')
     );
-    $form['fixed_session'] = array(
+    $form['session_time'] = array(
       '#type' => 'textfield',
-      '#title' => $this->t('Fixed Session'),
+      '#title' => $this->t('Session Time (sec)'),
       '#description' => $this->t('Add something here'), //TODO:Change this.
-      '#default_value' => $config->get('fixed_session')
+      '#default_value' => $config->get('session_time')
     );
-    $form['dynamic_session'] = array(
-      '#type' => 'textfield',
-      '#title' => $this->t('Dynamic Session'),
-      '#description' => $this->t('Add something here'), //TODO:Change this.
-      '#default_value' => $config->get('dynamic_session')
-    );
+//    $form['dynamic_session'] = array(
+//      '#type' => 'textfield',
+//      '#title' => $this->t('Dynamic Session'),
+//      '#description' => $this->t('Add something here'), //TODO:Change this.
+//      '#default_value' => $config->get('dynamic_session')
+//    );
     return $form;
   }
 
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('gigya_raas.settings');
     $config->set('session_type', $this->getValue($form_state, 'session_type'));
-    $config->set('fixed_session', $this->getValue($form_state, 'fixed_session'));
-    $config->set('dynamic_session', $this->getValue($form_state, 'dynamic_session'));
+    $config->set('session_time', $this->getValue($form_state, 'session_time'));
+   // $config->set('dynamic_session', $this->getValue($form_state, 'dynamic_session')); inbal
     $config->save();
     parent::submitForm($form, $form_state);
   }

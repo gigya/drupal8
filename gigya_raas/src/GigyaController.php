@@ -237,49 +237,69 @@ class GigyaController extends ControllerBase {
    * @return \Drupal\Core\Ajax\AjaxResponse
    *   The Ajax response
    */
-  public function gigyaRaasExtCookieAjax(Request $request, $login = FALSE) {
-    if ($this->shouldAddExtCookie($request, $login)) {
-      $gigya_conf  = \Drupal::config('gigya.settings');
-      $session_ttl = \Drupal::config('gigya_raas.settings')->get('dynamic_session');
-      $api_key     = $gigya_conf->get('gigya.gigya_api_key');
-      $glt_cookie  = $request->cookies->get('glt_' . $api_key);
-      $token       = (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL;
-      $now         = $_SERVER['REQUEST_TIME'];
-      $expiration  = strval($now + $session_ttl);
-      $helper      = new GigyaHelper();
-      if (!empty($token)) {
-        $session_sig = $this->calcDynamicSessionSig(
-          $token, $expiration, $gigya_conf->get('gigya.gigya_application_key'),
-          $helper->decrypt($gigya_conf->get('gigya.gigya_application_secret_key'))
-        );
-        setrawcookie('gltexp_' . $api_key, rawurlencode($session_sig), $expiration, '/', $request->getHost());
+  public function gigyaRaasExtCookieAjax(Request $request, $login = FALSE)
+  {
+      if ($this->shouldAddExtCookie($request, $login)) {
+          $gigya_conf = \Drupal::config('gigya.settings');
+          $session_ttl = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
+          $api_key = $gigya_conf->get('gigya.gigya_api_key');
+          $glt_cookie = $request->cookies->get('glt_' . $api_key);
+          $token = (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL;
+          $now = $_SERVER['REQUEST_TIME'];
+          $expiration = strval($now + $session_ttl);
+          $helper = new GigyaHelper();
+
+          if (!empty($token)) {
+              $session_sig = $this->calcDynamicSessionSig(
+                  $token, $expiration, $gigya_conf->get('gigya.gigya_application_key'),
+                  $helper->decrypt($gigya_conf->get('gigya.gigya_application_secret_key'))
+              );
+              setrawcookie('gltexp_' . $api_key, rawurlencode($session_sig), $expiration, '/', $request->getHost());
+          }
       }
-    }
-    return new AjaxResponse();
+      return new AjaxResponse();
   }
 
-  private function shouldAddExtCookie($request, $login) {
-    if ('dynamic' != \Drupal::config('gigya_raas.settings')->get('session_type')) {
-      return FALSE;
-    }
-    if ($login) {
+  private function shouldAddExtCookie($request, $login)
+  {
+      if (-1 != \Drupal::config('gigya.global')->get('gigya.globalParameters.sessionExpiration')) {
+          return FALSE;
+      }
+      if ($login) {
+          return TRUE;
+      }
+      $current_user = \Drupal::currentUser();
+      if ($current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas')) {
+          $gigya_conf = \Drupal::config('gigya.settings');
+          $api_key = $gigya_conf->get('gigya.gigya_api_key');
+          $gltexp_cookie = $request->cookies->get('gltexp_' . $api_key);
+          return !empty($gltexp_cookie);
+      }
       return TRUE;
-    }
-    $current_user = \Drupal::currentUser();
-    if ($current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas')) {
-      $gigya_conf    = \Drupal::config('gigya.settings');
-      $api_key       = $gigya_conf->get('gigya.gigya_api_key');
-      $gltexp_cookie = $request->cookies->get('gltexp_' . $api_key);
-      return !empty($gltexp_cookie);
-    }
-    return TRUE;
   }
+    private function calculateExpCookieValue($secondsToExpiration, $api_key,$applicationKey,$secretKey) {
+        $currentTime = time(); // current Unix time (number of seconds since January 1 1970 00:00:00 GMT)
+        $expirationTime = $currentTime + $secondsToExpiration; // expiration time in Unix time format
+        $tokenCookieName = "glt_" . $api_key;   //  the name of the token-cookie Gigya stores
+        $tokenCookieValue = trim($_COOKIE[$tokenCookieName]);
+        $loginToken = explode("|", $tokenCookieValue)[0]; // get the login token from the token-cookie.
+        $unsignedExpString = $loginToken . '_' . $expirationTime . '_' . $applicationKey; // define base string for signing
+        $signedExpString = signBaseString($secretKey, $unsignedExpString); // sign the base string using the secret key
+        $cookieValue = $expirationTime . '_' . $applicationKey . '_' . $signedExpString;   // define the cookie value
+        return $cookieValue;
+    }
+    function signBaseString($key, $unsignedExpString) {
+        $unsignedExpString = utf8_encode($unsignedExpString);
+        $rawHmac = hash_hmac("sha1", utf8_encode($unsignedExpString), base64_decode($key), true);
+        $signature = base64_encode($rawHmac);
+        return $signature;
+    }
 
-  private function calcDynamicSessionSig($token, $expiration, $userKey, $secret) {
-    $unsignedExpString = utf8_encode($token . "_" . $expiration . "_" . $userKey);
-    $rawHmac           = hash_hmac("sha1", utf8_encode($unsignedExpString), base64_decode($secret), TRUE);
-    $sig               = base64_encode($rawHmac);
-    return $expiration . '_' . $userKey . '_' . $sig;
-  }
+    private function calcDynamicSessionSig($token, $expiration, $userKey, $secret) {
+        $unsignedExpString = utf8_encode($token . "_" . $expiration . "_" . $userKey);
+        $rawHmac           = hash_hmac("sha1", utf8_encode($unsignedExpString), base64_decode($secret), TRUE);
+        $sig               = base64_encode($rawHmac);
+        return $expiration . '_' . $userKey . '_' . $sig;
+    }
 
 }

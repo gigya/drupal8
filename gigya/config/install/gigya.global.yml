@@ -1,7 +1,7 @@
 gigya:
   language: 'Auto'
   languageFallback: 'en'
-  keyPath: ''
+  keyPath: '/var/tmp/key.txt'
   gigyaDebugMode : false
   globalParameters : { bypassCookiePolicy : 'never' , enabledProviders : '*', sessionExpiration : 0 }
   enableRaaS : true

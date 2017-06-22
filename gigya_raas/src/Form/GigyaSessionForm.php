@@ -69,7 +69,18 @@ class GigyaSessionForm extends ConfigFormBase {
     $config->set('gigya_raas.session_type', $this->getValue($form_state, 'session_type'));
     $config->set('gigya_raas.session_time', $this->getValue($form_state, 'session_time'));
     $config->save();
+     /* $configGlobal = $this->config('gigya.global');
+      if ($this->getValue($form_state, 'session_time') === 'dynamic')
+      {
+          $configGlobal->set('gigya.globalParameters.sessionExpiration',-1);
+      }
+      else
+      {
+          $configGlobal->set('gigya.globalParameters.sessionExpiration',0);
+      }
+      */
     parent::submitForm($form, $form_state);
+
   }
 
 

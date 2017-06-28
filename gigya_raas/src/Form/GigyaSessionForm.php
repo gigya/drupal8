@@ -50,17 +50,19 @@ class GigyaSessionForm extends ConfigFormBase {
     $config = $this->config('gigya_raas.settings');
     $form['session_type'] = array(
       '#type' => 'radios',
-      '#title' => $this->t('Session type'),
-      '#description' => $this->t('Write something here'), //TODO:Change this.
-      '#options' => array('fixed' => $this->t('Fixed session'), 'dynamic' => $this->t('Dynamic session')),
+      '#title' => $this->t('Session Type'),
+      '#description' => $this->t('If you choose “Fixed”, the user session lasts for the duration specified below. If you choose “Dynamic”, the user session lasts the specified duration, and restarts with every server-side interaction.'),
+      '#options' => array('fixed' => $this->t('Fixed'), 'dynamic' => $this->t('Dynamic')),
       '#default_value' => $config->get('gigya_raas.session_type')
     );
     $form['session_time'] = array(
       '#type' => 'textfield',
-      '#title' => $this->t('Session Time (sec)'),
-      '#description' => $this->t('Add something here'), //TODO:Change this.
+      '#title' => $this->t('Session Duration (in seconds)'),
+      '#description' => $this->t('The session is led by Gigya. For more information visit <a href="@Gigya’s documentation"><u>Gigya’s documentation</u></a>.', array('@Gigya’s documentation' => 'https://developers.gigya.com/display/GD/GConnector+-+CMS+and+E-Commerce+Integrations')),
       '#default_value' => $config->get('gigya_raas.session_time')
     );
+
+
     return $form;
   }
 

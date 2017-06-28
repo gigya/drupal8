@@ -29,7 +29,7 @@ gigya.raas.config:
   path: '/admin/config/gigya/raas/session'
   defaults:
     _form: 'Drupal\gigya_raas\Form\GigyaSessionForm'
-    _title: 'Gigya Raas Session Settings'
+    _title: 'Gigya RaaS Session Settings'
   requirements:
     _permission: 'gigya major admin' #TODO: maybe change this
 

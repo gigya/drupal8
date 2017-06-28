@@ -1,3 +1,3 @@
 gigya_raas:
-  session_type: ''
-  session_time: ''
+  session_type: 'dynamic'
+  session_time: '1800'

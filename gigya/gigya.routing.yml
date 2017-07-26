@@ -6,3 +6,11 @@ gigya.admin.form:
   requirements:
     _permission: 'gigya major admin'
 
+
+gigya.admin.job:
+  path: '/admin/config/gigya/job'
+    defaults:
+      _form: 'Drupal\gigya\Form\GigyaJobForm'
+      _title: 'Gigya job settings'
+    requirements:
+      _permission: 'gigya major admin'

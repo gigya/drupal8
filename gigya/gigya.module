@@ -38,7 +38,241 @@ function gigya_page_attachments(array &$attachments) {
     // Add Library.
     $attachments['#attached']['library'][] = 'gigya/drupalGigya';
   }
+
+  //added for job:
+//Check if job enabled
+    $jobEnabled = \Drupal::config('gigya.job')->get('gigya.enableJob');
+    $attachments['#attached']['drupalSettings']['gigya']['enableJob'] = \Drupal::config('gigya.job')->get('gigya.enableJob');
+    if ($jobEnabled) {
+        //get jobFrequency
+        $attachments['#attached']['drupalSettings']['gigya']['jobFrequency'] = \Drupal::config('gigya.job')->get('gigya.jobFrequency');
+        //get emailOnSuccess
+        $attachments['#attached']['drupalSettings']['gigya']['emailOnSuccess'] = \Drupal::config('gigya.job')->get('gigya.emailOnSuccess');
+        //get emailOnFailure
+        $attachments['#attached']['drupalSettings']['gigya']['emailOnFailure'] = \Drupal::config('gigya.job')->get('gigya.emailOnFailure');
+        // get storageDetails
+        $storageDetails = \Drupal::config('gigya.job')->get('gigya.storageDetails');
+        \Drupal::moduleHandler()->alter('storageDetails', $storageDetails);
+        $attachments['#attached']['drupalSettings']['gigya']['storageDetails'] = $storageDetails;
+        gigya_job_cron();
+    }
+
 }
 
+/**
+ * Implements hook_cron().
+ */
 
+//TBD: make sure all is in sec
+function gigya_job_cron() {
+    $enableJob = \Drupal::config('gigya.job')->get('gigya.enableJob');
+    $counterSucceed = 0;
+    $counterFailed = 0;
+    if ($enableJob) {
+        //update last run
+        $jobFrequency = \Drupal::config('gigya.job')->get('gigya.jobFrequency');
+        //REQUEST_TIME
+        //  $request_time = \Drupal::time()->getRequestTime();
+        $request_time = 36000;
+        $last_run = \Drupal::state()->get('job.last_run', 0);
+
+
+        // If x minutes passed since last time delete the rows/uids
+        if (($request_time - $last_run) > 0) {
+            // if (($request_time - $last_run) > $jobFrequency) {
+            $helper = new GigyaHelper();
+            $messageSucceed = "User successfully deleted from CMS - UID: ";
+            $accounts = getUsers('C:\\xampp\\htdocs\\users.csv');
+
+            //foreach ($accounts as $uid)
+            for ($i = 1; $i < count($accounts); $i++)
+            {
+//                    if(!mb_detect_encoding($accounts[$i], 'utf-8', true))
+//                    {
+                $account = $accounts[$i];
+                // $item = autoUTF($accounts[$i]);
+                // $item1 = mb_convert_encoding($item, 'UTF-8',mb_detect_encoding($item, 'UTF-8, ISO-8859-1', true));
+//                        $user = $helper->getUidByUUID('ddfdsfetrt');
+//                        if ($user = $helper->getUidByUUID($user)) {
+//                            try {
+//                                user_delete($user);
+//                                $counterSucceed++;
+//                                \Drupal::logger('my_module')->notice($messageSucceed . $user);
+//                            }  //or with hook:  hook_user_delete($account)
+//                            catch(\Exception $e)
+//                            {
+//                            //add to logs
+//                                \Drupal::logger('my_module')->error("Failed to delete UID " . $user . " from CMS with error - " . $e);
+//                                //increase failed counter to send in email
+//                                $counterFailed++;
+//                            }
+//                        }
+//                else
+//                {
+//                    //add to logs
+//                    \Drupal::logger('my_module')->error("Failed to delete UID: " . $user . ", UID wasn't found in CMS");
+//                    //increase failed counter to send in email
+//                    $counterFailed++;
+//                }
+                // }
+                // user_delete_multiple(array $uids)
+
+
+//                $query = \Drupal::database()->delete('users');
+//                $query->condition('uuid == ' . $uid)
+//                    ->execute();
+
+                // Update last run.
+                //\Drupal::state()->set('job.last_run', $request_time);
+            }
+            if ($counterFailed >= 0)
+            {
+                $total = $counterFailed + $counterSucceed;
+                $message = "CMS delete job failed for " . $counterFailed . "/" . $total;
+                // $params['to'] = \Drupal::config('gigya.job')->get('gigya.storageDetails.emailOnSuccess');
+                $params['to'] = "inbal@gigya-inc.com";
+                $params['message'] = $message;
+                $title = "delete users job";
+                gigya_job_mail('job_email', $message, $params);
+                //  sendEmail($title, $message, 'notice_job', "inbal@gigya-inc.com");
+            }
+            if ($counterSucceed > 0)
+            {
+                //  gigya_job_mail('notice_job', &$message, $params);
+            }
+
+        }
+    }
+}
+
+function loadFileFromServer()
+{
+    if (connectToServer()) {
+        $filename = "C:\\xampp\\htdocs\\users.csv";
+        $handle = fopen($filename, "r");
+        $contents = fread($handle, filesize($filename));
+        fclose($handle);
+        return $contents;
+
+        //$file = file_get_contents("test.csv");
+//
+    }
+}
+
+function connectToServer()
+{
+
+    //https://mywebsite.s3.amazonaws.com/40.pdf?AWSAccessKeyId=[my access key]&Expires=1433297453&Signature=[this random set of numbers]"
+    $file = '';
+    $bucketName = \Drupal::config('gigya.job')->get('gigya.bucketName');
+    $accessKey = \Drupal::config('gigya.job')->get('gigya.accessKey');
+    $secretKey = \Drupal::config('gigya.job')->get('gigya.secretKey');
+    $objectKeyPrefix = \Drupal::config('gigya.job')->get('gigya.objectKeyPrefix');
+    $url = "https://" . $bucketName .".s3.amazonaws.com/" . $file . "?AWSAccessKeyId=" . $accessKey . "&AWSSecretKeyId=" . $secretKey ;
+    return true;
+}
+function getUsers($file)
+{
+    $file = loadFileFromServer();
+    if ($file !== null) {
+        //  $data = array_map("str_getcsv", preg_split('/\r*\n+|\r+/', $file));
+        $file="C:\\xampp\\htdocs\\users.csv";
+        //  $csv = file_get_contents($file);
+        //  $csv2 = array_map('str_getcsv', str_getcsv($csv,"\n"));
+        // $array = array_map('str_getcsv', mb_convert_encoding(file($file), 'iso-8859-1', 'auto'));
+        // $array = array_map('str_getcsv', file($file));
+
+        //file_get_contents(path,include_path,context,start,max_length)
+        $array = str_getcsv(file_get_contents($file), "\n");
+        //ncodeData = array_map('utf8_encode', $array);  -->null
+        //  $csv = file($file);
+        //  $array1 = array_map("str_getcsv", explode("\n", $csv));
+        //  $json = json_encode($csv);
+        //  echo $array[0];
+
+        return $array;
+    }
+}
+function autoUTF($s)
+{
+    // detect UTF-8
+    if (preg_match('#[\x80-\x{1FF}\x{2000}-\x{3FFF}]#u', $s))
+        return $s;
+
+    // detect WINDOWS-1250
+    if (preg_match('#[\x7F-\x9F\xBC]#', $s))
+        return iconv('WINDOWS-1250', 'UTF-8', $s);
+
+    // assume ISO-8859-2
+    return iconv('ISO-8859-2', 'UTF-8', $s);
+}
+
+/**
+ * Implements hook_mail().
+ */
+
+function gigya_job_mail($key, &$message, $params) {
+    $options = array(
+        'langcode' => 'en'
+    );
+    switch ($key) {
+        case 'job_email':
+            $message = array(
+                'id' => "gigya" . _ . $key,
+                'module' => "gigya",
+                'from' => "cms@gigya-inc.com",
+                'body' => array(),
+                'subject' => '',
+                'to' => "inbal@gigya-inc.com",
+                'send' => TRUE,
+                'key' => $key,
+                'langcode' => 'en',
+                'params' =>  array(),
+            );
+            $headers = array(
+                'MIME-Version' => '1.0',
+                'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
+                'Content-Transfer-Encoding' => '8Bit',
+                'X-Mailer' => 'Drupal',
+            );
+//          $system = drupal_mail_system("gigya", $key);
+//          $message['result'] = $system->mail($message);
+
+            // $message['from'] = \Drupal::config('system.site')->get('mail');
+//          $message['id'] = "gigya" . _ . $key;
+//          $message['module'] = "gigya";
+//          $message['from'] = "cms@gigya-inc.com";
+//          $params['subject'] = t('CMS - delete users job: @title', array('@title' => $params['title']), $options);
+//          $params['message'] = 'message is here';
+//              //$message['body'][] = Html::escape($params['message']);
+//          $message['body'][] = $params['message'];
+//          $message['subject'] = $params['subject'];
+//          $message['to'] = 'inbal@gigya-inc.com';
+            // $message['to'] = $params['to'];
+            break;
+    }
+}
+function sendEmail($title, $message, $key, $to) {
+    $mailManager = \Drupal::service('plugin.manager.mail');
+    $module = 'module-name';
+    $params['message'] = $message;
+    $params['body'][] = $message;
+    $params['subject'] = $title;
+    $params['title'] = $title;
+    //$langcode = \Drupal::currentUser()->getPreferredLangcode();
+    $langcode = 'en';
+    $send = true;
+
+    $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
+    if ($result['result'] != true) {
+        $message = t('There was a problem sending your email notification to @email.', array('@email' => $to));
+        drupal_set_message($message, 'error');
+        \Drupal::logger('mail-log')->error($message);
+        return;
+    }
+
+    $message = t('An email notification has been sent to @email ', array('@email' => $to));
+    drupal_set_message($message);
+    \Drupal::logger('mail-log')->notice($message);
+}
 

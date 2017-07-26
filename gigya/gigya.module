@@ -1,6 +1,7 @@
 <?php
 use Drupal\gigya\Helper\GigyaHelper;
-
+use Aws\S3\S3Client;
+use Aws\S3\Exception\S3Exception;
 /**
  * Implements hook_page_attachments().
  * @param array $attachments
@@ -72,8 +73,7 @@ function gigya_job_cron() {
         //update last run
         $jobFrequency = \Drupal::config('gigya.job')->get('gigya.jobFrequency');
         //REQUEST_TIME
-        //  $request_time = \Drupal::time()->getRequestTime();
-        $request_time = 36000;
+        $request_time = \Drupal::time()->getRequestTime();
         $last_run = \Drupal::state()->get('job.last_run', 0);
 
 
@@ -85,46 +85,35 @@ function gigya_job_cron() {
             $accounts = getUsers('C:\\xampp\\htdocs\\users.csv');
 
             //foreach ($accounts as $uid)
-            for ($i = 1; $i < count($accounts); $i++)
-            {
-//                    if(!mb_detect_encoding($accounts[$i], 'utf-8', true))
-//                    {
-                $account = $accounts[$i];
-                // $item = autoUTF($accounts[$i]);
-                // $item1 = mb_convert_encoding($item, 'UTF-8',mb_detect_encoding($item, 'UTF-8, ISO-8859-1', true));
-//                        $user = $helper->getUidByUUID('ddfdsfetrt');
-//                        if ($user = $helper->getUidByUUID($user)) {
-//                            try {
-//                                user_delete($user);
-//                                $counterSucceed++;
-//                                \Drupal::logger('my_module')->notice($messageSucceed . $user);
-//                            }  //or with hook:  hook_user_delete($account)
-//                            catch(\Exception $e)
-//                            {
-//                            //add to logs
-//                                \Drupal::logger('my_module')->error("Failed to delete UID " . $user . " from CMS with error - " . $e);
-//                                //increase failed counter to send in email
-//                                $counterFailed++;
-//                            }
-//                        }
-//                else
-//                {
-//                    //add to logs
-//                    \Drupal::logger('my_module')->error("Failed to delete UID: " . $user . ", UID wasn't found in CMS");
-//                    //increase failed counter to send in email
-//                    $counterFailed++;
-//                }
-                // }
-                // user_delete_multiple(array $uids)
+            for ($i = 1; $i < count($accounts); $i++) {
 
-
+                if ($user = $helper->getUidByUUID($accounts[$i])) {
+                    try {
+                        //get CMS's uid by Gigya uid
+                        $CMSuid = $user->get('uid')->value;
+                        user_delete($CMSuid);
+                        $counterSucceed++;
+                        \Drupal::logger('my_module')->notice($messageSucceed . $accounts[$i]);
+                    } //or with hook:  hook_user_delete($account)
+                    catch (\Exception $e) {
+                        //add to logs
+                        \Drupal::logger('my_module')->error("Failed to delete UID " . $accounts[$i] . " from CMS with error - " . $e);
+                        //increase failed counter to send in email
+                        $counterFailed++;
+                    }
+                } else {
+                    //add to logs
+                    \Drupal::logger('my_module')->error("Failed to delete UID: " . $accounts[$i] . ", UID wasn't found in CMS");
+                    //increase failed counter to send in email
+                    $counterFailed++;
+                }
 //                $query = \Drupal::database()->delete('users');
 //                $query->condition('uuid == ' . $uid)
 //                    ->execute();
-
-                // Update last run.
-                //\Drupal::state()->set('job.last_run', $request_time);
             }
+            // Update last run.
+            \Drupal::state()->set('job.last_run', $request_time);
+
             if ($counterFailed >= 0)
             {
                 $total = $counterFailed + $counterSucceed;
@@ -133,7 +122,7 @@ function gigya_job_cron() {
                 $params['to'] = "inbal@gigya-inc.com";
                 $params['message'] = $message;
                 $title = "delete users job";
-                gigya_job_mail('job_email', $message, $params);
+               // gigya_job_mail('job_email', $message, $params);
                 //  sendEmail($title, $message, 'notice_job', "inbal@gigya-inc.com");
             }
             if ($counterSucceed > 0)
@@ -145,51 +134,50 @@ function gigya_job_cron() {
     }
 }
 
+
 function loadFileFromServer()
 {
-    if (connectToServer()) {
-        $filename = "C:\\xampp\\htdocs\\users.csv";
-        $handle = fopen($filename, "r");
-        $contents = fread($handle, filesize($filename));
-        fclose($handle);
-        return $contents;
+    //TBD: religion, try and catch, contains
 
-        //$file = file_get_contents("test.csv");
-//
+    $file = 'users.csv';
+    $storageDetails = \Drupal::config('gigya.job')->get('gigya.storageDetails');
+
+    $bucketName = $storageDetails['bucketName'];
+    $accessKey = $storageDetails['accessKey'];
+    $secretKey = $storageDetails['secretKey'];
+    $objectKeyPrefix = $storageDetails['objectKeyPrefix'];
+
+    $s3Client = S3Client::factory(array(
+        'key' => $accessKey,
+        'secret' => $secretKey,
+        'signature' => 'v4',
+        'region' => 'eu-west-2',
+    ));
+    //$response = $s3Client->listObjects(array('Bucket' => $bucketName, 'MaxKeys' => 10, 'Prefix' => $objectKeyPrefix));
+    //$files = $response->getPath('Contents');
+
+    try {
+        $result = $s3Client->getObject(array(
+            'Bucket' => $bucketName,
+            'Key' => $objectKeyPrefix . "/" . $file,
+        ));
+        $body = $result->get('Body');
+        $body->rewind();
+        $content = $body->read($result['ContentLength']);
+        return $content;
     }
-}
-
-function connectToServer()
-{
-
-    //https://mywebsite.s3.amazonaws.com/40.pdf?AWSAccessKeyId=[my access key]&Expires=1433297453&Signature=[this random set of numbers]"
-    $file = '';
-    $bucketName = \Drupal::config('gigya.job')->get('gigya.bucketName');
-    $accessKey = \Drupal::config('gigya.job')->get('gigya.accessKey');
-    $secretKey = \Drupal::config('gigya.job')->get('gigya.secretKey');
-    $objectKeyPrefix = \Drupal::config('gigya.job')->get('gigya.objectKeyPrefix');
-    $url = "https://" . $bucketName .".s3.amazonaws.com/" . $file . "?AWSAccessKeyId=" . $accessKey . "&AWSSecretKeyId=" . $secretKey ;
-    return true;
+    catch(S3Exception $e) {
+        \Drupal::logger('gigya')->error("Failed to get file from S3 server - " . $e);
+    }
 }
 function getUsers($file)
 {
     $file = loadFileFromServer();
     if ($file !== null) {
-        //  $data = array_map("str_getcsv", preg_split('/\r*\n+|\r+/', $file));
-        $file="C:\\xampp\\htdocs\\users.csv";
-        //  $csv = file_get_contents($file);
-        //  $csv2 = array_map('str_getcsv', str_getcsv($csv,"\n"));
-        // $array = array_map('str_getcsv', mb_convert_encoding(file($file), 'iso-8859-1', 'auto'));
-        // $array = array_map('str_getcsv', file($file));
-
         //file_get_contents(path,include_path,context,start,max_length)
-        $array = str_getcsv(file_get_contents($file), "\n");
-        //ncodeData = array_map('utf8_encode', $array);  -->null
-        //  $csv = file($file);
-        //  $array1 = array_map("str_getcsv", explode("\n", $csv));
-        //  $json = json_encode($csv);
-        //  echo $array[0];
 
+       // $csv2 = array_map('str_getcsv', str_getcsv($file,"\n"));
+        $array = array_map("str_getcsv", explode("\n", $file));
         return $array;
     }
 }

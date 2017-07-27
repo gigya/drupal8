@@ -103,8 +103,8 @@ class GigyaJobForm extends ConfigFormBase {
 //      $form['objectKeyPrefix'] = array('#type' => 'textfield', '#title' => $this->t('Object Key Prefix'));
 //      $form['objectKeyPrefix']['#description'] = $this->t('Specify the object key prefix of the S3');
 
-    return $form;
-
+  //  return $form;
+      return parent::buildForm($form, $form_state);
   }
 
   /**
@@ -126,14 +126,14 @@ class GigyaJobForm extends ConfigFormBase {
     }
 
     $config = $this->config('gigya.job');
-//
-//    // enableJob was changed ?
-//    if ($this->getValue($form_state, 'enableJob') != $config->get('gigya.enableJob')) {
-//      $_enableJob = $this->getValue($form_state, 'enableJob');
-//    }
-//    else {
-//      $_enableJob = $config->get('gigya.enableJob');
-//    }
+
+    // enableJob was changed ?
+    if ($this->getValue($form_state, 'enableJob') != $config->get('gigya.enableJob')) {
+      $_enableJob = $this->getValue($form_state, 'enableJob');
+    }
+    else {
+      $_enableJob = $config->get('gigya.enableJob');
+    }
 //
 //    // jobFrequency was changed ?
 //    if ($this->getValue($form_state, 'jobFrequency') != $config->get('gigya.jobFrequency')) {
@@ -209,7 +209,7 @@ class GigyaJobForm extends ConfigFormBase {
 
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('gigya.job');
-//    $config->set('gigya.enableJob', $this->getValue($form_state, 'enableJob'));
+    $config->set('gigya.enableJob', $this->getValue($form_state, 'enableJob'));
 //    $config->set('gigya.jobFrequency', $this->getValue($form_state, 'jobFrequency'));
 //    $config->set('gigya.emailOnSuccess', $this->getValue($form_state, 'emailOnSuccess'));
 //    $config->set('gigya.emailOnFailure', $this->getValue($form_state, 'emailOnFailure'));

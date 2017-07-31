@@ -13,7 +13,8 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\gigya\Helper\GigyaHelperInterface;
-use Gigya\CmsStarterKit\sdk\GSObject;
+use Aws\S3\S3Client;
+use Aws\S3\Exception\S3Exception;
 
 class GigyaJobForm extends ConfigFormBase {
   /**
@@ -22,7 +23,7 @@ class GigyaJobForm extends ConfigFormBase {
 
 
 
- // public $helper = false;
+  public $helper = false;
 
 
 
@@ -54,57 +55,81 @@ class GigyaJobForm extends ConfigFormBase {
     else {
       $this->helper = $helper;
     }
-
+    if (!$this->helper->checkEncryptKey()) {
+        drupal_set_message($this->t('Cannot read encrypt key'), 'error');
+    }
     $form = parent::buildForm($form, $form_state);
     $config = $this->config('gigya.job');
+
     //enable job checkbox
-      $form['enableJob'] = array('#type' => 'checkbox', '#title' => $this->t('Enable Job'),
-      $form['enableJob']['#description'] = $this->t('Enable job of user delete'));
+      $form['enableJob'] = array('#type' => 'checkbox', '#title' => $this->t('Enable Job'));
+      $form['enableJob']['#description'] = $this->t('Enable job of user delete');
+      $form['enableJob']['#default_value'] = $config->get('gigya.enableJob');
       $enableJob = $config->get('gigya.enableJob');
-//
-//    //Job frequency
-//    $form['jobFrequency'] = array('#type' => 'textfield', '#title' => $this->t('Job frequency (minutes)'),
-//    $form['jobFrequency']['#description'] = $this->t('Specify the Job frequency in minutes'));
-//      if ($enableJob) {
-//          $form['jobFrequency']['#required'] = TRUE;
-//      }
-//    //Email on success
-//    $form['emailOnSuccess'] = array('#type' => 'textfield', '#title' => $this->t('Email on success'),
-//    $form['emailOnSuccess']['#description'] = $this->t('Specify the email address to send on success'));
-//
-//    //Email on failure
-//    $form['emailOnFailure'] = array('#type' => 'textfield', '#title' => $this->t('Email on failure'),
-//    $form['emailOnFailure']['#description'] = $this->t('Specify the email address to send on failure'));
 
-    //S3 Storage details:
+   //Job frequency
+    $form['jobFrequency'] = array('#type' => 'textfield', '#title' => $this->t('Job frequency (minutes)'));
+    $form['jobFrequency']['#description'] = $this->t('Specify the Job frequency in minutes');
+    $jobFrequency = $config->get('gigya.jobFrequency') / 60;
+    //if $jobFrequency == 0 => display an empty value
+    if ($jobFrequency == 0)
+    {
+        $form['jobFrequency']['#default_value'] = "";
+    }
+    else
+    {
+        $form['jobFrequency']['#default_value'] =  $jobFrequency;
+    }
+
+
+    //Email on success
+    $form['emailOnSuccess'] = array('#type' => 'email', '#title' => $this->t('Email on success'),
+    $form['emailOnSuccess']['#description'] = $this->t('Specify the email address to send on success'));
+    $form['emailOnSuccess']['#default_value'] = $config->get('gigya.emailOnSuccess');
+
+    //Email on failure
+    $form['emailOnFailure'] = array('#type' => 'email', '#title' => $this->t('Email on failure'),
+    $form['emailOnFailure']['#description'] = $this->t('Specify the email address to send on failure'));
+    $form['emailOnFailure']['#default_value'] = $config->get('gigya.emailOnFailure');
+
+      //S3 Storage details:
       //bucketName
-//      $form['bucketName'] = array('#type' => 'textfield', '#title' => $this->t('Bucket Name'));
-//      $form['bucketName']['#description'] = $this->t('Specify the bucket name');
-//      if ($enableJob == TRUE) {
-//          $form['bucketName']['#required'] = TRUE;
-//      }
-//
-//      //accessKey
-//      $form['accessKey'] = array('#type' => 'textfield', '#title' => $this->t('Access Key'));
-//      $form['accessKey']['#description'] = $this->t('Specify the access key of the S3');
-//      if ($enableJob) {
-//          $form['accessKey']['#required'] = TRUE;
-//      }
-//
-//      //TBD: encrypt secretKey
-//      //secretKey
-//      $form['secretKey'] = array('#type' => 'textfield', '#title' => $this->t('Secret Key'));
-//      $form['secretKey']['#description'] = $this->t('Specify the secret key of the S3');
-//      if ($enableJob) {
-//          $form['secretKey']['#required'] = TRUE;
-//      }
-//
-//      //objectKeyPrefix
-//      $form['objectKeyPrefix'] = array('#type' => 'textfield', '#title' => $this->t('Object Key Prefix'));
-//      $form['objectKeyPrefix']['#description'] = $this->t('Specify the object key prefix of the S3');
+    $form['storageDetails']['bucketName'] = array('#type' => 'textfield', '#title' => $this->t('Bucket Name'));
+    $form['storageDetails']['bucketName']['#default_value'] = $config->get('gigya.storageDetails.bucketName');
+    $form['storageDetails']['bucketName']['#description'] = $this->t('Specify the bucket name');
 
-  //  return $form;
-      return parent::buildForm($form, $form_state);
+
+    //accessKey
+      $form['storageDetails']['accessKey'] = array('#type' => 'textfield', '#title' => $this->t('Access Key'));
+      $form['storageDetails']['accessKey']['#description'] = $this->t('Specify the access key of the S3');
+      $form['storageDetails']['accessKey']['#default_value'] = $config->get('gigya.storageDetails.accessKey');
+
+      //secretKey
+      //decrypt secret key
+      $key = $config->get('gigya.storageDetails.secretKey');
+      $access_key = "";
+      if (!empty($key)) {
+          $access_key = $this->helper->decrypt($key);
+      }
+
+      $form['storageDetails']['secretKey'] = array('#type' => 'textfield', '#title' => $this->t('Secret Key'));
+      $form['storageDetails']['secretKey']['#description'] = $this->t('Specify the secret key of the S3');
+     // $form['storageDetails']['secretKey']['#default_value'] = $config->get('gigya.storageDetails.secretKey');
+      if (!empty($access_key))
+      {
+          $form['storageDetails']['secretKey']['#default_value'] = "*********";
+          $form['storageDetails']['secretKey']['#description'] = $this->t(",current key first and last letters are
+        @accessKey", array('@accessKey' => substr($access_key, 0, 2) . "****" .
+              substr($access_key, strlen($access_key) - 2, 2)));
+
+      }
+      //objectKeyPrefix
+      $form['storageDetails']['objectKeyPrefix'] = array('#type' => 'textfield', '#title' => $this->t('Object Key Prefix'));
+      $form['storageDetails']['objectKeyPrefix']['#description'] = $this->t('Specify the object key prefix of the S3');
+      $form['storageDetails']['objectKeyPrefix']['#default_value'] = $config->get('gigya.storageDetails.objectKeyPrefix');
+
+      return $form;
+
   }
 
   /**
@@ -126,102 +151,112 @@ class GigyaJobForm extends ConfigFormBase {
     }
 
     $config = $this->config('gigya.job');
+    $jobRequiredFields = ['jobFrequency', 'storageDetails.bucketName','storageDetails.accessKey','storageDetails.secretKey'];
 
-    // enableJob was changed ?
-    if ($this->getValue($form_state, 'enableJob') != $config->get('gigya.enableJob')) {
-      $_enableJob = $this->getValue($form_state, 'enableJob');
+    // if $_enableJob is true verify all required fields with value
+    $_enableJob = $this->getValue($form_state, 'enableJob');
+
+    if ($_enableJob)
+    {
+        $helper = new GigyaHelper();
+        if (!$helper->checkEncryptKey()) {
+            drupal_set_message($this->t('Cannot read encrypt key'), 'error');
+        }
+        foreach ($jobRequiredFields as $field)
+        {
+            if (strpos($field, 'storageDetails') !== false)
+            {
+                $num = strlen($field) - strlen('storageDetails') - 1;
+                $field = substr($field, 0 - $num);
+                $fieldValue = $form['storageDetails'][$field]['#value'];
+            }
+            else
+            {
+                $fieldValue = $this->getValue($form_state, $field);
+            }
+            if ($fieldValue == '')
+            {
+                $form_state->setErrorByName($field, $this->t($field . " is required field if job enabled."));
+                break;
+            }
+        }
+        //try to connect to storage and get region
+        $bucketName = $this->getValue($form_state, 'bucketName');
+        $accessKey = $this->getValue($form_state, 'accessKey');
+        $secretKey = $this->getValue($form_state, 'secretKey');
+
+        //if secret encrypt -> decrypt it
+        if (empty($secretKey) || $secretKey === "*********")
+        {
+            $secretKeyEnc = \Drupal::config('gigya.job')->get('gigya.storageDetails.secretKey');
+            $secretKey = $helper->decrypt($secretKeyEnc);
+        }
+        $s3Client = S3Client::factory(array(
+            'key' => $accessKey,
+            'secret' => $secretKey,
+        ));
+        try {
+            $response = $s3Client->GetBucketLocation(array('Bucket' => $bucketName,));
+        }
+        catch(S3Exception $e) {
+            \Drupal::logger('gigya')->error("Failed to connect to S3 server - " . $e);
+            $form_state->setErrorByName("Failed connecting to S3 server. ", $this->t($field . "Please try again later."));
+        }
+
     }
-    else {
-      $_enableJob = $config->get('gigya.enableJob');
-    }
-//
-//    // jobFrequency was changed ?
-//    if ($this->getValue($form_state, 'jobFrequency') != $config->get('gigya.jobFrequency')) {
-//      $_jobFrequency = $this->getValue($form_state, 'jobFrequency');
-//    }
-//    else {
-//      $_jobFrequency = $config->get('gigya.jobFrequency');
-//    }
-//
-//    // emailOnSuccess was changed ?
-//      if ($this->getValue($form_state, 'emailOnSuccess') != $config->get('gigya.emailOnSuccess')) {
-//          $_emailOnSuccess = $this->getValue($form_state, 'emailOnSuccess');
-//      }
-//      else {
-//          $_emailOnSuccess = $config->get('gigya.jobFrequency');
-//      }
-//
-//      // emailOnFailure was changed ?
-//      if ($this->getValue($form_state, 'emailOnFailure') != $config->get('gigya.emailOnFailure')) {
-//          $_emailOnFailure = $this->getValue($form_state, 'emailOnFailure');
-//      }
-//      else {
-//          $_emailOnFailure = $config->get('gigya.emailOnFailure');
-//      }
-//
-//      // bucketName was changed ?
-//      if ($this->getValue($form_state, 'bucketName') != $config->get('gigya.bucketName')) {
-//          $_bucketName = $this->getValue($form_state, 'bucketName');
-//      }
-//      else {
-//          $_bucketName = $config->get('gigya.bucketName');
-//      }
-//
-//      // accessKey was changed ?
-//      if ($this->getValue($form_state, 'accessKey') != $config->get('gigya.accessKey')) {
-//          $_accessKey = $this->getValue($form_state, 'accessKey');
-//      }
-//      else {
-//          $_accessKey = $config->get('gigya.accessKey');
-//      }
-//
-//      // secretKey was changed ?
-//      if ($this->getValue($form_state, 'secretKey') != $config->get('gigya.secretKey')) {
-//          $_secretKey = $this->getValue($form_state, 'secretKey');
-//      }
-//      else {
-//          $_secretKey = $config->get('gigya.secretKey');
-//      }
-//
-//      // objectKeyPrefix was changed ?
-//      if ($this->getValue($form_state, 'objectKeyPrefix') != $config->get('gigya.objectKeyPrefix')) {
-//          $_objectKeyPrefix = $this->getValue($form_state, 'objectKeyPrefix');
-//      }
-//      else {
-//          $_objectKeyPrefix = $config->get('gigya.objectKeyPrefix');
-//      }
-//
-//    $access_params = array();
-//    $access_params['enableJob'] = $_enableJob;
-//    $access_params['jobFrequency'] = $_jobFrequency;
-//    $access_params['emailOnSuccess'] = $_emailOnSuccess;
-//    $access_params['emailOnFailure'] = $_emailOnFailure;
-//    $access_params['bucketName'] = $_bucketName;
-//    $access_params['accessKey'] = $_accessKey;
-//    $access_params['secretKey'] = $_secretKey;
-//    $access_params['objectKeyPrefix'] = $_objectKeyPrefix;
-//    $params = new GSObject();
-   // $params->put('url', 'http://gigya.com');
 
-
-    //TBD: try to connect to storage
   }
 
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('gigya.job');
     $config->set('gigya.enableJob', $this->getValue($form_state, 'enableJob'));
-//    $config->set('gigya.jobFrequency', $this->getValue($form_state, 'jobFrequency'));
-//    $config->set('gigya.emailOnSuccess', $this->getValue($form_state, 'emailOnSuccess'));
-//    $config->set('gigya.emailOnFailure', $this->getValue($form_state, 'emailOnFailure'));
-//    $config->set('gigya.bucketName', $this->getValue($form_state, 'bucketName'));
-//    $config->set('gigya.accessKey', $this->getValue($form_state, 'accessKey'));
-//    $config->set('gigya.secretKey', $this->getValue($form_state, 'secretKey'));
-//    $config->set('gigya.objectKeyPrefix', $this->getValue($form_state, 'objectKeyPrefix'));
+
+    $jobFrequency = $this->getValue($form_state, 'jobFrequency') * 60;
+    if ($jobFrequency == 0)
+    {
+        $config->set('gigya.jobFrequency', "");
+    }
+    else
+    {
+        $config->set('gigya.jobFrequency', $jobFrequency);
+    }
+    $config->set('gigya.emailOnSuccess', $this->getValue($form_state, 'emailOnSuccess'));
+    $config->set('gigya.emailOnFailure', $this->getValue($form_state, 'emailOnFailure'));
+    $config->set('gigya.storageDetails.bucketName', $this->getValue($form_state, 'bucketName'));
+    $config->set('gigya.storageDetails.accessKey', $this->getValue($form_state, 'accessKey'));
+    //encrypt storageDetails.secret
+    $temp_access_key = $this->getValue($form_state, 'secretKey');
+    if (!empty($temp_access_key) && $temp_access_key !== "*********") {
+        $enc = $this->helper->enc($temp_access_key);
+        $config->set('gigya.storageDetails.secretKey', $enc);
+    }
+    $config->set('gigya.storageDetails.objectKeyPrefix', $this->getValue($form_state, 'objectKeyPrefix'));
     $config->save();
     return parent::submitForm($form, $form_state);
   }
 
   private function getValue($form_state, $prop_name) {
     return trim($form_state->getValue($prop_name));
+  }
+  function connectToStorage()
+  {
+      $secretKey = "";
+      $storageDetails = \Drupal::config('gigya.job')->get('gigya.storageDetails');
+      $helper = new GigyaHelper();
+      $bucketName = $storageDetails['bucketName'];
+      $accessKey = $storageDetails['accessKey'];
+      $secretKeyEnc = $storageDetails['secretKey'];
+      if (!empty($secretKeyEnc)) {
+          $secretKey = $helper->decrypt($secretKeyEnc);
+      }
+      $objectKeyPrefix = $storageDetails['objectKeyPrefix'] . "/";
+
+      $s3Client = S3Client::factory(array(
+          'key' => $accessKey,
+          'secret' => $secretKey,
+      ));
+      $response = $s3Client->GetBucketLocation(array('Bucket' => $bucketName,));
+      return true;
+     // return $files = $response->location('Location');
   }
 }

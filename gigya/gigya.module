@@ -2,6 +2,7 @@
 use Drupal\gigya\Helper\GigyaHelper;
 use Aws\S3\S3Client;
 use Aws\S3\Exception\S3Exception;
+use Drupal\Component\Utility;
 /**
  * Implements hook_page_attachments().
  * @param array $attachments
@@ -69,33 +70,24 @@ function gigya_job_cron() {
     $enableJob = \Drupal::config('gigya.job')->get('gigya.enableJob');
     $counterSucceed = 0;
     $counterFailed = 0;
-    if ($enableJob) {
-        //update last run
+    if ($enableJob)
+    {
         $jobFrequency = \Drupal::config('gigya.job')->get('gigya.jobFrequency');
         //REQUEST_TIME
         $request_time = \Drupal::time()->getRequestTime();
-       // $last_run = \Drupal::state()->get('job.last_run', 0);
-
-        $last_run = 0;
+        //update last run
+        $last_run = \Drupal::state()->get('job.last_run', 0);
 
         // If x minutes passed since last time delete the rows/uids
-        if (($request_time - $last_run) > 0) {
-       //if (($request_time - $last_run) > $jobFrequency) {
+       // if (($request_time - $last_run) > 0) {
+       if (($request_time - $last_run) > $jobFrequency)
+       {
             $helper = new GigyaHelper();
             $messageSucceed = "User successfully deleted from CMS - UID: ";
             $files = filesList();
             foreach ($files as $file)
             {
-                $storageDetails = \Drupal::config('gigya.job')->get('gigya.storageDetails');
-                $key = $file['Key'];
-                $objectKeyPrefix = $storageDetails['objectKeyPrefix'];
-            //    $f1 = preg_match($storageDetails['objectKeyPrefix'] . '[A-Za-z][0-9]*', $file['Key']);
-             //   $f2 = preg_match($storageDetails['objectKeyPrefix'] . '+', $file['Key']);
-             //   $f3 = preg_match($storageDetails['objectKeyPrefix'] . '+', $file['Key']);
-            //    $f4 = preg_match($storageDetails['objectKeyPrefix'] . '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$%^&]).*$/', $file['Key']);
-                $f5 = preg_match($storageDetails['objectKeyPrefix'] . '\/.+', $file['Key']);
-              //  $f6 = preg_match($file['Key'], $storageDetails['objectKeyPrefix'] . '/');
-                if ($file['LastModified'] > $last_run && strpos( $file['Key'], $storageDetails['bucketName'] ) !== false) { // && $file['Key'].contains($storageDetails['bucketName'])
+                if ($file['LastModified'] > $last_run && $file['Size'] > 0) {
                     $accounts = getUsers($file);
 
                     //foreach ($accounts as $uid)
@@ -113,15 +105,15 @@ function gigya_job_cron() {
                                     \Drupal::logger('gigya')->notice($messageSucceed . $accounts[$i]);
                                 }
                             } //or with hook:  hook_user_delete($account)
-                            catch (\Exception $e) {
+                            catch (Exception $e) {
                                 //add to logs
-                                \Drupal::logger('my_module')->error("Failed to delete UID " . $accounts[$i] . " from CMS with error - " . $e);
+                                \Drupal::logger('gigya')->error("Failed to delete UID " . $accounts[$i] . " from CMS with error - " . $e);
                                 //increase failed counter to send in email
                                 $counterFailed++;
                             }
                         } else {
                             //add to logs
-                            \Drupal::logger('my_module')->error("Failed to delete UID: " . $accounts[$i] . ", UID wasn't found in CMS");
+                            \Drupal::logger('gigya')->error("Failed to delete UID: " . $accounts[$i] . ", UID wasn't found in CMS");
                             //increase failed counter to send in email
                             $counterFailed++;
                         }
@@ -130,23 +122,47 @@ function gigya_job_cron() {
 //                $query->condition('uuid == ' . $uid)
 //                    ->execute();
                     }
-                    if ($counterFailed >= 0) {
+                    if ($counterFailed > 0)
+                    {
                         $total = $counterFailed + $counterSucceed;
                         $message = "CMS delete job failed for " . $counterFailed . "/" . $total;
-                        // $params['to'] = \Drupal::config('gigya.job')->get('gigya.storageDetails.emailOnSuccess');
-                        $params['to'] = "inbal@gigya-inc.com";
+                        $mailManager = \Drupal::service('plugin.manager.mail');
+                        $module = 'gigya';
+                        $to = \Drupal::config('gigya.job')->get('gigya.emailOnFailure');
+                        $params['subject'] = "test";
+                        $params['body'][] = "body";
                         $params['message'] = $message;
                         $title = "delete users job";
-                         gigya_job_mail('job_email', $message, $params);
-                        //  sendEmail($title, $message, 'notice_job', "inbal@gigya-inc.com");
+                        $key = "job_email";
+                        $params['node_title'] = 'label';
+                        $send = true;
+                        $result = $mailManager->mail($module, $key, $to, 'en', $params, NULL, $send);
+                        if (!$result)
+                        {
+                            \Drupal::logger('gigya')->error("Failed to send email on failure: ");
+                        }
+
                     }
                     if ($counterSucceed > 0) {
-                        //  gigya_job_mail('notice_job', &$message, $params);
+                        $total = $counterFailed + $counterSucceed;
+                        $message = "CMS delete job succeed for " . $counterSucceed . "/" . $total;
+                        $mailManager = \Drupal::service('plugin.manager.mail');
+                        $module = 'gigya';
+                        $to = \Drupal::config('gigya.job')->get('gigya.emailOnSuccess');
+                        $params['subject'] = "test";
+                        $params['body'][] = "body";
+                        $params['message'] = $message;
+                        $title = "delete users job";
+                        $key = "job_email";
+                        $params['node_title'] = 'label';
+                        $send = true;
+                        $result = $mailManager->mail($module, $key, $to, 'en', $params, NULL, $send);
+                        if (!$result)
+                        {
+                            \Drupal::logger('gigya')->error("Failed to send email on succeed: ");
+                        }
                     }
                 }
-
-
-
             }
             // Update last run.
             \Drupal::state()->set('job.last_run', $request_time);
@@ -155,39 +171,76 @@ function gigya_job_cron() {
 }
 function filesList()
 {
+    try {
+    $secretKey = "";
     $storageDetails = \Drupal::config('gigya.job')->get('gigya.storageDetails');
-
+    $helper = new GigyaHelper();
     $bucketName = $storageDetails['bucketName'];
     $accessKey = $storageDetails['accessKey'];
-    $secretKey = $storageDetails['secretKey'];
-    $objectKeyPrefix = $storageDetails['objectKeyPrefix'];
-
+    $secretKeyEnc = $storageDetails['secretKey'];
+    if (!empty($secretKeyEnc)) {
+        $secretKey = $helper->decrypt($secretKeyEnc);
+    }
+    $objectKeyPrefix = $storageDetails['objectKeyPrefix'] . "/";
+    $region = getRegion();
     $s3Client = S3Client::factory(array(
         'key' => $accessKey,
         'secret' => $secretKey,
         'signature' => 'v4',
-        'region' => 'eu-west-2',
+        'region' => $region,
     ));
-    $response = $s3Client->listObjects(array('Bucket' => $bucketName, 'MaxKeys' => 10, 'Prefix' => $objectKeyPrefix));
-    return $files = $response->getPath('Contents');
+
+        $response = $s3Client->listObjects(array('Bucket' => $bucketName, 'MaxKeys' => 15, 'Prefix' => $objectKeyPrefix));
+        return $files = $response->getPath('Contents');
+    }
+    catch(S3Exception $e) {
+        \Drupal::logger('gigya')->error("Failed to get files list from S3 server. Error: " . $e);
+    }
+    catch(Exception $e) {
+        \Drupal::logger('gigya')->error("Missing required parameter - " . $e);
+    }
+}
+function getStorageDetails()
+{
+    $secretKey = "";
+    try
+    {
+        $storageDetails = \Drupal::config('gigya.job')->get('gigya.storageDetails');
+        $helper = new GigyaHelper();
+        $bucketName = $storageDetails['bucketName'];
+        $accessKey = $storageDetails['accessKey'];
+        $secretKeyEnc = $storageDetails['secretKey'];
+        if (!empty($secretKeyEnc)) {
+            $secretKey = $helper->decrypt($secretKeyEnc);
+        }
+
+        $objectKeyPrefix = $storageDetails['objectKeyPrefix'] . "/";
+       // return ('#type' => 'textfield', '#title' =>
+    }
+    catch(Exception $e) {
+        \Drupal::logger('gigya')->error("Failed to get Storage Details parameters - " . $e);
+    }
 }
 
 function loadFileFromServer($fileName)
 {
-    //TBD: religion, try and catch, contains
+    //TBD: religion, try and catch
 
+    $secretKey = "";
     $storageDetails = \Drupal::config('gigya.job')->get('gigya.storageDetails');
-
+    $helper = new GigyaHelper();
     $bucketName = $storageDetails['bucketName'];
     $accessKey = $storageDetails['accessKey'];
-    $secretKey = $storageDetails['secretKey'];
-    $objectKeyPrefix = $storageDetails['objectKeyPrefix'];
-
+    $secretKeyEnc = $storageDetails['secretKey'];
+    if (!empty($secretKeyEnc)) {
+        $secretKey = $helper->decrypt($secretKeyEnc);
+    }
+    $region = getRegion();
     $s3Client = S3Client::factory(array(
         'key' => $accessKey,
         'secret' => $secretKey,
         'signature' => 'v4',
-        'region' => 'eu-west-2',
+        'region' => $region,
     ));
    // $response = $s3Client->listObjects(array('Bucket' => $bucketName, 'MaxKeys' => 10, 'Prefix' => $objectKeyPrefix));
    // $files = $response->getPath('Contents');
@@ -195,7 +248,7 @@ function loadFileFromServer($fileName)
     try {
         $result = $s3Client->getObject(array(
             'Bucket' => $bucketName,
-            'Key' => $objectKeyPrefix . "/" . $fileName,
+            'Key' => $fileName['Key'],
         ));
         $body = $result->get('Body');
         $body->rewind();
@@ -223,44 +276,25 @@ function getUsers($fileName)
  * Implements hook_mail().
  */
 
-function gigya_job_mail($key, &$message, $params) {
+function gigya_mail($key, &$message, $params) {
     $options = array(
         'langcode' => 'en'
     );
     switch ($key) {
         case 'job_email':
-            $message = array(
-                'id' => "gigya" . _ . $key,
-                'module' => "gigya",
-                'from' => "cms@gigya-inc.com",
-                'body' => array(),
-                'subject' => '',
-                'to' => "inbal@gigya-inc.com",
-                'send' => TRUE,
-                'key' => $key,
-                'langcode' => 'en',
-                'params' =>  array(),
-            );
+           // $message['from'] = \Drupal::config('system.site')->get('mail');
+            $message['from'] = "goldray518@gmail.com";
+            $message['subject'] = t('Node created: @title', array('@title' => $params['node_title']), $options);
+
             $headers = array(
                 'MIME-Version' => '1.0',
                 'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
                 'Content-Transfer-Encoding' => '8Bit',
                 'X-Mailer' => 'Drupal',
+                'Sender' => 'goldray518@gmail.com',
+                'Return-Path' => 'goldray518@gmail.com',
             );
-//          $system = drupal_mail_system("gigya", $key);
-//          $message['result'] = $system->mail($message);
-
-            // $message['from'] = \Drupal::config('system.site')->get('mail');
-//          $message['id'] = "gigya" . _ . $key;
-//          $message['module'] = "gigya";
-//          $message['from'] = "cms@gigya-inc.com";
-//          $params['subject'] = t('CMS - delete users job: @title', array('@title' => $params['title']), $options);
-//          $params['message'] = 'message is here';
-//              //$message['body'][] = Html::escape($params['message']);
-//          $message['body'][] = $params['message'];
-//          $message['subject'] = $params['subject'];
-//          $message['to'] = 'inbal@gigya-inc.com';
-            // $message['to'] = $params['to'];
+            $message['headers'] = $headers;
             break;
     }
 }
@@ -286,5 +320,29 @@ function sendEmail($title, $message, $key, $to) {
     $message = t('An email notification has been sent to @email ', array('@email' => $to));
     drupal_set_message($message);
     \Drupal::logger('mail-log')->notice($message);
+}
+function getRegion()
+{
+    $secretKey = "";
+    $storageDetails = \Drupal::config('gigya.job')->get('gigya.storageDetails');
+    $helper = new GigyaHelper();
+    $bucketName = $storageDetails['bucketName'];
+    $accessKey = $storageDetails['accessKey'];
+    $secretKeyEnc = $storageDetails['secretKey'];
+    if (!empty($secretKeyEnc)) {
+        $secretKey = $helper->decrypt($secretKeyEnc);
+    }
+
+    $s3Client = S3Client::factory(array(
+        'key' => $accessKey,
+        'secret' => $secretKey,
+    ));
+    try {
+        $response = $s3Client->GetBucketLocation(array('Bucket' => $bucketName,));
+        return $response['Location'];
+    }
+    catch(S3Exception $e) {
+        \Drupal::logger('gigya')->error("Failed to get region from S3 server - " . $e);
+    }
 }
 

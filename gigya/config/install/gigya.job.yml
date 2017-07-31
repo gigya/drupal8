@@ -1,6 +1,6 @@
 gigya:
-  jobFrequency: '3600'
-  emailOnSuccess: ''
-  emailOnFailure: ''
+  jobFrequency : '86400'
+  emailOnSuccess : ''
+  emailOnFailure : ''
   storageDetails : { bucketName : '' , accessKey : '', secretKey : '', objectKeyPrefix : '' }
   enableJob : false

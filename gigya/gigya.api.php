@@ -50,6 +50,21 @@ function hook_gigya_lang_alter(&$lang) {
   }
 }
 
+
+/**
+ * Modify the data gigya_delete_user before it is added to the js.
+ *
+ * @param $user (CMS)
+ *
+ * @see CKEditorPluginManager
+ */
+function hook_gigya_delete_user1_alter(&$user) {
+    if ($user->get('uid')->value == 18)
+    {
+        return TRUE;
+    }
+    return FALSE;
+}
 /**
  * @} End of "addtogroup hooks".
  */

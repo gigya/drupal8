@@ -13,3 +13,12 @@
 .hidden {
   display: none;
 }
+
+.gigya-label-custom {
+    margin-top: 30px;
+    font-size: 15px;
+}
+
+.gigya-bold {
+    font-style: oblique;
+}

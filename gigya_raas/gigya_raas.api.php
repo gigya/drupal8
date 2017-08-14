@@ -32,8 +32,6 @@ function hook_gigya_raas_profile_settings_alter(array &$raas_profile) {
   $raas_profile['screenSet'] = 'Default-ProfileUpdate';
 }
 
-
-
 /**
  * @} End of "addtogroup hooks".
  */

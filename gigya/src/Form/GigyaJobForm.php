@@ -62,14 +62,20 @@ class GigyaJobForm extends ConfigFormBase {
     $config = $this->config('gigya.job');
 
     //enable job checkbox
-      $form['enableJob'] = array('#type' => 'checkbox', '#title' => $this->t('Enable Job'));
-      $form['enableJob']['#description'] = $this->t('Enable job of user delete');
+//      $form['enableJobLabel'] = array('#type' => 'label', '#title' => $this->t('Enable Job'), "#attributes" => [
+//          'class' => 'gigya-space'
+//      ]);
+      $form['enableJob'] = array('#type' => 'checkbox', '#title' => $this->t('Enable'));//, "#options_attributes" => array( 'class' => array('gigya-bold')));
+      $form['enableJob']['attributes']['label']['class'] = 'gigya-bold';
       $form['enableJob']['#default_value'] = $config->get('gigya.enableJob');
+     // $form['enableJob']['#theme'] = 'checkbox_markup_checkboxes';
       $enableJob = $config->get('gigya.enableJob');
 
    //Job frequency
     $form['jobFrequency'] = array('#type' => 'textfield', '#title' => $this->t('Job frequency (minutes)'));
-    $form['jobFrequency']['#description'] = $this->t('Specify the Job frequency in minutes');
+//    if ($form['enableJob']['#default_value']) {
+          $form['jobFrequency']['#required'] = TRUE;
+//      }
     $jobFrequency = $config->get('gigya.jobFrequency') / 60;
     //if $jobFrequency == 0 => display an empty value
     if ($jobFrequency == 0)
@@ -93,15 +99,17 @@ class GigyaJobForm extends ConfigFormBase {
     $form['emailOnFailure']['#default_value'] = $config->get('gigya.emailOnFailure');
 
       //S3 Storage details:
+
+    $form['storage'] = array('#type' => 'label', '#title' => $this->t('Amazon S3 settings'), "#attributes" => [
+        'class' => 'gigya-label-custom'
+    ]);
       //bucketName
-    $form['storageDetails']['bucketName'] = array('#type' => 'textfield', '#title' => $this->t('Bucket Name'));
+    $form['storageDetails']['bucketName'] = array('#type' => 'textfield', '#title' => $this->t('Bucket name'));
     $form['storageDetails']['bucketName']['#default_value'] = $config->get('gigya.storageDetails.bucketName');
-    $form['storageDetails']['bucketName']['#description'] = $this->t('Specify the bucket name');
 
 
     //accessKey
-      $form['storageDetails']['accessKey'] = array('#type' => 'textfield', '#title' => $this->t('Access Key'));
-      $form['storageDetails']['accessKey']['#description'] = $this->t('Specify the access key of the S3');
+      $form['storageDetails']['accessKey'] = array('#type' => 'textfield', '#title' => $this->t('Access key'));
       $form['storageDetails']['accessKey']['#default_value'] = $config->get('gigya.storageDetails.accessKey');
 
       //secretKey
@@ -112,20 +120,18 @@ class GigyaJobForm extends ConfigFormBase {
           $access_key = $this->helper->decrypt($key);
       }
 
-      $form['storageDetails']['secretKey'] = array('#type' => 'textfield', '#title' => $this->t('Secret Key'));
-      $form['storageDetails']['secretKey']['#description'] = $this->t('Specify the secret key of the S3');
+      $form['storageDetails']['secretKey'] = array('#type' => 'textfield', '#title' => $this->t('Secret key'));
      // $form['storageDetails']['secretKey']['#default_value'] = $config->get('gigya.storageDetails.secretKey');
       if (!empty($access_key))
       {
           $form['storageDetails']['secretKey']['#default_value'] = "*********";
-          $form['storageDetails']['secretKey']['#description'] = $this->t(",current key first and last letters are
-        @accessKey", array('@accessKey' => substr($access_key, 0, 2) . "****" .
+          $form['storageDetails']['secretKey']['#description'] = $this->t("Current key first letters are
+        @accessKey", array('@accessKey' => substr($access_key, 0, 2) . "******" .
               substr($access_key, strlen($access_key) - 2, 2)));
 
       }
       //objectKeyPrefix
-      $form['storageDetails']['objectKeyPrefix'] = array('#type' => 'textfield', '#title' => $this->t('Object Key Prefix'));
-      $form['storageDetails']['objectKeyPrefix']['#description'] = $this->t('Specify the object key prefix of the S3');
+      $form['storageDetails']['objectKeyPrefix'] = array('#type' => 'textfield', '#title' => $this->t('Object key prefix'));
       $form['storageDetails']['objectKeyPrefix']['#default_value'] = $config->get('gigya.storageDetails.objectKeyPrefix');
 
       return $form;

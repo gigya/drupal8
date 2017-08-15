@@ -89,13 +89,13 @@ class GigyaJobForm extends ConfigFormBase {
 
 
     //Email on success
-    $form['emailOnSuccess'] = array('#type' => 'email', '#title' => $this->t('Email on success'),
-    $form['emailOnSuccess']['#description'] = $this->t('Specify the email address to send on success'));
+    $form['emailOnSuccess'] = array('#type' => 'textfield', '#title' => $this->t('Email on success'),
+    $form['emailOnSuccess']['#description'] = $this->t('A comma-separated list of emails that the job will notify upon completed successfully.'));
     $form['emailOnSuccess']['#default_value'] = $config->get('gigya.emailOnSuccess');
 
     //Email on failure
-    $form['emailOnFailure'] = array('#type' => 'email', '#title' => $this->t('Email on failure'),
-    $form['emailOnFailure']['#description'] = $this->t('Specify the email address to send on failure'));
+    $form['emailOnFailure'] = array('#type' => 'textfield', '#title' => $this->t('Email on failure'),
+    $form['emailOnFailure']['#description'] = $this->t('A comma-separated list of emails that the job will notify upon completed failure.'));
     $form['emailOnFailure']['#default_value'] = $config->get('gigya.emailOnFailure');
 
       //S3 Storage details:
@@ -202,11 +202,11 @@ class GigyaJobForm extends ConfigFormBase {
             'secret' => $secretKey,
         ));
         try {
-            $response = $s3Client->GetBucketLocation(array('Bucket' => $bucketName,));
+            $s3Client->GetBucketLocation(array('Bucket' => $bucketName,));
         }
         catch(S3Exception $e) {
-            \Drupal::logger('gigya')->error("Failed to connect to S3 server - " . $e);
-            $form_state->setErrorByName("Failed connecting to S3 server. ", $this->t($field . "Please try again later."));
+            \Drupal::logger('gigya')->error("Failed to connect to S3 server - " . $e->getMessage());
+            $form_state->setErrorByName('storageDetails.secretKey', $this->t("Failed connecting to S3 server with error: " . $e->getMessage()));
         }
 
     }
@@ -255,14 +255,17 @@ class GigyaJobForm extends ConfigFormBase {
       if (!empty($secretKeyEnc)) {
           $secretKey = $helper->decrypt($secretKeyEnc);
       }
-      $objectKeyPrefix = $storageDetails['objectKeyPrefix'] . "/";
 
       $s3Client = S3Client::factory(array(
           'key' => $accessKey,
           'secret' => $secretKey,
       ));
-      $response = $s3Client->GetBucketLocation(array('Bucket' => $bucketName,));
-      return true;
-     // return $files = $response->location('Location');
+      try {
+          $response = $s3Client->GetBucketLocation(array('Bucket' => $bucketName,));
+          return $response['Location'];
+      }
+      catch(S3Exception $e) {
+          \Drupal::logger('gigya')->error("Failed to get region from S3 server - " . $e->getMessage());
+      }
   }
 }

@@ -134,6 +134,30 @@ class GigyaController extends ControllerBase {
             $this->helper->processFieldMapping($gigyaUser, $user);
             $this->gigyaRaasExtCookieAjax($request, $raas_login);
             $user->save();
+
+              $now = time();
+//              if (isset($_SESSION['discard_after']) && $now > $_SESSION['discard_after'])
+//              {
+//                  session_unset();
+//                  session_destroy();
+//                  session_start();
+//              }
+//              else
+//              {
+//                  $_SESSION['discard_after'] = time() + 60;
+//              }
+
+              $session_manager = \Drupal::service('session_manager');
+
+//              $lifetime = 1800;
+//              $session_manager->get($lifetime);
+
+//              if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 60)) {
+//                  // last request was more than 30 minutes ago
+//                  session_unset();     // unset $_SESSION variable for the run-time
+//                  session_destroy();   // destroy session data in storage
+//              }
+//              $_SESSION['LAST_ACTIVITY'] = time(); // update last activity time stamp
             user_login_finalize($user);
           }
           else {
@@ -193,7 +217,11 @@ class GigyaController extends ControllerBase {
               $user->save();
               $raas_login = TRUE;
               $this->gigyaRaasExtCookieAjax($request, $raas_login);
+                $session_manager = \Drupal::service('session_manager');
+                $lifetime = 1800;
+                $session_manager->regenerate(false, $lifetime);
               user_login_finalize($user);
+
 
             } catch (Exception $e) {
               session_destroy();

@@ -19,6 +19,11 @@
     font-size: 15px;
 }
 
-.gigya-bold {
-    font-style: oblique;
+.gigya-label-cb {
+    font-weight: bold;
+    display: inline-block;
+    float: right;
+    width: 99%;
 }
+
+

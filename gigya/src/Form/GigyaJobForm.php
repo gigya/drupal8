@@ -65,16 +65,20 @@ class GigyaJobForm extends ConfigFormBase {
 //      $form['enableJobLabel'] = array('#type' => 'label', '#title' => $this->t('Enable Job'), "#attributes" => [
 //          'class' => 'gigya-space'
 //      ]);
-      $form['enableJob'] = array('#type' => 'checkbox', '#title' => $this->t('Enable'));//, "#options_attributes" => array( 'class' => array('gigya-bold')));
-      $form['enableJob']['attributes']['label']['class'] = 'gigya-bold';
+      $form['enableJobLabel'] = array('#type' => 'label', '#title' => $this->t('Enable'), "#attributes" => [
+          'class' => 'gigya-label-cb'
+      ]);
+      $form['enableJob'] = array('#type' => 'checkbox');//, "#options_attributes" => array( 'class' => array('gigya-bold')));, '#title' => $this->t('Enable')
+     // $form['enableJob']['attributes']['label']['class'] = 'gigya-bold';
       $form['enableJob']['#default_value'] = $config->get('gigya.enableJob');
      // $form['enableJob']['#theme'] = 'checkbox_markup_checkboxes';
       $enableJob = $config->get('gigya.enableJob');
 
    //Job frequency
     $form['jobFrequency'] = array('#type' => 'textfield', '#title' => $this->t('Job frequency (minutes)'));
+    //, '#required' => array(':input[name="jobFrequency"]' => array('checked' => TRUE)));;
 //    if ($form['enableJob']['#default_value']) {
-          $form['jobFrequency']['#required'] = TRUE;
+       //   $form['jobFrequency']['#required'] = TRUE;
 //      }
     $jobFrequency = $config->get('gigya.jobFrequency') / 60;
     //if $jobFrequency == 0 => display an empty value
@@ -268,4 +272,6 @@ class GigyaJobForm extends ConfigFormBase {
           \Drupal::logger('gigya')->error("Failed to get region from S3 server - " . $e->getMessage());
       }
   }
+
 }
+

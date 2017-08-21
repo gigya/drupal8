@@ -67,108 +67,108 @@ function gigya_page_attachments(array &$attachments) {
  */
 
 //TBD: make sure all is in sec
-function gigya_job_cron() {
+function gigya_job_cron()
+{
     $enableJob = \Drupal::config('gigya.job')->get('gigya.enableJob');
     $counterSucceed = 0;
     $counterFailed = 0;
-    if ($enableJob)
-    {
+    if ($enableJob) {
         $jobFrequency = \Drupal::config('gigya.job')->get('gigya.jobFrequency');
         //REQUEST_TIME
         $request_time = \Drupal::time()->getRequestTime();
         //update last run
         $last_run = \Drupal::state()->get('job.last_run', 0);
-        $last_run = 0;
+       // $last_run = 0;
         // If x minutes passed since last time delete the rows/uids
-        if (($request_time - $last_run) > 0)
-     //  if (($request_time - $last_run) > $jobFrequency)
-       {
+     //   if (($request_time - $last_run) > 0)
+        if (($request_time - $last_run) > $jobFrequency)
+        {
             //add delete-user job to queue
-           $queue = \Drupal::queue('job_queue');
+            $queue = \Drupal::queue('job_queue');
 
             $helper = new GigyaHelper();
             $messageSucceed = "User successfully deleted from CMS - UID: ";
             $files = filesList();
-            foreach ($files as $file)
-            {
-               // $queue->createItem($file);
-                if ($file['LastModified'] > $last_run && $file['Size'] > 0) {
+            foreach ($files as $file) {
+                // $queue->createItem($file);
+
+                $fileDateTimestamp = strtotime($file['LastModified']);
+
+             //   if ($last_run > 0) {
+                    if (($fileDateTimestamp > $last_run) && ($file['Size'] > 0)) {
                     $accounts = getUsers($file);
 
-                    //foreach ($accounts as $uid)
                     for ($i = 1; $i < count($accounts); $i++) {
-                        $user = $helper->getUidByUUID($accounts[$i]);
-                        if ($user) {
-                            try {
-                                //get CMS's uid by Gigya uid
-                                $CMSuid = $user->get('uid')->value;
-                                if ($CMSuid == 1) {
-                                    \Drupal::logger('gigya')->notice("Skipped deleting admin user");
-                                } else {
-                                    $shouldDel = true;
-                                    \Drupal::moduleHandler()->alter('delete_user', $user, $shouldDel);
-                                    if ($shouldDel === TRUE)
-                                    {
-                                        user_delete($CMSuid);
-                                        $counterSucceed++;
+                        foreach ($accounts[$i] as $gigyaUID) {
+
+                            $user = $helper->getUidByUUID($accounts[$i]);
+                            if ($user) {
+                                try {
+                                    //get CMS's uid by Gigya uid
+                                    $CMSuid = $user->get('uid')->value;
+                                    if ($CMSuid == 1) {
+                                        \Drupal::logger('gigya')->notice("Skipped deleting admin user");
+                                    } else {
+                                        $shouldDel = true;
+                                        \Drupal::moduleHandler()->alter('delete_user', $user, $shouldDel);
+                                        if ($shouldDel === TRUE) {
+                                            user_delete($CMSuid);
+                                            $counterSucceed++;
+                                        } else {
+                                            \Drupal::logger('gigya')->notice("Delete user hook - Skipped deleting user. CMS ID = " . $CMSuid);
+                                        }
+                                        \Drupal::logger('gigya')->notice($messageSucceed . $gigyaUID);
                                     }
-                                    else {
-                                        \Drupal::logger('gigya')->notice("Delete user hook - Skipped deleting user. CMS ID = " . $CMSuid);
-                                    }
-                                    \Drupal::logger('gigya')->notice($messageSucceed . $accounts[$i]);
+                                } //or with hook:  hook_user_delete($account)
+                                catch (Exception $e) {
+                                    //add to logs
+                                    \Drupal::logger('gigya')->error("Failed to delete UID " . $gigyaUID . " from CMS with error - " . $e->getMessage());
+                                    //increase failed counter to send in email
+                                    $counterFailed++;
                                 }
-                            } //or with hook:  hook_user_delete($account)
-                            catch (Exception $e) {
+                            } else {
                                 //add to logs
-                                \Drupal::logger('gigya')->error("Failed to delete UID " . $accounts[$i] . " from CMS with error - " . $e->getMessage());
-                                //increase failed counter to send in email
-                                $counterFailed++;
+                                \Drupal::logger('gigya')->error("Failed to delete UID: " . $gigyaUID . ", UID wasn't found in CMS");
+
                             }
-                        } else {
-                            //add to logs
-                            \Drupal::logger('gigya')->error("Failed to delete UID: " . $accounts[$i] . ", UID wasn't found in CMS");
-                            //increase failed counter to send in email
-                            $counterFailed++;
-                        }
 
 //                $query = \Drupal::database()->delete('users');
 //                $query->condition('uuid == ' . $uid)
 //                    ->execute();
-                    }
-                    if ($counterSucceed === 0)
-                    {
-                        $total = $counterFailed + $counterSucceed;
-                        $message = "CMS delete job failed (total of " . $total . ").";
-                        $subject = "Deleted users job failed";
-                        $to = \Drupal::config('gigya.job')->get('gigya.emailOnFailure');
-
-                       // $params['message'] = $message;
-                       // $title = "delete users job";
-                        sendEmail($subject, $message, $to);
-
-                    }
-                    else {
-                        // Update last run only on succeed.
-                        \Drupal::state()->set('job.last_run', $request_time);
-
-                        //if completed with errors
-                        if ($counterFailed > 0) {
-                            $subject = "Deleted users job completed with errors";
                         }
-                        //if succeed
-                        else {
-                            $subject = "Deleted users job completed successfully";
+                        if ($counterSucceed === 0) {
+                            $total = $counterFailed + $counterSucceed;
+                            $message = "CMS delete job failed (total of " . $total . ").";
+                            $subject = "Deleted users job failed";
+                            $to = \Drupal::config('gigya.job')->get('gigya.emailOnFailure');
+
+                            // $params['message'] = $message;
+                            // $title = "delete users job";
+                            sendEmail($subject, $message, $to);
+
+                        } else {
+                            // Update last run only on succeed.
+                            \Drupal::state()->set('job.last_run', $request_time);
+
+                            //if completed with errors
+                            if ($counterFailed > 0) {
+                                $subject = "Deleted users job completed with errors";
+                            } //if succeed
+                            else {
+                                $subject = "Deleted users job completed successfully";
+                            }
+                            $total = $counterFailed + $counterSucceed;
+                            $message = "CMS delete job succeed for " . $counterSucceed . "/" . $total . "users.";
+                            $to = \Drupal::config('gigya.job')->get('gigya.emailOnSuccess');
+                            sendEmail($subject, $message, $to);
                         }
-                        $total = $counterFailed + $counterSucceed;
-                        $message = "CMS delete job succeed for " . $counterSucceed . "/" . $total. "users.";
-                        $to = \Drupal::config('gigya.job')->get('gigya.emailOnSuccess');
-                        sendEmail($subject, $message, $to);
                     }
                 }
-            }
+                }
 
+            }
         }
-    }
+
 }
 function filesList()
 {
@@ -381,7 +381,7 @@ function getRegion()
 }
 
 function gigya_delete_user_alter(&$user, &$res) {
-    if ($user->get('uid')->value === "4")
+    if ($user->get('uid')->value === "14")
     {
         $res = false;
         return;

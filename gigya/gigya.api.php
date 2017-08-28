@@ -58,12 +58,13 @@ function hook_gigya_lang_alter(&$lang) {
  *
  * @see CKEditorPluginManager
  */
-function hook_gigya_delete_user1_alter(&$user) {
-    if ($user->get('uid')->value == 18)
+function hook_gigya_delete_user_alter(&$user, &$res) {
+    if ($user->get('uid')->value === "14")
     {
-        return TRUE;
+        $res = FALSE;
+        return;
     }
-    return FALSE;
+    $res = TRUE;
 }
 /**
  * @} End of "addtogroup hooks".

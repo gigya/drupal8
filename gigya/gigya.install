@@ -6,7 +6,7 @@
  */
 
 use Drupal\User\RoleInterface;
-
+use Drupal\Core\Database\Database;
 /**
  * Implements hook_install.
  */
@@ -16,4 +16,34 @@ function gigya_install() {
 
 function gigya_uninstall() {
 
+}
+
+function hook_update_N()  {
+    $specText = array(
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => FALSE,
+    );
+    $specNumber = array(
+            'type' => 'int',
+            'length' => 20,
+            'not null' => FALSE,
+        );
+    $schema = Database::getConnection()->schema();
+    $schema->addField('gigya', 'enableJob', $specNumber);
+    $schema->addField('gigya', 'jobFrequency', $specNumber);
+    $schema->addField('gigya', 'emailOnSuccess', $specText);
+    $schema->addField('gigya', 'emailOnFailure', $specText);
+    $schema->addField('gigya', 'storageDetails.bucketName', $specText);
+    $schema->addField('gigya', 'storageDetails.accessKey', $specText);
+    $schema->addField('gigya', 'storageDetails.secretKey', $specText);
+    $schema->addField('gigya', 'storageDetails.objectKeyPrefix', $specText);
+    $schema->addField('gigya', 'last_run', $specNumber);
+
+
+    //OR:
+    $source = new FileStorage('\gigya\config\install\');
+      /** @var \Drupal\Core\Config\StorageInterface $active_storage */
+      $active_storage = \Drupal::service('config.storage');
+      $active_storage->write($name, $source->read(gigya.job.yml));
 }

@@ -61,25 +61,16 @@ class GigyaJobForm extends ConfigFormBase {
     $form = parent::buildForm($form, $form_state);
     $config = $this->config('gigya.job');
 
-    //enable job checkbox
-//      $form['enableJobLabel'] = array('#type' => 'label', '#title' => $this->t('Enable Job'), "#attributes" => [
-//          'class' => 'gigya-space'
-//      ]);
       $form['enableJobLabel'] = array('#type' => 'label', '#title' => $this->t('Enable'), "#attributes" => [
           'class' => 'gigya-label-cb'
       ]);
-      $form['enableJob'] = array('#type' => 'checkbox');//, "#options_attributes" => array( 'class' => array('gigya-bold')));, '#title' => $this->t('Enable')
-     // $form['enableJob']['attributes']['label']['class'] = 'gigya-bold';
+      $form['enableJob'] = array('#type' => 'checkbox');
       $form['enableJob']['#default_value'] = $config->get('gigya.enableJob');
-     // $form['enableJob']['#theme'] = 'checkbox_markup_checkboxes';
-      $enableJob = $config->get('gigya.enableJob');
+
 
    //Job frequency
     $form['jobFrequency'] = array('#type' => 'textfield', '#title' => $this->t('Job frequency (minutes)'));
-    //, '#required' => array(':input[name="jobFrequency"]' => array('checked' => TRUE)));;
-//    if ($form['enableJob']['#default_value']) {
-       //   $form['jobFrequency']['#required'] = TRUE;
-//      }
+
     $jobFrequency = $config->get('gigya.jobFrequency') / 60;
     //if $jobFrequency == 0 => display an empty value
     if ($jobFrequency == 0)
@@ -102,12 +93,12 @@ class GigyaJobForm extends ConfigFormBase {
     $form['emailOnFailure']['#description'] = $this->t('A comma-separated list of emails that the job will notify upon completed failure.'));
     $form['emailOnFailure']['#default_value'] = $config->get('gigya.emailOnFailure');
 
-      //S3 Storage details:
-
+    //S3 Storage details:
     $form['storage'] = array('#type' => 'label', '#title' => $this->t('Amazon S3 settings'), "#attributes" => [
         'class' => 'gigya-label-custom'
     ]);
-      //bucketName
+
+    //bucketName
     $form['storageDetails']['bucketName'] = array('#type' => 'textfield', '#title' => $this->t('Bucket name'));
     $form['storageDetails']['bucketName']['#default_value'] = $config->get('gigya.storageDetails.bucketName');
 
@@ -248,30 +239,30 @@ class GigyaJobForm extends ConfigFormBase {
   private function getValue($form_state, $prop_name) {
     return trim($form_state->getValue($prop_name));
   }
-  function connectToStorage()
-  {
-      $secretKey = "";
-      $storageDetails = \Drupal::config('gigya.job')->get('gigya.storageDetails');
-      $helper = new GigyaHelper();
-      $bucketName = $storageDetails['bucketName'];
-      $accessKey = $storageDetails['accessKey'];
-      $secretKeyEnc = $storageDetails['secretKey'];
-      if (!empty($secretKeyEnc)) {
-          $secretKey = $helper->decrypt($secretKeyEnc);
-      }
-
-      $s3Client = S3Client::factory(array(
-          'key' => $accessKey,
-          'secret' => $secretKey,
-      ));
-      try {
-          $response = $s3Client->GetBucketLocation(array('Bucket' => $bucketName,));
-          return $response['Location'];
-      }
-      catch(S3Exception $e) {
-          \Drupal::logger('gigya')->error("Failed to get region from S3 server - " . $e->getMessage());
-      }
-  }
+//  function connectToStorage()
+//  {
+//      $secretKey = "";
+//      $storageDetails = \Drupal::config('gigya.job')->get('gigya.storageDetails');
+//      $helper = new GigyaHelper();
+//      $bucketName = $storageDetails['bucketName'];
+//      $accessKey = $storageDetails['accessKey'];
+//      $secretKeyEnc = $storageDetails['secretKey'];
+//      if (!empty($secretKeyEnc)) {
+//          $secretKey = $helper->decrypt($secretKeyEnc);
+//      }
+//
+//      $s3Client = S3Client::factory(array(
+//          'key' => $accessKey,
+//          'secret' => $secretKey,
+//      ));
+//      try {
+//          $response = $s3Client->GetBucketLocation(array('Bucket' => $bucketName,));
+//          return $response['Location'];
+//      }
+//      catch(S3Exception $e) {
+//          \Drupal::logger('gigya')->error("Failed to get region from S3 server - " . $e->getMessage());
+//      }
+//  }
 
 }
 

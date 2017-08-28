@@ -123,13 +123,36 @@
     drupalSettings.gigya.isRaasInit = true;
   };
 
+    var gigyaCheckLoginStatus = function () {
+        try {
+            if (document.cookie.indexOf('glt_' . drupalSettings.gigya.apiKey) == -1 ) {
+                if (drupalSettings.gigyaExtra.isLogin == true) {
+                    //Login in drupal but not in Gigya.
+                    if (!drupalSettings.gigyaExtra.bypassRaas == true) {
+                        //No bypass raas perm.
+                        //Log out the user.
+                        document.location = drupalSettings.path.baseUrl + 'user/logout';
+                    }
+                }
+            }
+            else {
+                if (drupalSettings.gigyaExtra.isLogin == false) {
+                    onLoginHandler(response);
+                }
+            }
+        } catch (e) {
+        } finally {
+        }
 
+
+    };
   Drupal.behaviors.gigyaRaasInit = {
     attach: function (context, settings) {
       if (!('isRaasInit' in drupalSettings.gigya)) {
         window.onGigyaServiceReady = function (serviceName) {
           checkLogout();
           gigyaHelper.runGigyaCmsInit();
+          gigyaCheckLoginStatus();
           initLoginUI();
           initRaas();
         };

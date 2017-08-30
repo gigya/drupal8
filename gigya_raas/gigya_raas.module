@@ -19,7 +19,8 @@ function gigya_raas_page_attachments(array &$attachments) {
       $attachments['#attached']['drupalSettings']['gigyaExtra']['session_type'] = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type');
       if (\Drupal::currentUser()->isAnonymous()) {
         $session_conf = \Drupal::config('gigya_raas.settings');
-        $expiration = ('fixed' == $session_conf->get('session_type')) ? $session_conf->get('session_time') : -1;
+        $sessionType = $attachments['#attached']['drupalSettings']['gigya']['globalParameters']['sessionExpiration'];
+        $expiration =   ($sessionType == -1 ?  $session_conf->get('session_time') : $sessionType);
         $raas_login    = array(
           'screenSet'       => 'Default-RegistrationLogin',
           'mobileScreenSet' => '',

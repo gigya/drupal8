@@ -12,7 +12,7 @@
 
     gigyaHelper.addGigyaScript(drupalSettings.gigya.apiKey, drupalSettings.gigya.lang, drupalSettings.gigya.dataCenter);
     drupalSettings.gigya.isInit = true;
-  }
+  };
 
   Drupal.behaviors.gigyaInit = {
     attach: function (context, settings) {

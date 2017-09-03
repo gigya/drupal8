@@ -130,9 +130,9 @@
             var parts = value.split("; " + name + "=");
             if (parts.length == 2)
             {
-                var cookieValue = parts.pop().split(";").shift();
-                var cookieValueArray = cookieValue.split("_");
-                return cookieValueArray[0];
+                var cookie_value = parts.pop().split(";").shift();
+                var cookie_value_array = cookie_value.split("_");
+                return cookie_value_array[0];
             }
             return;
         }
@@ -160,24 +160,23 @@
     };
     var gigyaCheckLoginStatus = function () {
         try {
-            var isDynamic = drupalSettings.gigya.globalParameters.sessionExpiration;
+            var is_dynamic = drupalSettings.gigya.globalParameters.sessionExpiration;
 
             //is dynamic session enable?
-            if (isDynamic == -1) {
-                var isGigyaActive = getDynamicTimestampCookie();
+            if (is_dynamic == -1) {
+                var is_Gigya_active = getDynamicTimestampCookie();
             }
             else {
-                var isGigyaActive = getNonDynamicTimestampCookie();
+                var is_Gigya_active = getNonDynamicTimestampCookie();
             }
-            var nowTimestamp = Date.now()/1000;
+            var now_timestamp = Date.now()/1000;
 
             //is session in Gigya still active
-            if ((nowTimestamp < isGigyaActive) || (isGigyaActive == true)) {
+            if ((now_timestamp < is_Gigya_active) || (is_Gigya_active == true)) {
                 //is user not login to Drupal
                 if (drupalSettings.gigyaExtra.isLogin == false) {
                     //Login the user to Drupal
                     onLoginHandler(response);
-
                 }
             }
             //if session to Gigya expired, logout the user from Drupal

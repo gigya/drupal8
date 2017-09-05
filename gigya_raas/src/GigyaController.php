@@ -113,6 +113,7 @@ class GigyaController extends ControllerBase {
                 "Oops! Something went wrong during your login/registration process. Please try to login/register again."
               );
               $response->addCommand(new AlertCommand($err_msg));
+
               return $response;
             }
             if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, $user->id())) {

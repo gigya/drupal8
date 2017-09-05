@@ -7,6 +7,7 @@
 
     'use strict';
 
+
     Drupal.behaviors.gigyaRassDynamicSession = {
         attach: function (context, settings)
         {
@@ -66,7 +67,6 @@
             gigya.utils.cookie.remove('Drupal.visitor.gigya');
         }
     };
-
 
     var logoutCallback = function () {
         document.location = drupalSettings.path.baseUrl + 'user/logout';
@@ -161,7 +161,6 @@
     var gigyaCheckLoginStatus = function () {
         try {
             var is_dynamic = drupalSettings.gigya.globalParameters.sessionExpiration;
-
             //is dynamic session enable?
             if (is_dynamic == -1) {
                 var is_Gigya_active = getDynamicTimestampCookie();
@@ -176,7 +175,18 @@
                 //is user not login to Drupal
                 if (drupalSettings.gigyaExtra.isLogin == false) {
                     //Login the user to Drupal
-                    onLoginHandler(response);
+                    var getAccountInfoResponse = function (response) {
+                        if (!response) {
+                            return;
+                        }
+                        else
+                        {
+                            onLoginHandler(response);
+                        }
+                    };
+                    gigya.accounts.getAccountInfo({
+                        callback: getAccountInfoResponse
+                    });
                 }
             }
             //if session to Gigya expired, logout the user from Drupal

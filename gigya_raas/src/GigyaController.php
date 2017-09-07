@@ -194,9 +194,6 @@ class GigyaController extends ControllerBase {
               $user->save();
               $raas_login = TRUE;
               $this->gigyaRaasExtCookieAjax($request, $raas_login);
-                $session_manager = \Drupal::service('session_manager');
-                $lifetime = 1800;
-                $session_manager->regenerate(false, $lifetime);
               user_login_finalize($user);
 
 

@@ -18,9 +18,8 @@ function gigya_raas_page_attachments(array &$attachments) {
       $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin'] = \Drupal::currentUser()->isAuthenticated();
       $attachments['#attached']['drupalSettings']['gigyaExtra']['session_type'] = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type');
       $attachments['#attached']['drupalSettings']['gigyaExtra']['session_time'] = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
-      // $expiration =   $attachments['#attached']['drupalSettings']['gigyaExtra']['session_time'];
+
       if (\Drupal::currentUser()->isAnonymous()) {
-      //  $session_conf = \Drupal::config('gigya_raas.settings');
         $session_type = $attachments['#attached']['drupalSettings']['gigyaExtra']['session_type'];
         $session_time = $attachments['#attached']['drupalSettings']['gigyaExtra']['session_time'];
         $expiration =   $session_type == "dynamic" ? -1 : $session_time;
@@ -42,7 +41,6 @@ function gigya_raas_page_attachments(array &$attachments) {
         $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin'] = FALSE;
       }
       else {
-      //  $attachments['#attached']['drupalSettings']['gigyaExtra']['session_time'] = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
         $attachments['#attached']['drupalSettings']['gigyaExtra']['bypassRaas'] = Drupal::currentUser()->hasPermission(
           'bypass gigya raas'
         );

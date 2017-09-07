@@ -11,6 +11,10 @@ function gigya_page_attachments(array &$attachments) {
   if (!empty($api_key)) {
     //Add gigya params to drupalSettings.
     $global_params = \Drupal::config('gigya.global')->get('gigya.globalParameters');
+    //if Raas module enabled take the sessionExpiration value from this module
+    if (\Drupal::config('gigya.global')->get('gigya.enableRaaS') == TRUE) {
+       $global_params['sessionExpiration'] = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
+    }
     \Drupal::moduleHandler()->alter('gigya_global_parameters', $global_params);
 
     $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;

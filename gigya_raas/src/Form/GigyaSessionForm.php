@@ -61,8 +61,6 @@ class GigyaSessionForm extends ConfigFormBase {
       '#description' => $this->t('The session is led by Gigya. For more information visit <a href="@Gigya’s documentation"><u>Gigya’s documentation</u></a>.', array('@Gigya’s documentation' => 'https://developers.gigya.com/display/GD/GConnector+-+CMS+and+E-Commerce+Integrations')),
       '#default_value' => $config->get('gigya_raas.session_time')
     );
-
-
     return $form;
   }
 
@@ -71,16 +69,7 @@ class GigyaSessionForm extends ConfigFormBase {
     $config->set('gigya_raas.session_type', $this->getValue($form_state, 'session_type'));
     $config->set('gigya_raas.session_time', $this->getValue($form_state, 'session_time'));
     $config->save();
-     /* $configGlobal = $this->config('gigya.global');
-      if ($this->getValue($form_state, 'session_time') === 'dynamic')
-      {
-          $configGlobal->set('gigya.globalParameters.sessionExpiration',-1);
-      }
-      else
-      {
-          $configGlobal->set('gigya.globalParameters.sessionExpiration',0);
-      }
-      */
+
     parent::submitForm($form, $form_state);
 
   }

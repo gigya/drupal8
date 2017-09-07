@@ -7,11 +7,10 @@
 
     'use strict';
 
-
     Drupal.behaviors.gigyaRassDynamicSession = {
         attach: function (context, settings)
         {
-            if (-1 === drupalSettings.gigya.globalParameters.sessionExpiration) {
+            if ("dynamic" === drupalSettings.gigyaExtra.session_type) {
                 Drupal.ajax({url:'/gigya/extcookie'}).execute();
             }
         }
@@ -160,9 +159,9 @@
     };
     var gigyaCheckLoginStatus = function () {
         try {
-            var is_dynamic = drupalSettings.gigya.globalParameters.sessionExpiration;
+            var is_dynamic = drupalSettings.gigyaExtra.session_type;
             //is dynamic session enable?
-            if (is_dynamic == -1) {
+            if (is_dynamic == "dynamic") {
                 var is_Gigya_active = getDynamicTimestampCookie();
             }
             else {
@@ -176,7 +175,7 @@
                 if (drupalSettings.gigyaExtra.isLogin == false) {
                     //Login the user to Drupal
                     var getAccountInfoResponse = function (response) {
-                        if (!response) {
+                        if (!response || response.errorCode != 0) {
                             return;
                         }
                         else

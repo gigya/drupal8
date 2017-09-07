@@ -135,30 +135,6 @@ class GigyaController extends ControllerBase {
             $this->helper->processFieldMapping($gigyaUser, $user);
             $this->gigyaRaasExtCookieAjax($request, $raas_login);
             $user->save();
-
-              $now = time();
-//              if (isset($_SESSION['discard_after']) && $now > $_SESSION['discard_after'])
-//              {
-//                  session_unset();
-//                  session_destroy();
-//                  session_start();
-//              }
-//              else
-//              {
-//                  $_SESSION['discard_after'] = time() + 60;
-//              }
-
-              $session_manager = \Drupal::service('session_manager');
-
-//              $lifetime = 1800;
-//              $session_manager->get($lifetime);
-
-//              if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 60)) {
-//                  // last request was more than 30 minutes ago
-//                  session_unset();     // unset $_SESSION variable for the run-time
-//                  session_destroy();   // destroy session data in storage
-//              }
-//              $_SESSION['LAST_ACTIVITY'] = time(); // update last activity time stamp
             user_login_finalize($user);
           }
           else {
@@ -291,7 +267,7 @@ class GigyaController extends ControllerBase {
 
   private function shouldAddExtCookie($request, $login)
   {
-      if (-1 != \Drupal::config('gigya.global')->get('gigya.globalParameters.sessionExpiration')) {
+      if ("dynamic" != \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type')) {
           return FALSE;
       }
       if ($login) {

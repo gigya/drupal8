@@ -9,16 +9,16 @@
 
   var init = function () {
     window.__gigyaConf = drupalSettings.gigya.globalParameters;
-      
+
     gigyaHelper.addGigyaScript(drupalSettings.gigya.apiKey, drupalSettings.gigya.lang, drupalSettings.gigya.dataCenter);
     drupalSettings.gigya.isInit = true;
   };
 
   Drupal.behaviors.gigyaInit = {
     attach: function (context, settings) {
-       if (!('isInit' in drupalSettings.gigya)) {
-           init();
-       }
+      if (!('isInit' in drupalSettings.gigya)) {
+        init();
+      }
     }
   };
 

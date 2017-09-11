@@ -9,34 +9,34 @@ function gigya_page_attachments(array &$attachments) {
     //Check for api key.
     $api_key = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
     if (!empty($api_key)) {
-        //Add gigya params to drupalSettings.
-        $global_params = \Drupal::config('gigya.global')->get('gigya.globalParameters');
-        \Drupal::moduleHandler()->alter('gigya_global_parameters', $global_params);
+      //Add gigya params to drupalSettings.
+      $global_params = \Drupal::config('gigya.global')->get('gigya.globalParameters');
+      \Drupal::moduleHandler()->alter('gigya_global_parameters', $global_params);
 
-        $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
-        $attachments['#attached']['drupalSettings']['gigya']['apiKey'] = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
-        $attachments['#attached']['drupalSettings']['gigya']['dataCenter'] = \Drupal::config('gigya.settings')->get('gigya.gigya_data_center');
+      $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
+      $attachments['#attached']['drupalSettings']['gigya']['apiKey'] = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
+      $attachments['#attached']['drupalSettings']['gigya']['dataCenter'] = \Drupal::config('gigya.settings')->get('gigya.gigya_data_center');
 
-        $lang = \Drupal::config('gigya.global')->get('gigya.language');
-        //Check if lang is in auto mode.
-        if (strtolower($lang) == 'auto') {
-            $lang = \Drupal::languageManager()->getCurrentLanguage()->getId();
+      $lang = \Drupal::config('gigya.global')->get('gigya.language');
+      //Check if lang is in auto mode.
+      if (strtolower($lang) == 'auto') {
+        $lang = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
-            $helper = new GigyaHelper();
+        $helper = new GigyaHelper();
 
-            $languages = $helper->getGigyaLanguages();
+        $languages = $helper->getGigyaLanguages();
 
-            if (!array_key_exists($lang, $languages)) {
-                //If we do not have the lang in gigya set the lang to the fallback.
-                $lang = \Drupal::config('gigya.global')->get('gigya.languageFallback');
-            }
+        if (!array_key_exists($lang, $languages)) {
+          //If we do not have the lang in gigya set the lang to the fallback.
+          $lang = \Drupal::config('gigya.global')->get('gigya.languageFallback');
         }
+      }
 
-        \Drupal::moduleHandler()->alter('gigya_lang', $lang);
-        $attachments['#attached']['drupalSettings']['gigya']['lang'] = $lang;
+      \Drupal::moduleHandler()->alter('gigya_lang', $lang);
+      $attachments['#attached']['drupalSettings']['gigya']['lang'] = $lang;
 
-        // Add Library.
-        $attachments['#attached']['library'][] = 'gigya/drupalGigya';
+      // Add Library.
+      $attachments['#attached']['library'][] = 'gigya/drupalGigya';
     }
 }
 

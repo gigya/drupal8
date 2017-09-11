@@ -7,6 +7,10 @@
  */
 
 namespace Drupal\gigya\gigya\Plugin\QueueWorker;
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity;
+use Drupal\Core\Database;
+use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\gigya\Helper\GigyaHelper;
 use Aws\S3\S3Client;
@@ -19,11 +23,12 @@ use Drupal\Component\Utility;
  * @QueueWorker(
  *   id = "gigya",
  *   title = @Translation("Example: Queue worker"),
- *   cron = {"time" = 90}
+ *   cron = {"time" = 90}QueueWorkerBase
  * )
  */
 class DeleteUsersQueueWorker extends QueueWorkerBase  {
-    public function processItem($account,&$counter_succeed, &$counter_failed) {
+    public function processItem($item) {
+        $account = $item->gigya_uid;
         \Drupal::logger('gigya')->info("processed item");
         $helper = new GigyaHelper();
         $messageSucceed = "User successfully deleted from CMS - UID: ";

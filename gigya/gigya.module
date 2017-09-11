@@ -3,6 +3,14 @@ use Drupal\gigya\Helper\GigyaHelper;
 use Aws\S3\S3Client;
 use Aws\S3\Exception\S3Exception;
 use Drupal\Component\Utility;
+use Drupal\Core\Queue\QueueWorkerBase;
+use Drupal\Core\Queue\QueueFactory;
+use Drupal\Core\Queue\QueueWorkerManager;
+use Drupal\Core\Queue\QueueWorkerInterface;
+use Drupal\Core\Queue\QueueInterface;
+
+use Drupal\Core\Queue;
+
 /**
  * Implements hook_page_attachments().
  * @param array $attachments
@@ -46,6 +54,11 @@ function gigya_page_attachments(array &$attachments) {
 
 }
 
+function delete_uid_queue_name() {
+    return 'delete_uid_queue';
+}
+
+
 /**
  * Implements hook_cron().
  */
@@ -63,6 +76,10 @@ function gigya_job_cron() {
         // If x seconds passed since last time delete job run
         if (($request_time - $last_run) > $job_frequency) {
             //Add delete-user job to queue
+          //  $queue_factory = \Drupal::service('queue');
+            //creates a new DatabaseQueue
+         //   $queue = $queue_factory->get('delete_users_queue_worker');
+
             $queue = \Drupal::queue('job_queue');
             $queue->createQueue();
 
@@ -71,19 +88,24 @@ function gigya_job_cron() {
             //Run delete users on each file
             foreach ($files as $file) {
                 //Add item - file to queue
-                $queue->createItem($file);
+              //  $queue->createItem($file);
 
                 $fileDateTimestamp = strtotime($file['LastModified']);
                 if (($fileDateTimestamp > $last_run) && ($file['Size'] > 0)) {
-                    //Get all GIgya UIDs from file to array
+                    //Get all Gigya UIDs from file to array
                     $accounts = getUsers($file);
                     //Delete user
                     for ($i = 1; $i < count($accounts); $i++) {
-                        foreach ($accounts[$i] as $gigyaUID) {
+                        foreach ($accounts[$i] as $gigya_uid) {
                             //Add item - account to queue
-                            $queue->createItem($gigyaUID, $counter_succeed, $counter_failed);
-
-
+                            $item = array('gigya_uid' => $gigya_uid);
+                          //  DrupalQueue::get(delete_uid_queue_name())->createItem($item);
+                            $queue->createItem($item);
+                            $count = $queue->numberOfItems();
+                            $queue->processItem($item);
+                            $queue->deleteItem($item);
+                          //  runQueue();
+                            $count = $queue->numberOfItems();
                         }
                         //If job failed, send email
                         if ($counter_succeed === 0) {
@@ -117,6 +139,29 @@ function gigya_job_cron() {
         }
     }
 }
+
+function runQueue() {
+    /** @var QueueInterface $queue */
+    $queue = \Drupal::queue('job_queue');
+    /** @var QueueWorkerInterface $queue_worker */
+  //  $queue_worker = $queueManager->createInstance('delete_users_queue_worker');
+
+    while($item = $queue->claimItem()) {
+        try {
+            $count = $queue->numberOfItems();
+            $queue->processItem($item->data);
+            $queue->deleteItem($item);
+        }
+        catch (SuspendQueueException $e) {
+            $queue->releaseItem($item);
+            break;
+        }
+        catch (\Exception $e) {
+            watchdog_exception('gigya', $e);
+        }
+    }
+}
+
 //Function connect to S3 and retrieves all files in bucket (name only)
 function filesList()
 {

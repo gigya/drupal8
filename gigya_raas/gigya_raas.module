@@ -7,103 +7,102 @@ use Drupal\gigya\Helper\GigyaHelper;
  * @param array $attachments
  */
 function gigya_raas_page_attachments(array &$attachments) {
-    // Add Settings.
-    $api_key = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
-    if (!empty($api_key)) {
-        $attachments['#attached']['drupalSettings']['gigya']['enableRaaS'] = \Drupal::config('gigya.global')->get(
-            'gigya.enableRaaS'
+  // Add Settings.
+  $api_key = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
+  if (!empty($api_key)) {
+    $attachments['#attached']['drupalSettings']['gigya']['enableRaaS'] = \Drupal::config('gigya.global')->get(
+      'gigya.enableRaaS'
+    );
+
+    if (\Drupal::config('gigya.global')->get('gigya.enableRaaS') == TRUE) {
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin'] = \Drupal::currentUser()->isAuthenticated();
+
+      $session_type = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type');
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['session_type'] =  $session_type;
+
+      $session_time = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['session_time'] =  $session_time;
+
+      //get sessionExpiration from Raas settings and set globalParameters with the value
+      $expiration = $session_type == "dynamic" ? -1 : $session_time;
+
+      $global_params = \Drupal::config('gigya.global')->get('gigya.globalParameters');
+      $global_params['sessionExpiration'] = $expiration;
+      $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
+
+      \Drupal::moduleHandler()->alter('gigya_global_parameters', $global_params);
+
+      if (\Drupal::currentUser()->isAnonymous()) {
+        $raas_login    = array(
+          'screenSet'       => 'Default-RegistrationLogin',
+          'mobileScreenSet' => '',
+          'startScreen'     => 'gigya-login-screen',
+          'sessionExpiration' => $expiration
         );
-
-        if (\Drupal::config('gigya.global')->get('gigya.enableRaaS') == TRUE) {
-            $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin'] = \Drupal::currentUser()->isAuthenticated();
-
-            $session_type = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type');
-            $attachments['#attached']['drupalSettings']['gigyaExtra']['session_type'] =  $session_type;
-
-            $session_time = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
-            $attachments['#attached']['drupalSettings']['gigyaExtra']['session_time'] =  $session_time;
-
-            //get sessionExpiration from Raas settings and set globalParameters with the value
-            $expiration = $session_type == "dynamic" ? -1 : $session_time;
-
-            $global_params = \Drupal::config('gigya.global')->get('gigya.globalParameters');
-            $global_params['sessionExpiration'] = $expiration;
-            $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
-
-            \Drupal::moduleHandler()->alter('gigya_global_parameters', $global_params);
-
-            if (\Drupal::currentUser()->isAnonymous()) {
-
-                $raas_login    = array(
-                    'screenSet'       => 'Default-RegistrationLogin',
-                    'mobileScreenSet' => '',
-                    'startScreen'     => 'gigya-login-screen',
-                    'sessionExpiration' => $expiration
-                );
-                $raas_register = array(
-                    'screenSet'       => 'Default-RegistrationLogin',
-                    'mobileScreenSet' => '',
-                    'startScreen'     => 'gigya-register-screen',
-                    'sessionExpiration' => $expiration
-                );
-                \Drupal::moduleHandler()->alter('gigya_raas_settings', $raas_login, $raas_register);
-                $attachments['#attached']['drupalSettings']['gigya']['raas']['login']    = $raas_login;
-                $attachments['#attached']['drupalSettings']['gigya']['raas']['register'] = $raas_register;
-                $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin'] = FALSE;
-            }
-            else {
-                $attachments['#attached']['drupalSettings']['gigyaExtra']['bypassRaas'] = Drupal::currentUser()->hasPermission(
-                    'bypass gigya raas'
-                );
-                $raas_profile = array(
-                    'screenSet'       => 'Default-ProfileUpdate',
-                    'mobileScreenSet' => 'DefaultMobile-ProfileUpdate'
-                );
-                \Drupal::moduleHandler()->alter('gigya_raas_profile_settings', $raas_profile);
-                $attachments['#attached']['drupalSettings']['gigya']['raas']['profile'] = $raas_profile;
-            }
-            $attachments['#attached']['library'][] = 'gigya_raas/gigyaRaas';
-        }
+        $raas_register = array(
+          'screenSet'       => 'Default-RegistrationLogin',
+          'mobileScreenSet' => '',
+          'startScreen'     => 'gigya-register-screen',
+          'sessionExpiration' => $expiration
+        );
+        \Drupal::moduleHandler()->alter('gigya_raas_settings', $raas_login, $raas_register);
+        $attachments['#attached']['drupalSettings']['gigya']['raas']['login']    = $raas_login;
+        $attachments['#attached']['drupalSettings']['gigya']['raas']['register'] = $raas_register;
+        $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin'] = FALSE;
+      }
+      else {
+        $attachments['#attached']['drupalSettings']['gigyaExtra']['bypassRaas'] = Drupal::currentUser()->hasPermission(
+          'bypass gigya raas'
+        );
+        $raas_profile = array(
+          'screenSet'       => 'Default-ProfileUpdate',
+          'mobileScreenSet' => 'DefaultMobile-ProfileUpdate'
+        );
+        \Drupal::moduleHandler()->alter('gigya_raas_profile_settings', $raas_profile);
+        $attachments['#attached']['drupalSettings']['gigya']['raas']['profile'] = $raas_profile;
+      }
+      $attachments['#attached']['library'][] = 'gigya_raas/gigyaRaas';
     }
+  }
 }
 
 /**
  * Implements hook_theme().
  */
 function gigya_raas_theme($existing, $type, $theme, $path) {
-    return array(
-        'gigya_raas_links_block'    => array(
-            'variables' => array('links' => NULL, 'title' => NULL),
-        ),
-        'gigya_raas_login_block'    => array(
-            'variables' => array('showDiv' => NULL),
-        ),
-        'gigya_raas_register_block' => array(
-            'variables' => array('showDiv' => NULL),
-        ),
-        'gigya_raas_profile_block'  => array(
-            'variables' => array('showDiv' => NULL),
-        )
-    );
+  return array(
+    'gigya_raas_links_block'    => array(
+      'variables' => array('links' => NULL, 'title' => NULL),
+    ),
+    'gigya_raas_login_block'    => array(
+      'variables' => array('showDiv' => NULL),
+    ),
+    'gigya_raas_register_block' => array(
+      'variables' => array('showDiv' => NULL),
+    ),
+    'gigya_raas_profile_block'  => array(
+      'variables' => array('showDiv' => NULL),
+    )
+  );
 }
 
 /**
  * Implements hook_user_login().
  */
 function gigya_raas_user_login($account) {
-    if (\Drupal::config('gigya.global')->get('gigya.enableRaaS') == TRUE) {
-        if (!$account->hasPermission('bypass gigya raas')) {
-            // If user didn't login via RaaS.
-            // (if RaaS is enabled in Drupal admin, but a native login link was not disabled, and user still tried to login via Drupal login).
-            global $raas_login;
-            if ($raas_login == NULL) {
-                user_logout();
-            }
-        }
+  if (\Drupal::config('gigya.global')->get('gigya.enableRaaS') == TRUE) {
+    if (!$account->hasPermission('bypass gigya raas')) {
+      // If user didn't login via RaaS.
+      // (if RaaS is enabled in Drupal admin, but a native login link was not disabled, and user still tried to login via Drupal login).
+      global $raas_login;
+      if ($raas_login == NULL) {
+        user_logout();
+      }
     }
+  }
 }
 
 function gigya_raas_user_logout($account) {
-    $helper = new GigyaHelper();
-    $helper->saveUserLogoutCookie();
+  $helper = new GigyaHelper();
+  $helper->saveUserLogoutCookie();
 }

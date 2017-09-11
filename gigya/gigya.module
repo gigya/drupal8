@@ -40,5 +40,5 @@ function gigya_page_attachments(array &$attachments) {
   }
 
 
-    
+
 }

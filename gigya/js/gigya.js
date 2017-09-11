@@ -5,7 +5,7 @@
 
 (function ($, Drupal, drupalSettings) {
 
-    'use strict';
+  'use strict';
 
     var init = function () {
         window.__gigyaConf = drupalSettings.gigya.globalParameters;

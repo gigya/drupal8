@@ -11,7 +11,6 @@ function gigya_page_attachments(array &$attachments) {
     if (!empty($api_key)) {
         //Add gigya params to drupalSettings.
         $global_params = \Drupal::config('gigya.global')->get('gigya.globalParameters');
-
         \Drupal::moduleHandler()->alter('gigya_global_parameters', $global_params);
 
         $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;

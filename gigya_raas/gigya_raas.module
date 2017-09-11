@@ -1,6 +1,6 @@
 <?php
 use Drupal\gigya\Helper\GigyaHelper;
-use Drupal\Component\Utility;
+
 /**
  * Implements hook_page_attachments().
  *

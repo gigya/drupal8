@@ -1,5 +1,6 @@
 <?php
 use Drupal\gigya\Helper\GigyaHelper;
+
 /**
  * @file
  * This module provides a link to Gigya DS data.
@@ -25,7 +26,6 @@ function gigya_ds_gigya_raas_map_data_alter(&$gigya_data, &$drupal_user, &$field
   foreach ($ds_mapping as $map) {
     $field_map[$map['cmsName']] = $map['gigyaName'];
   }
-
   $res = gigya_ds_get_data($gigya_data->getUID());
   $gigya_data->ds = $res;
 }
@@ -98,12 +98,12 @@ function gigya_ds_retrieve_field_mappings() {
   try {
     $mappingJson = \Drupal::config('gigya_ds.settings')->get('gigya_ds.gigya_ds_mapping');
     if ('' == $mappingJson) {
-      watchdog('gigya_ds', t('No mapping found'));
+        \Drupal::logger('gigya_ds')->error('No mapping found');
       return FALSE;
     }
     return (_gigya_ds_process_mapping($mappingJson));
-  } catch (Exeption $e) {
-    watchdog('gigya_ds', t('No mapping file found'));
+  } catch (Exception $e) {
+      \Drupal::logger('gigya_ds')->error('No mapping file found');
     return FALSE;
   }
 }
@@ -113,7 +113,7 @@ function _gigya_ds_process_mapping($json) {
     $map = json_decode($json, TRUE);
 
     return $map;
-  } catch (Exeption $e) {
+  } catch (Exception $e) {
     return FALSE;
   }
 }

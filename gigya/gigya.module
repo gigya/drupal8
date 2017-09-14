@@ -38,7 +38,4 @@ function gigya_page_attachments(array &$attachments) {
     // Add Library.
     $attachments['#attached']['library'][] = 'gigya/drupalGigya';
   }
-
-
-
 }

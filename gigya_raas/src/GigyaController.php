@@ -6,7 +6,7 @@
  */
 
 namespace Drupal\gigya_raas;
-
+use Drupal\Core\Entity\Exception;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\AlertCommand;
 use Drupal\Core\Ajax\RedirectCommand;
@@ -15,6 +15,7 @@ use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\gigya\Helper\GigyaHelper;
+
 
 /**
  * Returns responses for Editor module routes.
@@ -90,7 +91,7 @@ class GigyaController extends ControllerBase {
       $response = new AjaxResponse();
 
       if ($gigyaUser = $this->helper->validateUid($guid, $uid_sig, $sig_timestamp)) {
-        if (empty($gigyaUser->getLoginIds['emails'])) {
+        if (empty($gigyaUser->getLoginIDs['emails'])) {
           $err_msg = $this->t(
             'Email address is required by Drupal and is missing, please contact the site administrator.'
           );
@@ -159,15 +160,16 @@ class GigyaController extends ControllerBase {
               $response->addCommand(new AlertCommand($err_msg));
               return $response;
             }
-
-            $uname = !empty($gigyaUser->getProfile()->getUsername()) ? $gigyaUser->getProfile()->getUsername()
+            $gigya_user_name = $gigyaUser->getProfile()->getUsername();
+            $uname = !empty($gigya_user_name) ? $gigyaUser->getProfile()->getUsername()
               : $gigyaUser->getProfile()->getFirstName();
             if (!$this->helper->getUidByName($uname)) {
               $username = $uname;
             }
             else {
               // If user name is taken use first name if it is not empty.
-              if (!empty($gigyaUser->getProfile()->getFirstName())
+              $gigya_firstname = $gigyaUser->getProfile()->getFirstName();
+              if (!empty($gigya_firstname)
                 && (!$this->helper->getUidByName(
                   $gigyaUser->getProfile()->getFirstName()
                 ))
@@ -195,7 +197,6 @@ class GigyaController extends ControllerBase {
               $raas_login = TRUE;
               $this->gigyaRaasExtCookieAjax($request, $raas_login);
               user_login_finalize($user);
-
 
             } catch (Exception $e) {
               session_destroy();

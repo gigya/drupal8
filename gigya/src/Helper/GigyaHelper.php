@@ -175,11 +175,12 @@ class GigyaHelper implements GigyaHelperInterface{
     return $res->serialize()['data'];
   }
 
-  public function doSingleDsSearch($type, $fields, $uid) {
+  public function doSingleDsSearch($type, $oid, $fields, $uid) {
     $dsQueryObj = $this->getGigyaDsQuery();
     $dsQueryObj->setFields($fields);
     $dsQueryObj->setTable($type);
     $dsQueryObj->addWhere("UID", "=", $uid, "string");
+    $dsQueryObj->addWhere("oid", "=", $oid, "string");
     $res = $dsQueryObj->dsSearch()->serialize()['results'];
     return $this->dsProcessSearch($res);
   }

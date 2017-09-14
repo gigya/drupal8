@@ -1,6 +1,5 @@
 <?php
 use Drupal\gigya\Helper\GigyaHelper;
-
 /**
  * @file
  * This module provides a link to Gigya DS data.
@@ -26,6 +25,7 @@ function gigya_ds_gigya_raas_map_data_alter(&$gigya_data, &$drupal_user, &$field
   foreach ($ds_mapping as $map) {
     $field_map[$map['cmsName']] = $map['gigyaName'];
   }
+
   $res = gigya_ds_get_data($gigya_data->getUID());
   $gigya_data->ds = $res;
 }
@@ -137,7 +137,7 @@ function _gigya_ds_create_query($gigya_keyed, $uid) {
     }
   }
 
-  if (!\Drupal::config('gigya_ds.settings')->get('gigya_ds.gigya_ds_use_search')) {
+  if (\Drupal::config('gigya_ds.settings')->get('gigya_ds.gigya_ds_use_search')) {
     $res = _gigya_ds_do_ds_search($types, $dsFields, $uid);
   }
   else {
@@ -166,7 +166,14 @@ function _gigya_ds_do_ds_search($types, $fields, $uid) {
   $helper = new GigyaHelper();
   $data = array();
   foreach ($types as $type => $oid) {
-    $data[$type] = $helper->doSingleDsSearch($type, $fields, $uid);
+    foreach ($oid as $oid_value) {
+      if (!isset($data[$type])) {
+        $data[$type] = $helper->doSingleDsSearch($type, $oid_value, $fields, $uid);
+      }
+      else {
+        $data[$type] += $helper->doSingleDsSearch($type, $oid_value, $fields, $uid);
+      }
+    }
   }
   return $data;
 }

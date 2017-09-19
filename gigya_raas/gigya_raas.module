@@ -30,7 +30,6 @@ function gigya_raas_page_attachments(array &$attachments) {
       $global_params['sessionExpiration'] = $expiration;
       $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
 
-      \Drupal::moduleHandler()->alter('gigya_global_parameters', $global_params);
 
       if (\Drupal::currentUser()->isAnonymous()) {
         $raas_login    = array(

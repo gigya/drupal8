@@ -13,7 +13,7 @@ use Drupal\Core\Ajax\AlertCommand;
 use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Form\FormState;
 use Drupal\gigya_raas\GigyaController;
-use Drupal\simpletest\BrowserTestBase;
+use Drupal\Tests\BrowserTestBase;
 use Gigya\CmsStarterKit\sdk\GSApiException;
 use Gigya\CmsStarterKit\sdk\GSResponse;
 use Gigya\CmsStarterKit\user\GigyaUserFactory;
@@ -73,11 +73,7 @@ class GigyaTest extends BrowserTestBase {
     $this->successResponse = new AjaxResponse();
     $this->successResponse->addCommand(new RedirectCommand("/"));
 
-
-
     $this->requestMock = $this->getMockBuilder('Symfony\Component\HttpFoundation\Request')->getMock();
-
-
 
     $this->gigyaAdmin = $this->drupalCreateUser(['gigya major admin', 'bypass gigya raas']);
     $this->helperMock = $this->getMockBuilder('\Drupal\gigya\Helper\GigyaHelper')

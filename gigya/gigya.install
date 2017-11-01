@@ -42,8 +42,10 @@ function hook_update_N()  {
 
 
     //OR:
-    $source = new FileStorage('\gigya\config\install\');
-      /** @var \Drupal\Core\Config\StorageInterface $active_storage */
+    $source = new FileStorage('\gigya\config\install\\');
+      /**
+      * @var \Drupal\Core\Config\StorageInterface $active_storage
+      */
       $active_storage = \Drupal::service('config.storage');
       $active_storage->write($name, $source->read(gigya.job.yml));
 }

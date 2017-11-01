@@ -1,12 +1,11 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Inbal.Zi
- * Date: 8/24/2017
- * Time: 2:22 PM
+ * @file
+ * Contains \Drupal\gigya\Plugin\QueueWorker\DeleteUsersQueueWorker.
  */
 
-namespace Drupal\gigya\gigya\Plugin\QueueWorker;
+namespace Drupal\gigya\Plugin\QueueWorker;
+
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity;
 use Drupal\Core\Database;
@@ -26,9 +25,10 @@ use Drupal\Component\Utility;
  *   cron = {"time" = 90}
  * )
  */
-class DeleteUsersQueueWorker extends QueueWorkerBase  {
-    public function processItem($item) {
-        $account = $item->gigya_uid;
+class DeleteUsersQueueWorker extends QueueWorkerBase
+{
+	public function processItem($item) {
+		$account = $item->gigya_uid;
         \Drupal::logger('gigya')->info("processed item");
         $helper = new GigyaHelper();
         $messageSucceed = "User successfully deleted from CMS - UID: ";
@@ -65,9 +65,6 @@ class DeleteUsersQueueWorker extends QueueWorkerBase  {
         else {
             //add to logs
             \Drupal::logger('gigya')->error("Failed to delete UID: " . $account . ", UID wasn't found in CMS");
-
         }
-
-
     }
 }

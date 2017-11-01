@@ -63,7 +63,6 @@ function delete_uid_queue_name() {
  * Implements hook_cron().
  */
 function gigya_cron() {
-	\Drupal::logger('cron activated');
     $enable_job = \Drupal::config('gigya.job')->get('gigya.enableJob');
     $counter_succeed = 0;
     $counter_failed = 0;
@@ -78,7 +77,6 @@ function gigya_cron() {
             //Add delete-user job to queue
           //  $queue_factory = \Drupal::service('queue');
             //creates a new DatabaseQueue
-         //   $queue = $queue_factory->get('delete_users_queue_worker');
 
             $queue = \Drupal::queue('job_queue');
             $queue->createQueue();
@@ -144,7 +142,6 @@ function runQueue() {
     /** @var QueueInterface $queue */
     $queue = \Drupal::queue('job_queue');
     /** @var QueueWorkerInterface $queue_worker */
-  //  $queue_worker = $queueManager->createInstance('delete_users_queue_worker');
 
     while($item = $queue->claimItem()) {
         try {
@@ -165,6 +162,7 @@ function runQueue() {
 //Function connect to S3 and retrieves all files in bucket (name only)
 function filesList()
 {
+//	\Drupal::logger('file list called');
     try
     {
         $secretKey = "";

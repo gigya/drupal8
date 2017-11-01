@@ -62,7 +62,7 @@ function delete_uid_queue_name() {
 /**
  * Implements hook_cron().
  */
-function gigya_job_cron() {
+function gigya_cron() {
 	\Drupal::logger('cron activated');
     $enable_job = \Drupal::config('gigya.job')->get('gigya.enableJob');
     $counter_succeed = 0;

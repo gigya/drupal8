@@ -23,7 +23,7 @@ use Drupal\Component\Utility;
  * @QueueWorker(
  *   id = "gigya",
  *   title = @Translation("Example: Queue worker"),
- *   cron = {"time" = 90}QueueWorkerBase
+ *   cron = {"time" = 90}
  * )
  */
 class DeleteUsersQueueWorker extends QueueWorkerBase  {

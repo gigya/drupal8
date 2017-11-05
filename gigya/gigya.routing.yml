@@ -5,11 +5,3 @@ gigya.admin.form:
     _title: 'Gigya credentials settings'
   requirements:
     _permission: 'gigya major admin'
-
-gigya.admin.job:
-  path: '/admin/config/gigya/job'
-  defaults:
-    _form: 'Drupal\gigya\Form\GigyaJobForm'
-    _title: 'Gigya user deletion sync'
-  requirements:
-    _permission: 'gigya major admin'

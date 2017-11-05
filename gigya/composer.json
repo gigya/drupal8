@@ -16,7 +16,6 @@
     }
   ],
   "require": {
-    "gigya/cms-starter-kit": "1.1.9",
-    "aws/aws-sdk-php": "2.*"
+    "gigya/cms-starter-kit": "1.1.9"
   }
 }

@@ -1,0 +1,11 @@
+name: Gigya Hard Delete
+type: module
+description: 'Gigya hard delete module. Allows permanently deleting user data.'
+package: Gigya
+configure: gigya.cron.form
+version: '8.x-1.7'
+core: '8.x'
+project: 'gigya'
+dependencies:
+  - gigya
+  - gigya_raas

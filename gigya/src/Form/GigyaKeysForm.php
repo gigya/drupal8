@@ -231,7 +231,7 @@ class GigyaKeysForm extends ConfigFormBase {
     }
 
     $config->save();
-    return parent::submitForm($form, $form_state);
+    parent::submitForm($form, $form_state);
   }
 
   private function getValue($form_state, $prop_name) {

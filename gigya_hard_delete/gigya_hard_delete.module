@@ -111,18 +111,18 @@
 					{
 						user_delete($user->get('uid')->value);
 						$counter_succeed++;
-						\Drupal::logger('my_module')->notice($messageSucceed . $user->get('uid')->value);
+						\Drupal::logger('gigya_hard_delete')->notice($messageSucceed . $user->get('uid')->value);
 					}
 					catch (\Exception $e)
 					{
 						//add to logs
-						\Drupal::logger('my_module')->error("Failed to delete UID " . $user->get('uid')->value . " from CMS with error - " . $e);
+						\Drupal::logger('gigya_hard_delete')->error("Failed to delete UID " . $user->get('uid')->value . " from CMS with error - " . $e);
 						//increase failed counter to send in email
 						$counter_failed++;
 					}
 				}
                 else {
-                    \Drupal::logger('my_module')->error("Failed to delete UID " . $uid . " from CMS with error - user doesn't exist");
+                    \Drupal::logger('gigya_hard_delete')->error("Failed to delete UID " . $uid . " from CMS with error - user doesn't exist");
                 }
                 $queue_users->deleteItem($item_user);
 			}
@@ -148,7 +148,7 @@
 					$total = $counter_failed + $counter_succeed;
 
 					/* Send email on succeed */
-					$message = "CMS delete job succeed for " . $counter_succeed . "/" . $total . "users.";
+					$message = "CMS delete job success for " . $counter_succeed . "/" . $total . " users. Site: " . $_SERVER['SERVER_NAME'];
 					$to = \Drupal::config('gigya.job')->get('gigya.emailOnSuccess');
 					sendEmail($subject, $message, $to);
 				}
@@ -162,7 +162,6 @@
 					sendEmail($subject, $message, $to);
 				}
 			}
-
 		}
 	}
 
@@ -285,29 +284,43 @@
 	}
 
 	/**
+	 * Implement hook_mail()
+	 *
+	 * {@inheritdoc}
+	 */
+	function gigya_hard_delete_mail($key, &$message, $params) {
+		$options = array(
+			'langcode' => $message['langcode'],
+		);
+
+		$message['from'] = \Drupal::config('system.site')->get('mail');
+		$message['subject'] = t($params['subject'], array(), $options);
+		$message['body'][] = $params['message'];
+	}
+
+	/**
 	 * Send email
 	 *
 	 * @param    $subject
-	 * @param    $message
+	 * @param    $body
 	 * @param    $to
 	 */
-	function sendEmail($subject, $message, $to) {
+	function sendEmail($subject, $body, $to) {
 		$mailManager = \Drupal::service('plugin.manager.mail');
-		$module = 'gigya';
+		$module = 'gigya_hard_delete';
 		$params['subject'] = $subject;
-		$params['body'] = $message;
-		$key = "job_email";
+		$params['message'] = $body;
+		$key = 'job_email';
 		$langcode = \Drupal::currentUser()->getPreferredLangcode();
 		if (!$langcode)
 		{
 			$langcode = 'en';
 		}
-		$send = true;
 		try
 		{
 			foreach (explode(",", $to) as $email)
 			{
-				$result = $mailManager->mail($module, $key, $email, $langcode, $params, NULL, $send);
+				$result = $mailManager->mail($module, $key, $email, $langcode, $params, null, $send = true);
 				if (!$result)
 				{
 					\Drupal::logger('gigya_hard_delete')->error("Failed to send email to " . $email);

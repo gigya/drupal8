@@ -199,8 +199,8 @@ class GigyaKeysForm extends ConfigFormBase {
         $msg = $res->getMessage();
         //@TODO: see how we can print markup in the error messages.
 
-        $form_state->setErrorByName('gigya_api_key', $this->t("Gigya API error: {$code} - {$msg}.") .
-        "For more information please refer to <a href=http://developers.gigya.com/037_API_reference/zz_Response_Codes_and_Errors target=_blank>Response_Codes_and_Errors page</a>");
+		$gigya_api_error = new Drupal\Core\StringTranslation\TranslatableMarkup('Gigya API error: '.$code.' - '.$msg.'. For more information please refer to <a href="https://developers.gigya.com/display/GD/Response+Codes+and+Errors+REST" target="_blank">@message</a>.', array('@message' => 'Response Codes and Errors page'));
+        $form_state->setErrorByName('gigya_api_key', $gigya_api_error);
         Drupal::logger('gigya')->error('Error setting API key, error code: @code - @msg', array('@code' => $code, '@msg' => $msg));
       }
       else {

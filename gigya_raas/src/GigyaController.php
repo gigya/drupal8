@@ -280,7 +280,7 @@
 						$token, $expiration, $gigya_conf->get('gigya.gigya_application_key'),
 						$helper->decrypt($gigya_conf->get('gigya.gigya_application_secret_key'))
 					);
-					setrawcookie('gltexp_' . $api_key, rawurlencode($session_sig), $expiration, '/', $request->getHost());
+					setrawcookie('gltexp_' . $api_key, rawurlencode($session_sig), time() + (10 * 365 * 24 * 60 * 60), '/', $request->getHost());
 				}
 			}
 			return new AjaxResponse();
@@ -304,25 +304,6 @@
 				return !empty($gltexp_cookie);
 			}
 			return TRUE;
-		}
-
-		private function calculateExpCookieValue($secondsToExpiration, $api_key, $applicationKey, $secretKey) {
-			$currentTime = time(); // current Unix time (number of seconds since January 1 1970 00:00:00 GMT)
-			$expirationTime = $currentTime + $secondsToExpiration; // expiration time in Unix time format
-			$tokenCookieName = "glt_" . $api_key;   //  the name of the token-cookie Gigya stores
-			$tokenCookieValue = trim($_COOKIE[$tokenCookieName]);
-			$loginToken = explode("|", $tokenCookieValue)[0]; // get the login token from the token-cookie.
-			$unsignedExpString = $loginToken . '_' . $expirationTime . '_' . $applicationKey; // define base string for signing
-			$signedExpString = signBaseString($secretKey, $unsignedExpString); // sign the base string using the secret key
-			$cookieValue = $expirationTime . '_' . $applicationKey . '_' . $signedExpString;   // define the cookie value
-			return $cookieValue;
-		}
-
-		function signBaseString($key, $unsignedExpString) {
-			$unsignedExpString = utf8_encode($unsignedExpString);
-			$rawHmac = hash_hmac("sha1", utf8_encode($unsignedExpString), base64_decode($key), true);
-			$signature = base64_encode($rawHmac);
-			return $signature;
 		}
 
 		private function calcDynamicSessionSig($token, $expiration, $userKey, $secret) {

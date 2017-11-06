@@ -131,38 +131,38 @@
 
 			// Update last run.
 			\Drupal::state()->set('job.last_run', $request_time);
-//			if (($queue_users->numberOfItems() > 0) && ($queue_file->numberOfItems() > 0))
-//			{
-			if ($counter_succeed !== 0) /* If job succeeded */ //// FIXME: Does not currently work. This variable is always 0, so it always skips to failure.
+			if (($queue_users->numberOfItems() > 0) && ($queue_file->numberOfItems() > 0))
 			{
-				//Update last run only on succeed.
-				\Drupal::state()->set('job.last_run', $request_time);  //// FIXME: This might not actually work.
-				//if completed with errors
-				if ($counter_failed > 0)
+				if ($counter_succeed !== 0) /* If job succeeded */ //// FIXME: Does not currently work. This variable is always 0, so it always skips to failure.
 				{
-					$subject = "Deleted users job completed with errors";
-				} //if succeed
+					//Update last run only on succeed.
+					\Drupal::state()->set('job.last_run', $request_time);  //// FIXME: This might not actually work.
+					//if completed with errors
+					if ($counter_failed > 0)
+					{
+						$subject = "Deleted users job completed with errors";
+					} //if succeed
+					else
+					{
+						$subject = "Deleted users job completed successfully";
+					}
+					$total = $counter_failed + $counter_succeed;
+
+					/* Send email on succeed */
+					$message = "CMS delete job success for " . $counter_succeed . "/" . $total . "users.";
+					$to = \Drupal::config('gigya.job')->get('gigya.emailOnSuccess');
+					sendEmail($subject, $message, $to);
+				}
+				/* If job failed, send email */
 				else
 				{
-					$subject = "Deleted users job completed successfully";
+					$total = $counter_failed + $counter_succeed;
+					$message = "CMS delete job failed (total of " . $total . ").";
+					$subject = "Deleted users job failed";
+					$to = \Drupal::config('gigya.job')->get('gigya.emailOnFailure');
+					sendEmail($subject, $message, $to);
 				}
-				$total = $counter_failed + $counter_succeed;
-
-				/* Send email on succeed */
-				$message = "CMS delete job success for " . $counter_succeed . "/" . $total . "users.";
-				$to = \Drupal::config('gigya.job')->get('gigya.emailOnSuccess');
-				sendEmail($subject, $message, $to);
 			}
-			/* If job failed, send email */
-			else
-			{
-				$total = $counter_failed + $counter_succeed;
-				$message = "CMS delete job failed (total of " . $total . ").";
-				$subject = "Deleted users job failed";
-				$to = \Drupal::config('gigya.job')->get('gigya.emailOnFailure');
-				sendEmail($subject, $message, $to);
-			}
-//			}
 		}
 	}
 

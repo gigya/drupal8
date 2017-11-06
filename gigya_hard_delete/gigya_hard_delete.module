@@ -28,9 +28,10 @@
 	 */
 	function gigya_hard_delete_cron() {
 		$enable_job = \Drupal::config('gigya.job')->get('gigya.enableJob');
-		//Reset counters
-		$counter_succeed = 0;
-		$counter_failed = 0;
+
+		//Get counters from DB or set 0 if null
+		$counter_succeed = \Drupal::state()->get('job.counter_succeed', 0);
+		$counter_failed = \Drupal::state()->get('job.counter_failed', 0);
 
 		$messageSucceed = "User successfully deleted from CMS - UID: ";
 		if ($enable_job)
@@ -98,6 +99,8 @@
                 //remove the file from the queue_file
 				$queue_file->deleteItem($item_file);
 			}
+            //Update last run when file queue is empty.
+            \Drupal::state()->set('job.last_run', $request_time);
 
 			/* Claim uid from queue_users and delete it */
 			while ($queue_users->numberOfItems() > 0)
@@ -111,6 +114,7 @@
 					{
 						user_delete($user->get('uid')->value);
 						$counter_succeed++;
+                        \Drupal::state()->set('job.counter_succeed', $counter_succeed);
 						\Drupal::logger('gigya_hard_delete')->notice($messageSucceed . $user->get('uid')->value);
 					}
 					catch (\Exception $e)
@@ -119,6 +123,7 @@
 						\Drupal::logger('gigya_hard_delete')->error("Failed to delete UID " . $user->get('uid')->value . " from CMS with error - " . $e);
 						//increase failed counter to send in email
 						$counter_failed++;
+                        \Drupal::state()->set('job.counter_succeed', $counter_failed);
 					}
 				}
                 else {
@@ -127,15 +132,11 @@
                 $queue_users->deleteItem($item_user);
 			}
 
-			// Update last run.
-			\Drupal::state()->set('job.last_run', $request_time);
 			if (($queue_users->numberOfItems() == 0) && ($queue_file->numberOfItems() == 0))
 			{
                 //If full succeed or partial
 				if ($counter_succeed > 0)
 				{
-					//Update last run only on succeed.
-					\Drupal::state()->set('job.last_run', $request_time);
 					//if completed with errors
 					if ($counter_failed > 0)
 					{
@@ -161,15 +162,13 @@
 					$to = \Drupal::config('gigya.job')->get('gigya.emailOnFailure');
 					sendEmail($subject, $message, $to);
 				}
+                //Reset counters on DB
+                \Drupal::state()->set('job.counter_succeed', 0);
+                \Drupal::state()->set('job.counter_failed', 0);
 			}
 		}
 	}
 
-	function add_files_to_queue() {
-	}
-
-	function add_users_to_queue() {
-	}
 
 	/**
 	 * Function connect to S3 and retrieves all files in bucket (name only)

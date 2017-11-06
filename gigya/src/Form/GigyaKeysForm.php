@@ -75,6 +75,9 @@ class GigyaKeysForm extends ConfigFormBase {
     else {
       $form['gigya_application_secret_key']['#default_value'] = "*********";
       $form['gigya_application_secret_key']['#required'] = FALSE;
+      $form['gigya_application_secret_key']['#attributes'] = array(
+      	'autocomplete' => 'off'
+	  );
       $form['gigya_application_secret_key']['#description'].= $this->t(",current key first and last letters are
         @accessKey", array('@accessKey' => substr($access_key, 0, 2) . "****" .
         substr($access_key, strlen($access_key) - 2, 2)));

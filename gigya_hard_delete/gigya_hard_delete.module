@@ -16,7 +16,7 @@
 	 * @param array $attachments
 	 */
 	function gigya_hard_delete_page_attachments(array &$attachments) {
-		\Drupal::moduleHandler()->invoke('gigya', 'job_cron');
+		\Drupal::moduleHandler()->invoke('gigya_hard_delete', 'job_cron');
 	}
 
 	function delete_uid_queue_name() {

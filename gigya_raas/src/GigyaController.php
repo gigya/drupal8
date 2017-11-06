@@ -269,18 +269,23 @@
 				$session_ttl = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
 				$api_key = $gigya_conf->get('gigya.gigya_api_key');
 				$glt_cookie = $request->cookies->get('glt_' . $api_key);
-				$token = (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL;
+				$token = (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL; /* PHP 5.4+ */
 				$now = $_SERVER['REQUEST_TIME'];
 				$expiration = strval($now + $session_ttl);
 				$helper = new GigyaHelper();
 
-				if (!empty($token))
+				$gltexp_cookie = $request->cookies->get('gltexp_' . $api_key);
+				$gltexp_cookie_timestamp = explode('_', $gltexp_cookie)[0];
+				if (empty($gltexp_cookie_timestamp) or (time() < $gltexp_cookie_timestamp))
 				{
-					$session_sig = $this->calcDynamicSessionSig(
-						$token, $expiration, $gigya_conf->get('gigya.gigya_application_key'),
-						$helper->decrypt($gigya_conf->get('gigya.gigya_application_secret_key'))
-					);
-					setrawcookie('gltexp_' . $api_key, rawurlencode($session_sig), time() + (10 * 365 * 24 * 60 * 60), '/', $request->getHost());
+					if (!empty($token))
+					{
+						$session_sig = $this->calcDynamicSessionSig(
+							$token, $expiration, $gigya_conf->get('gigya.gigya_application_key'),
+							$helper->decrypt($gigya_conf->get('gigya.gigya_application_secret_key'))
+						);
+						setrawcookie('gltexp_' . $api_key, rawurlencode($session_sig), time() + (10 * 365 * 24 * 60 * 60), '/', $request->getHost());
+					}
 				}
 			}
 			return new AjaxResponse();

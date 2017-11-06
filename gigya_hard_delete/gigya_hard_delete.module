@@ -23,147 +23,155 @@
 		return 'delete_uid_queue';
 	}
 
-
 	/**
 	 * Implements hook_cron().
 	 */
 	function gigya_hard_delete_cron() {
 		$enable_job = \Drupal::config('gigya.job')->get('gigya.enableJob');
-        //TBD: change the counter
-        $counter_succeed = 0;
-        $counter_failed = 0;
+		//TBD: change the counter
+		$counter_succeed = 0;
+		$counter_failed = 0;
 
-        $messageSucceed = "User successfully deleted from CMS - UID: ";
+		$messageSucceed = "User successfully deleted from CMS - UID: ";
 		if ($enable_job)
 		{
-            $helper = new GigyaHelper();
+			$helper = new GigyaHelper();
 			$job_frequency = \Drupal::config('gigya.job')->get('gigya.jobFrequency');
 			//REQUEST_TIME
 			$request_time = \Drupal::time()->getRequestTime();
 			//get last run
 			$last_run = \Drupal::state()->get('job.last_run', 0); //// FIXME: This might not actually work. It seems to always return 0
-            //creates a new queue_file
-            $queue_file = \Drupal::queue('job_queue_file');
-            $queue_file->deleteQueue();
-            $queue_file->createQueue();
-            //create queue_users
-            $queue_users = \Drupal::queue('job_queue_users');
-            $queue_users->createQueue();
-
+			//creates a new queue_file
+			$queue_file = \Drupal::queue('job_queue_file');
+			$queue_file->deleteQueue();
+			$queue_file->createQueue();
+			//create queue_users
+			$queue_users = \Drupal::queue('job_queue_users');
+			$queue_users->createQueue();
 
 			/* If x seconds passed since last time add file to queue_file */
-			if (($request_time - $last_run) > $job_frequency) {
-                /* Get files from S3 */
-                $files = getFileList();
-                $queue_file = \Drupal::queue('job_queue_file');
-                \Drupal::logger('gigya_hard_delete')->debug(var_export($queue_file, true));
-                $last_run = \Drupal::state()->get('job.last_run', 0);
+			if (($request_time - $last_run) > $job_frequency)
+			{
+				/* Get files from S3 */
+				$files = getFileList();
+				$queue_file = \Drupal::queue('job_queue_file');
+				\Drupal::logger('gigya_hard_delete')->debug(var_export($queue_file, true));
+				$last_run = \Drupal::state()->get('job.last_run', 0);
 
-                //add files to queue
-                if (!empty($files)) {
-                    foreach ($files as $file) {
-                        $fileDateTimestamp = strtotime($file['LastModified']);
-                        if (($fileDateTimestamp > $last_run) and ($file['Size'] > 0)) {
-                            //Add item - file to queue_file
-                            $queue_file->createItem($file);
-                        }
-                    }
-                }
-                //save counter value on DB and add to log
-                $queue_files_counter = $queue_file->numberOfItems();
-                \Drupal::state()->set('job.queue_files_counter', $queue_files_counter);
-                \Drupal::logger('gigya_hard_delete')->info($queue_files_counter . ' files added to queue at ' . \Drupal::time()->getRequestTime());
-            }
+				//add files to queue
+				if (!empty($files))
+				{
+					foreach ($files as $file)
+					{
+						$fileDateTimestamp = strtotime($file['LastModified']);
+						if (($fileDateTimestamp > $last_run) and ($file['Size'] > 0))
+						{
+							//Add item - file to queue_file
+							$queue_file->createItem($file);
+						}
+					}
+				}
+				//save counter value on DB and add to log
+				$queue_files_counter = $queue_file->numberOfItems();
+				\Drupal::state()->set('job.queue_files_counter', $queue_files_counter);
+				\Drupal::logger('gigya_hard_delete')->info($queue_files_counter . ' files added to queue at ' . \Drupal::time()->getRequestTime());
+			}
 
-
-            //If queue_file is not empty take item (file) and add all users to queue_users
-            while ($queue_file->numberOfItems() > 1) {
-                $item = $queue_file->claimItem();
-                $item_array = (array) $item;
-                $file = $item_array['data']['Key'];
-                if ($file !== null) {
-                    $accounts = getUsers($file);
-                    foreach ($accounts as $account) {
-                        foreach ($account as $gigya_uid) {
-                            //Add item - account to queue_users
-                            $item = array('gigya_uid' => $gigya_uid);
-                            $queue_users->createItem($item);
-                        }
-                    }
-                    //remove the file from the queue_file
-                    $queue_file->deleteItem($item);
-                }
-                else {
-                    $queue_file->deleteItem($item);
-                }
-            }
-
+			//If queue_file is not empty take item (file) and add all users to queue_users
+			while ($queue_file->numberOfItems() > 1)
+			{
+				$item = $queue_file->claimItem();
+				$item_array = (array)$item;
+				$file = $item_array['data']['Key'];
+				if ($file !== null)
+				{
+					$accounts = getUsers($file);
+					foreach ($accounts as $account)
+					{
+						foreach ($account as $gigya_uid)
+						{
+							//Add item - account to queue_users
+							$item = array('gigya_uid' => $gigya_uid);
+							$queue_users->createItem($item);
+						}
+					}
+					//remove the file from the queue_file
+					$queue_file->deleteItem($item);
+				}
+				else
+				{
+					$queue_file->deleteItem($item);
+				}
+			}
 
 			/* Claim uid from queue_users and delete it */
-            while ($queue_users->numberOfItems() > 0) {
-                $item = $queue_users->claimItem();
-                $item_array = (array)$item;
-                $uid = $item_array['data']['gigya_uid'];
-                if ($user = $helper->getUidByUUID($uid)) {
-                    try {
-                        user_delete($user);
-                        $counter_succeed++;
-                        \Drupal::logger('my_module')->notice($messageSucceed . $user);
-                    }
-                    catch (\Exception $e) {
-                        //add to logs
-                        \Drupal::logger('my_module')->error("Failed to delete UID " . $user . " from CMS with error - " . $e);
-                        //increase failed counter to send in email
-                        $counter_failed++;
-                    }
-                    $queue_users->deleteItem($uid);
-                }
-            }
+			while ($queue_users->numberOfItems() > 0)
+			{
+				$item = $queue_users->claimItem();
+				$item_array = (array)$item;
+				$uid = $item_array['data']['gigya_uid'];
+				if ($user = $helper->getUidByUUID($uid))
+				{
+					try
+					{
+						user_delete($user);
+						$counter_succeed++;
+						\Drupal::logger('my_module')->notice($messageSucceed . $user);
+					}
+					catch (\Exception $e)
+					{
+						//add to logs
+						\Drupal::logger('my_module')->error("Failed to delete UID " . $user . " from CMS with error - " . $e);
+						//increase failed counter to send in email
+						$counter_failed++;
+					}
+					$queue_users->deleteItem($uid);
+				}
+			}
 
-            // Update last run.
-            \Drupal::state()->set('job.last_run', $request_time);
-            if (($queue_users->numberOfItems() > 0) && ($queue_file->numberOfItems() > 0)) {
-                if ($counter_succeed !== 0) /* If job succeed */ //// FIXME: Does not currently work. This variable is always 0, so it always skips to success.
-                {
-                    //Update last run only on succeed.
-                    \Drupal::state()->set('job.last_run', $request_time);  //// FIXME: This might not actually work.
-                    //if completed with errors
-                    if ($counter_failed > 0)
-                    {
-                        $subject = "Deleted users job completed with errors";
-                    } //if succeed
-                    else
-                    {
-                        $subject = "Deleted users job completed successfully";
-                    }
-                    $total = $counter_failed + $counter_succeed;
+			// Update last run.
+			\Drupal::state()->set('job.last_run', $request_time);
+			if (($queue_users->numberOfItems() > 0) && ($queue_file->numberOfItems() > 0))
+			{
+				if ($counter_succeed !== 0) /* If job succeed */ //// FIXME: Does not currently work. This variable is always 0, so it always skips to success.
+				{
+					//Update last run only on succeed.
+					\Drupal::state()->set('job.last_run', $request_time);  //// FIXME: This might not actually work.
+					//if completed with errors
+					if ($counter_failed > 0)
+					{
+						$subject = "Deleted users job completed with errors";
+					} //if succeed
+					else
+					{
+						$subject = "Deleted users job completed successfully";
+					}
+					$total = $counter_failed + $counter_succeed;
 
-                    /* Send email on succeed */
-                    $message = "CMS delete job succeed for " . $counter_succeed . "/" . $total . "users.";
-                    $to = \Drupal::config('gigya.job')->get('gigya.emailOnSuccess');
-                    sendEmail($subject, $message, $to);
-                }
-                /* If job failed, send email */
-                else {
-                    $total = $counter_failed + $counter_succeed;
-                    $message = "CMS delete job failed (total of " . $total . ").";
-                    $subject = "Deleted users job failed";
-                    $to = \Drupal::config('gigya.job')->get('gigya.emailOnFailure');
-                    sendEmail($subject, $message, $to);
-                }
-            }
+					/* Send email on succeed */
+					$message = "CMS delete job succeed for " . $counter_succeed . "/" . $total . "users.";
+					$to = \Drupal::config('gigya.job')->get('gigya.emailOnSuccess');
+					sendEmail($subject, $message, $to);
+				}
+				/* If job failed, send email */
+				else
+				{
+					$total = $counter_failed + $counter_succeed;
+					$message = "CMS delete job failed (total of " . $total . ").";
+					$subject = "Deleted users job failed";
+					$to = \Drupal::config('gigya.job')->get('gigya.emailOnFailure');
+					sendEmail($subject, $message, $to);
+				}
+			}
 
 		}
 	}
-    function add_files_to_queue()
-    {
 
+	function add_files_to_queue() {
+	}
 
-    }
-
-    function add_users_to_queue() {
-
-    }
+	function add_users_to_queue() {
+	}
 
 	/**
 	 * Function connect to S3 and retrieves all files in bucket (name only)

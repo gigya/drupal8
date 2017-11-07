@@ -13,11 +13,10 @@ use Drupal\Core\Ajax\AlertCommand;
 use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Form\FormState;
 use Drupal\gigya_raas\GigyaController;
-use Drupal\simpletest\BrowserTestBase;
+use Drupal\Tests\BrowserTestBase;
 use Gigya\CmsStarterKit\sdk\GSApiException;
 use Gigya\CmsStarterKit\sdk\GSResponse;
 use Gigya\CmsStarterKit\user\GigyaUserFactory;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests Gigya module functionality.

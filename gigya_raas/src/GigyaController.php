@@ -6,7 +6,6 @@
 
 	namespace Drupal\gigya_raas;
 
-	use Drupal\Core\Entity\Exception;
 	use Drupal\Core\Ajax\AjaxResponse;
 	use Drupal\Core\Ajax\AlertCommand;
 	use Drupal\Core\Ajax\RedirectCommand;
@@ -258,6 +257,7 @@
 		 *
 		 * @param \Symfony\Component\HttpFoundation\Request $request
 		 *   The incoming request object.
+		 * @param	boolean	$login
 		 *
 		 * @return \Drupal\Core\Ajax\AjaxResponse
 		 *   The Ajax response

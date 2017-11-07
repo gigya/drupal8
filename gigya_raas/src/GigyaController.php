@@ -50,10 +50,7 @@
 		 */
 		public function gigyaRaasProfileAjax(Request $request) {
 			$gigya_data = $request->get('gigyaData');
-			if ($gigyaUser = $this->helper->validateUid(
-				$gigya_data['UID'], $gigya_data['UIDSignature'], $gigya_data['signatureTimestamp']
-			)
-			)
+			if ($gigyaUser = $this->helper->validateUid($gigya_data['UID'], $gigya_data['UIDSignature'], $gigya_data['signatureTimestamp']))
 			{
 				if ($user = $this->helper->getUidByUUID($gigyaUser->getUID()))
 				{
@@ -257,7 +254,7 @@
 		 *
 		 * @param \Symfony\Component\HttpFoundation\Request $request
 		 *   The incoming request object.
-		 * @param	boolean	$login
+		 * @param    boolean                                $login
 		 *
 		 * @return \Drupal\Core\Ajax\AjaxResponse
 		 *   The Ajax response

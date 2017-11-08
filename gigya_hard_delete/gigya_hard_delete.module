@@ -137,28 +137,27 @@
                 //If full succeed or partial
 				if ($counter_succeed > 0)
 				{
+                    $total = $counter_failed + $counter_succeed;
 					//if completed with errors
 					if ($counter_failed > 0)
 					{
-						$subject = "Deleted users job completed with errors";
-					} //if succeed
+						$subject = "User deletion job completed with errors";
+                        $message = "The user deletion job scheduled to run for " . $_SERVER['SERVER_NAME'] . ' at ' . $last_run . ' completed with errors.' . $counter_succeed . " out of " . $total . ' users were deleted.';
+					}
+					/* Send email on succeed */
 					else
 					{
-						$subject = "Deleted users job completed successfully";
+						$subject = "Users deleted successfully";
+                        $message = "The user deletion job scheduled to run for " . $_SERVER['SERVER_NAME'] . ' at ' . $last_run . ' completed successfully.' . $counter_succeed . " out of " . $total . ' users were deleted.';
+                        $to = \Drupal::config('gigya.job')->get('gigya.emailOnSuccess');
+                        sendEmail($subject, $message, $to);
 					}
-					$total = $counter_failed + $counter_succeed;
-
-					/* Send email on succeed */
-					$message = "CMS delete job success for " . $counter_succeed . "/" . $total . " users. Site: " . $_SERVER['SERVER_NAME'];
-					$to = \Drupal::config('gigya.job')->get('gigya.emailOnSuccess');
-					sendEmail($subject, $message, $to);
 				}
 				/* If job failed, send email */
 				elseif ($counter_failed > 0)
 				{
-					$total = $counter_failed + $counter_succeed;
-					$message = "CMS delete job failed (total of " . $total . ").";
-					$subject = "Deleted users job failed";
+                    $subject = "Failed to delete users";
+                    $message = "The user deletion job scheduled to run for " . $_SERVER['SERVER_NAME'] . ' at ' . $last_run . ' has failed. No users were deleted.';
 					$to = \Drupal::config('gigya.job')->get('gigya.emailOnFailure');
 					sendEmail($subject, $message, $to);
 				}
@@ -168,7 +167,6 @@
 			}
 		}
 	}
-
 
 	/**
 	 * Function connect to S3 and retrieves all files in bucket (name only)
@@ -307,6 +305,7 @@
 	function sendEmail($subject, $body, $to) {
 		$mailManager = \Drupal::service('plugin.manager.mail');
 		$module = 'gigya_hard_delete';
+        $params['from'] = 'Gigya IdentitySync';
 		$params['subject'] = $subject;
 		$params['message'] = $body;
 		$key = 'job_email';

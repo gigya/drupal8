@@ -14,6 +14,7 @@
 	use Drupal\Core\Form\FormState;
 	use Drupal\gigya_raas\GigyaController;
 	use Drupal\Tests\BrowserTestBase;
+	use Drupal\User\Entity\User;
 	use Gigya\CmsStarterKit\sdk\GSApiException;
 	use Gigya\CmsStarterKit\sdk\GSResponse;
 	use Gigya\CmsStarterKit\user\GigyaUser;
@@ -55,7 +56,6 @@
 		 * @var \Drupal\user\UserInterface
 		 */
 		protected $webUser;
-
 		/**
 		 * The user for tests.
 		 *
@@ -315,7 +315,7 @@
 //    $config->save();
 
 //  3. Set Gigya apikey, user app and secret and DC and save settings
-//     Expected: Settings saved secret encrypt on DB and in logs doesnt appear
+//     Expected: Settings saved secret encrypt on DB and in logs doesn't appear
 
 			$form_state = new FormState();
 			$values['gigya_api_key'] = 'apikey';
@@ -340,7 +340,7 @@
 			//Set other setting and register from front-site without required field - email, enable debug mode
 			//Expected:
 			//1. Error for missing email appears to user
-			//2. Secret doesnt appear in any messages in the logs
+			//2. Secret doesn't appear in any messages in the logs
 
 
 			$email = $this->gigyaUser->getProfile()->getEmail();
@@ -355,17 +355,16 @@
 //  Set email with required field and register
 //  Expected:
 //  1.Registration succeed, user appears in Drupal users list
-//  2. Secret doesnt appear in any messages in the logs
+//  2. Secret doesn't appear in any messages in the logs
 //  3. getAccountInfo fired without any error
 
 			$this->gigyaUser->getProfile()->setEmail($email);
 			$res = $this->gigyaControl->gigyaRaasLoginAjax($this->requestMock);
-			$user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+			$user = User::load(\Drupal::currentUser()->id());
 			$this->assertTrue(\Drupal::currentUser()->isAuthenticated());
 
 			$this->assertEquals($this->successResponse->getCommands(), $res->getCommands());
 			$this->assertEquals($this->gigyaUser->getProfile()->getEmail(), $user->getEmail());
-
 
 			$this->key = "aa";
 
@@ -373,7 +372,6 @@
 			$this->drupalLogout();
 
 			$this->checkBadForm($form_state);
-
 
 			$err_msg = t("Oops! Something went wrong during your login/registration process. Please try to login/register again.");
 

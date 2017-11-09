@@ -276,93 +276,86 @@
 		/**
 		 * Tests encrypt.
 		 */
-		public function testEncrypt() {
+//		public function testEncrypt() {
+////    2. Give the user permission in Gigya Role and load Gigya settings page
+////       Expected: 1. secret keys is visible.
+//			$this->drupalLogin($this->gigyaAdmin);
+//			$this->drupalGet('admin/config/gigya/raas/session');
+//			$this->assertSession()->statusCodeEquals('200');
+//
+//			//    $config = Drupal::service('config.factory')->getEditable('gigya.settings')->set('gigya.gigya_application_secret_key', 'a');
+////    $config->save();
+//
+////  3. Set Gigya apikey, user app and secret and DC and save settings
+////     Expected: Settings saved secret encrypt on DB and in logs doesnt appear
+//
+//			$form_state = new FormState();
+//			$values['session_type'] = 'dynamic';
+//			$values['session_time'] = '1800';
+//			$form_state->setValues($values);
+//
+//			\Drupal::formBuilder()->submitForm('Drupal\gigya_raas\Form\GigyaSessionForm', $form_state, $this->helperMock);
+//
+//			$this->drupalLogout();
+//
+//			//@TODO: check logs.
+//			//Set other setting and register from front-site without required field - email, enable debug mode
+//			//Expected:
+//			//1. Error for missing email appears to user
+//			//2. Secret doesnt appear in any messages in the logs
+//
+//
+//			$email = $this->gigyaUser->getProfile()->getEmail();
+//			$this->gigyaUser->getProfile()->setEmail("");
+//			$res = $this->gigyaControl->gigyaRaasLoginAjax($this->requestMock);
+//
+//			$response = new AjaxResponse();
+//			$err_msg = t('Email address is required by Drupal and is missing, please contact the site administrator.');
+//			$response->addCommand(new AlertCommand($err_msg));
+//			$this->assertEquals($response->getCommands(), $res->getCommands());
+//
+////  Set email with required field and register
+////  Expected:
+////  1.Registration succeed, user appears in Drupal users list
+////  2. Secret doesnt appear in any messages in the logs
+////  3. getAccountInfo fired without any error
+//
+//			$this->gigyaUser->getProfile()->setEmail($email);
+//			$res = $this->gigyaControl->gigyaRaasLoginAjax($this->requestMock);
+//			$user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+//			$this->assertTrue(\Drupal::currentUser()->isAuthenticated());
+//
+//			$this->assertEquals($this->successResponse->getCommands(), $res->getCommands());
+//			$this->assertEquals($this->gigyaUser->getProfile()->getEmail(), $user->getEmail());
+//		}
+//
+//		public function checkGoodLogin() {
+//
+//			$res = $this->gigyaControl->gigyaRaasLoginAjax($this->requestMock);
+//			$this->assertEquals($this->successResponse->getCommands(), $res->getCommands());
+//			$this->assertTrue(\Drupal::currentUser()->isAuthenticated());
+//
+//		}
 
-
-//    2. Give the user permission in Gigya Role and load Gigya settings page
-//       Expected: 1. secret keys is visible.
-			$this->drupalLogin($this->gigyaAdmin);
-			$this->drupalGet('admin/config/gigya/raas/session');
-			$this->assertSession()->statusCodeEquals('200');
-
-
-			//    $config = Drupal::service('config.factory')->getEditable('gigya.settings')->set('gigya.gigya_application_secret_key', 'a');
-//    $config->save();
-
-//  3. Set Gigya apikey, user app and secret and DC and save settings
-//     Expected: Settings saved secret encrypt on DB and in logs doesnt appear
-
-
-			$form_state = new FormState();
-			$values['session_type'] = 'dynamic';
-			$values['session_time'] = '1800';
-			$form_state->setValues($values);
-
-			\Drupal::formBuilder()->submitForm('Drupal\gigya_raas\Form\GigyaSessionForm', $form_state, $this->helperMock);
-
-
-			$this->drupalLogout();
-
-			//@TODO: check logs.
-			//Set other setting and register from front-site without required field - email, enable debug mode
-			//Expected:
-			//1. Error for missing email appears to user
-			//2. Secret doesnt appear in any messages in the logs
-
-
-			$email = $this->gigyaUser->getProfile()->getEmail();
-			$this->gigyaUser->getProfile()->setEmail("");
-			$res = $this->gigyaControl->gigyaRaasLoginAjax($this->requestMock);
-
-			$response = new AjaxResponse();
-			$err_msg = t('Email address is required by Drupal and is missing, please contact the site administrator.');
-			$response->addCommand(new AlertCommand($err_msg));
-			$this->assertEquals($response->getCommands(), $res->getCommands());
-
-//  Set email with required field and register
-//  Expected:
-//  1.Registration succeed, user appears in Drupal users list
-//  2. Secret doesnt appear in any messages in the logs
-//  3. getAccountInfo fired without any error
-
-			$this->gigyaUser->getProfile()->setEmail($email);
-			$res = $this->gigyaControl->gigyaRaasLoginAjax($this->requestMock);
-			$user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
-			$this->assertTrue(\Drupal::currentUser()->isAuthenticated());
-
-			$this->assertEquals($this->successResponse->getCommands(), $res->getCommands());
-			$this->assertEquals($this->gigyaUser->getProfile()->getEmail(), $user->getEmail());
-
-
-		}
-
-		public function checkGoodLogin() {
-
-			$res = $this->gigyaControl->gigyaRaasLoginAjax($this->requestMock);
-			$this->assertEquals($this->successResponse->getCommands(), $res->getCommands());
-			$this->assertTrue(\Drupal::currentUser()->isAuthenticated());
-
-		}
-
-		public function testUI() {
-			$this->drupalLogin($this->gigyaAdmin);
-			$this->drupalGet('admin/config/gigya/raas/session');
-			$this->assertSession()->statusCodeEquals('200');
-			$this->assertSession()->elementExists('css', '#edit-session-type-fixed');
-			$this->assertSession()->elementExists('css', '#edit-session-type-dynamic');
-			$this->assertSession()->elementExists('css', '#edit-session-time');
-			$this->assertSession()->elementExists('css', '#edit-submit');
-
-			$form_state = new FormState();
-			$values['session_type'] = 'dynamic';
-			$values['session_time'] = '1800';
-			$form_state->setValues($values);
-
-			\Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaSessionForm', $form_state, $this->helperMock);
-			$msg = drupal_get_messages();
-			$this->assertArrayNotHasKey('error', $msg);
-			$this->drupalLogout();
-
-
-		}
+//		public function testUI() {
+//			$this->drupalLogin($this->gigyaAdmin);
+//			$this->drupalGet('admin/config/gigya/raas/session');
+//			$this->assertSession()->statusCodeEquals('200');
+//			$this->assertSession()->elementExists('css', '#edit-session-type-fixed');
+//			$this->assertSession()->elementExists('css', '#edit-session-type-dynamic');
+//			$this->assertSession()->elementExists('css', '#edit-session-time');
+//			$this->assertSession()->elementExists('css', '#edit-submit');
+//
+//			$form_state = new FormState();
+//			$values['session_type'] = 'dynamic';
+//			$values['session_time'] = '1800';
+//			$form_state->setValues($values);
+//
+//			\Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaSessionForm', $form_state, $this->helperMock);
+//			$msg = drupal_get_messages();
+//			$this->assertArrayNotHasKey('error', $msg);
+//			$this->drupalLogout();
+//
+//
+//		}
 	}

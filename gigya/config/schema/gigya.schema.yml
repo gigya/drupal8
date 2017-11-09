@@ -1,3 +1,16 @@
+gigya.global:
+  type: mapping
+  label: 'Gigya global YML settings'
+  mapping:
+    langcode:
+      type: text
+      label: 'Language code'
+    gigya:
+      type: text
+      label: 'Gigya'
+    _core:
+      type: text
+      label: 'Core'
 gigya.settings:
   type: mapping
   label: 'Gigya credentials settings'

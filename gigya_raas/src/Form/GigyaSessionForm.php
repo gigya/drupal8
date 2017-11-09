@@ -14,9 +14,15 @@ use Drupal\Core\Form\FormStateInterface;
 
 class GigyaSessionForm extends ConfigFormBase {
 
-  private function getValue($form_state, $prop_name) {
-    return trim($form_state->getValue($prop_name));
-  }
+	/**
+	 * @param $form_state
+	 * @param $prop_name
+	 * @return string
+	 */
+	private function getValue($form_state, $prop_name) {
+		return trim($form_state->getValue($prop_name));
+	}
+
   /**
    * Gets the configuration names that will be editable.
    *
@@ -43,9 +49,10 @@ class GigyaSessionForm extends ConfigFormBase {
   /**
    * @param array                                $form
    * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @return	array
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-
     $form = parent::buildForm($form, $form_state);
     $config = $this->config('gigya_raas.settings');
     $form['session_type'] = array(

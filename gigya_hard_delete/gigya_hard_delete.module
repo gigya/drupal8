@@ -27,6 +27,7 @@
 	 * Implements hook_cron().
 	 */
 	function gigya_hard_delete_cron() {
+		\Drupal::logger('gigya_hard_delete')->info('Gigya cron started');
 		$enable_job = \Drupal::config('gigya.job')->get('gigya.enableJob');
 
 		//Get counters from DB or set 0 if null

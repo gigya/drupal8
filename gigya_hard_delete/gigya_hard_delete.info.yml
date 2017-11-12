@@ -8,4 +8,3 @@ core: '8.x'
 project: 'gigya'
 dependencies:
   - gigya
-  - gigya_raas

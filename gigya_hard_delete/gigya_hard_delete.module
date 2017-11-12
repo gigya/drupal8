@@ -6,17 +6,14 @@
 	use Drupal\gigya\Helper\GigyaHelper;
 	use Aws\S3\S3Client;
 	use Aws\S3\Exception\S3Exception;
-	use Drupal\Core\Queue\QueueInterface;
-	use Drupal\Core\Queue\QueueWorkerInterface;
-	use Drupal\Core\Queue\SuspendQueueException;
 
 	/**
 	 * Implements hook_page_attachments().
 	 *
 	 * @param array $attachments
 	 */
-	function gigya_hard_delete_page_attachments(array &$attachments) {
-		\Drupal::moduleHandler()->invoke('gigya_hard_delete', 'job_cron');
+	function gigya_user_deletion_page_attachments(array &$attachments) {
+		\Drupal::moduleHandler()->invoke('gigya_user_deletion', 'job_cron');
 	}
 
 	function delete_uid_queue_name() {
@@ -26,8 +23,8 @@
 	/**
 	 * Implements hook_cron().
 	 */
-	function gigya_hard_delete_cron() {
-		\Drupal::logger('gigya_hard_delete')->info('Gigya cron started');
+	function gigya_user_deletion_cron() {
+		\Drupal::logger('gigya_user_deletion')->info('Gigya cron started');
 		$enable_job = \Drupal::config('gigya.job')->get('gigya.enableJob');
 
 		//Get counters from DB or set 0 if null
@@ -74,7 +71,7 @@
 				//save counter value on DB and add to log
 				$queue_files_counter = $queue_file->numberOfItems();
 				\Drupal::state()->set('job.queue_files_counter', $queue_files_counter);
-				\Drupal::logger('gigya_hard_delete')->info($queue_files_counter . ' files added to queue at ' . date('mm/dd/YYYY', \Drupal::time()->getRequestTime()));
+				\Drupal::logger('gigya_user_deletion')->info($queue_files_counter . ' files added to queue at ' . date('mm/dd/YYYY', \Drupal::time()->getRequestTime()));
 			}
 
 			//If queue_file is not empty take item (file) and add all users to queue_users
@@ -116,19 +113,19 @@
 						user_delete($user->get('uid')->value);
 						$counter_succeed++;
                         \Drupal::state()->set('job.counter_succeed', $counter_succeed);
-						\Drupal::logger('gigya_hard_delete')->notice($messageSucceed . $user->get('uid')->value);
+						\Drupal::logger('gigya_user_deletion')->notice($messageSucceed . $user->get('uid')->value);
 					}
 					catch (\Exception $e)
 					{
 						//add to logs
-						\Drupal::logger('gigya_hard_delete')->error("Failed to delete UID " . $user->get('uid')->value . " from CMS with error - " . $e);
+						\Drupal::logger('gigya_user_deletion')->error("Failed to delete UID " . $user->get('uid')->value . " from CMS with error - " . $e);
 						//increase failed counter to send in email
 						$counter_failed++;
                         \Drupal::state()->set('job.counter_succeed', $counter_failed);
 					}
 				}
                 else {
-                    \Drupal::logger('gigya_hard_delete')->error("Failed to delete UID " . $uid . " from CMS with error - user doesn't exist");
+                    \Drupal::logger('gigya_user_deletion')->error("Failed to delete UID " . $uid . " from CMS with error - user doesn't exist");
                 }
                 $queue_users->deleteItem($item_user);
 			}
@@ -150,9 +147,9 @@
 					{
 						$subject = "Users deleted successfully";
                         $message = "The user deletion job scheduled to run for " . $_SERVER['SERVER_NAME'] . ' at ' . $last_run . ' completed successfully.' . $counter_succeed . " out of " . $total . ' users were deleted.';
-                        $to = \Drupal::config('gigya.job')->get('gigya.emailOnSuccess');
-                        sendEmail($subject, $message, $to);
 					}
+					$to = \Drupal::config('gigya.job')->get('gigya.emailOnSuccess');
+					sendEmail($subject, $message, $to);
 				}
 				/* If job failed, send email */
 				elseif ($counter_failed > 0)
@@ -204,12 +201,12 @@
 		}
 		catch (S3Exception $e)
 		{
-			\Drupal::logger('gigya_hard_delete')->error("Failed to get files list from S3 server. Error: " . $e->getMessage());
+			\Drupal::logger('gigya_user_deletion')->error("Failed to get files list from S3 server. Error: " . $e->getMessage());
 			return false;
 		}
 		catch (Exception $e)
 		{
-			\Drupal::logger('gigya_hard_delete')->error("Missing required parameter. Error code: " . $e->getCode() . ". Message: " . $e->getMessage());
+			\Drupal::logger('gigya_user_deletion')->error("Missing required parameter. Error code: " . $e->getCode() . ". Message: " . $e->getMessage());
 			return false;
 		}
 	}
@@ -255,7 +252,7 @@
 		}
 		catch (S3Exception $e)
 		{
-			\Drupal::logger('gigya_hard_delete')->error("Failed to get file from S3 server - " . $e->getMessage());
+			\Drupal::logger('gigya_user_deletion')->error("Failed to get file from S3 server - " . $e->getMessage());
 			return false;
 		}
 	}
@@ -286,7 +283,7 @@
 	 *
 	 * {@inheritdoc}
 	 */
-	function gigya_hard_delete_mail($key, &$message, $params) {
+	function gigya_user_deletion_mail($key, &$message, $params) {
 		$options = array(
 			'langcode' => $message['langcode'],
 		);
@@ -305,7 +302,7 @@
 	 */
 	function sendEmail($subject, $body, $to) {
 		$mailManager = \Drupal::service('plugin.manager.mail');
-		$module = 'gigya_hard_delete';
+		$module = 'gigya_user_deletion';
         $params['from'] = 'Gigya IdentitySync';
 		$params['subject'] = $subject;
 		$params['message'] = $body;
@@ -322,13 +319,13 @@
 				$result = $mailManager->mail($module, $key, $email, $langcode, $params, null, $send = true);
 				if (!$result)
 				{
-					\Drupal::logger('gigya_hard_delete')->error("Failed to send email to " . $email);
+					\Drupal::logger('gigya_user_deletion')->error("Failed to send email to " . $email);
 				}
 			}
 		}
 		catch (Exception $e)
 		{
-			\Drupal::logger('gigya_hard_delete')->error("Failed to send emails - " . $e->getMessage());
+			\Drupal::logger('gigya_user_deletion')->error("Failed to send emails - " . $e->getMessage());
 		}
 	}
 
@@ -361,7 +358,7 @@
 		}
 		catch (S3Exception $e)
 		{
-			\Drupal::logger('gigya_hard_delete')->error("Failed to get region from S3 server - " . $e->getMessage());
+			\Drupal::logger('gigya_user_deletion')->error("Failed to get region from S3 server - " . $e->getMessage());
 			return false;
 		}
 	}

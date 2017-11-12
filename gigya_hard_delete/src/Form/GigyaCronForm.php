@@ -1,10 +1,10 @@
 <?php
 	/**
 	 * @file
-	 * Contains \Drupal\gigya_hard_delete\Form\GigyaCronForm.
+	 * Contains \Drupal\gigya_user_deletion\Form\GigyaCronForm.
 	 */
 
-	namespace Drupal\gigya_hard_delete\Form;
+	namespace Drupal\gigya_user_deletion\Form;
 
 	use Drupal\Core\Form\ConfigFormBase;
 	use Drupal\Core\Form\FormStateInterface;
@@ -84,7 +84,7 @@
 			$form['emailOnSuccess'] = array(
 				'#type' => 'textfield',
 				'#title' => $this->t('Email on success'),
-				'#description' => $this->t('A comma-separated list of emails that the job will notify upon completed successfully.'),
+				'#description' => $this->t('A comma-separated list of emails that will be notified when the job completes successfully'),
 				'#default_value' => $config->get('gigya.emailOnSuccess'),
 			);
 
@@ -92,7 +92,7 @@
 			$form['emailOnFailure'] = array(
 				'#type' => 'textfield',
 				'#title' => $this->t('Email on failure'),
-				'#description' => $this->t('A comma-separated list of emails that the job will notify upon completed failure.'),
+				'#description' => $this->t('A comma-separated list of emails that will be notified when the job fails or completes with errors'),
 				'#default_value' => $config->get('gigya.emailOnFailure'),
 			);
 
@@ -226,7 +226,7 @@
 				}
 				catch (S3Exception $e)
 				{
-					\Drupal::logger('gigya_hard_delete')->error("Failed to connect to S3 server (form) - " . $e->getMessage());
+					\Drupal::logger('gigya_user_deletion')->error("Failed to connect to S3 server (form) - " . $e->getMessage());
 					$form_state->setErrorByName('storageDetails.secretKey', $this->t("Failed connecting to S3 server with error: " . $e->getMessage()));
 				}
 			}
@@ -260,31 +260,5 @@
 			$config->save();
 			parent::submitForm($form, $form_state);
 		}
-
-//  function connectToStorage()
-//  {
-//      $secretKey = "";
-//      $storageDetails = \Drupal::config('gigya.job')->get('gigya.storageDetails');
-//      $helper = new GigyaHelper();
-//      $bucketName = $storageDetails['bucketName'];
-//      $accessKey = $storageDetails['accessKey'];
-//      $secretKeyEnc = $storageDetails['secretKey'];
-//      if (!empty($secretKeyEnc)) {
-//          $secretKey = $helper->decrypt($secretKeyEnc);
-//      }
-//
-//      $s3Client = S3Client::factory(array(
-//          'key' => $accessKey,
-//          'secret' => $secretKey,
-//      ));
-//      try {
-//          $response = $s3Client->GetBucketLocation(array('Bucket' => $bucketName,));
-//          return $response['Location'];
-//      }
-//      catch(S3Exception $e) {
-//          \Drupal::logger('gigya_hard_delete')->error("Failed to get region from S3 server - " . $e->getMessage());
-//      }
-//  }
-
 	}
 

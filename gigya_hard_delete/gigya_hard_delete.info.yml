@@ -1,6 +1,6 @@
-name: Gigya Hard Delete
+name: Gigya User Deletion
 type: module
-description: 'Gigya hard delete module. Allows permanently deleting user data.'
+description: 'Allows permanently deleting users from Gigya and Drupal databases'
 package: Gigya
 configure: gigya.cron.form
 version: '8.x-1.7'

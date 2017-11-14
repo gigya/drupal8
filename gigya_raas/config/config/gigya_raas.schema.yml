@@ -2,9 +2,9 @@ gigya_raas.settings:
   type: mapping
   label: 'Gigya RaaS Session Settings'
   mapping:
-    gigya_raas_session_type:
+    session_type:
       type: text
       label: 'Session Type'
-    gigya_raas_session_time:
+    session_time:
       type: integer
       label: 'Session Duration'

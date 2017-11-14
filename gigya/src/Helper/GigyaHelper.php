@@ -131,6 +131,12 @@ class GigyaHelper implements GigyaHelperInterface{
 
   }
 
+	/**
+	 * @param $uid
+	 * @param $uid_sig
+	 * @param $sig_timestamp
+	 * @return bool | GigyaUser
+	 */
   public function validateUid($uid, $uid_sig, $sig_timestamp) {
     try {
       $params = array('environment' => $this->getEnvString());

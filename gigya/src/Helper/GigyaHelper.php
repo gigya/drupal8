@@ -263,7 +263,8 @@ class GigyaHelper implements GigyaHelperInterface{
         $raas_field_parts = explode(".", $raas_field);
         $val = $this->getNestedValue($gigya_data, $raas_field_parts);
         if ($val !== NULL) {
-          if (is_bool($val)) {
+          $drupal_field_type = $drupal_user->get($drupal_field)->getFieldDefinition()->getType();
+          if ((is_bool($val)) && ($drupal_field_type == 'boolean')) {
             $val = intval($val);
           }
           $drupal_user->set($drupal_field, $val);

@@ -1,0 +1,7 @@
+gigya.cron.form:
+  path: '/admin/config/gigya/cron'
+  defaults:
+    _form: 'Drupal\gigya_user_deletion\Form\GigyaCronForm'
+    _title: 'Gigya user deletion sync'
+  requirements:
+    _permission: 'gigya major admin'

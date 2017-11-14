@@ -50,6 +50,8 @@ function hook_gigya_lang_alter(&$lang) {
   }
 }
 
+
+
 /**
  * @} End of "addtogroup hooks".
  */

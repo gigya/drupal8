@@ -35,11 +35,11 @@ class GigyaHelper implements GigyaHelperInterface{
           $obj = $obj[$key];
         }
         else {
-          return FALSE;
+          return NULL;
         }
       }
       else {
-        return FALSE;
+        return NULL;
       }
     }
     if (is_array($obj)) {

@@ -269,6 +269,11 @@
 							$err_number = 301001;
 							$err_message = "Invalid data center";
 						}
+						else
+						{
+							$err_message = '';
+							$err_number = 0;
+						}
 
 						$res = new GSApiException($err_message, $err_number, $err_message);
 					}
@@ -316,7 +321,6 @@
 			//Expected:
 			//1. Error for missing email appears to user
 			//2. Secret doesn't appear in any messages in the logs
-
 
 			$email = $this->gigyaUser->getProfile()->getEmail();
 			$this->gigyaUser->getProfile()->setEmail("");

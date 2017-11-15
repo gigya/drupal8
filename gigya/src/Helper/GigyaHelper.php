@@ -22,12 +22,18 @@ use Gigya\CmsStarterKit\user\GigyaUserFactory;
 use Gigya\CmsStarterKit\ds\DsQueryObject;
 
 class GigyaHelper implements GigyaHelperInterface{
+    /**
+     * @param $obj
+     * @param $keys
+     *
+     * @return null | string
+     */
   public function getNestedValue($obj, $keys) {
     while (!empty($keys)) {
       $key = array_shift($keys);
 
       if ($obj instanceof GigyaUser || $obj instanceof GigyaProfile) {
-      $method = "get" . ucfirst($key);
+        $method = "get" . ucfirst($key);
         $obj = $obj->$method();
       }
       else if (is_array($obj)) {
@@ -42,12 +48,11 @@ class GigyaHelper implements GigyaHelperInterface{
         return NULL;
       }
     }
+
     if (is_array($obj)) {
       $obj = Json::encode($obj);
     }
-    else if ($obj instanceof GigyaProfile) {
-      //@TODO: think if / how handle this.
-    }
+      
     return $obj;
   }
 

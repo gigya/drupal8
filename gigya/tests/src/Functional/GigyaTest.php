@@ -1,102 +1,111 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\gigya\Functional\GigyaTest.
- */
+	/**
+	 * @file
+	 * Contains \Drupal\Tests\gigya\Functional\GigyaTest.
+	 */
 
-namespace Drupal\Tests\gigya\Functional;
+	namespace Drupal\Tests\gigya\Functional;
 
-use Drupal;
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\AlertCommand;
-use Drupal\Core\Ajax\RedirectCommand;
-use Drupal\Core\Form\FormState;
-use Drupal\gigya_raas\GigyaController;
-use Drupal\Tests\BrowserTestBase;
-use Gigya\CmsStarterKit\sdk\GSApiException;
-use Gigya\CmsStarterKit\sdk\GSResponse;
-use Gigya\CmsStarterKit\user\GigyaUserFactory;
-use Symfony\Component\HttpFoundation\Request;
+	use Drupal;
+	use Drupal\Core\Ajax\AjaxResponse;
+	use Drupal\Core\Ajax\AlertCommand;
+	use Drupal\Core\Ajax\RedirectCommand;
+	use Drupal\Core\Form\FormState;
+	use Drupal\gigya_raas\GigyaController;
+	use Drupal\Tests\BrowserTestBase;
+	use Drupal\user\Entity\User;
+	use Gigya\CmsStarterKit\sdk\GSApiException;
+	use Gigya\CmsStarterKit\sdk\GSResponse;
+	use Gigya\CmsStarterKit\user\GigyaUser;
+	use Gigya\CmsStarterKit\user\GigyaUserFactory;
 
-/**
- * Tests Gigya module functionality.
- *
- * @group gigya
- */
-class GigyaTest extends BrowserTestBase {
+	/**
+	 * Tests Gigya module functionality.
+	 *
+	 * @group gigya
+	 */
+	class GigyaTest extends BrowserTestBase
+	{
+		private $key = "24c370c0d169a482ae1c5db1932b4b29";
 
+		/**
+		 * @var    GigyaController
+		 */
+		private $gigyaControl;
+		private $requestMock;
 
-  private $key = "24c370c0d169a482ae1c5db1932b4b29";
+		/**
+		 * @var    AjaxResponse
+		 */
+		private $successResponse;
 
-  private $gigyaControl = "";
+		private $trueKey = "24c370c0d169a482ae1c5db1932b4b29";
 
-  private $requestMock = "";
+		/**
+		 * Modules to enable.
+		 *
+		 * @var array
+		 */
+		public static $modules = array('gigya', 'gigya_raas');
 
-  private $successResponse = "";
+		/**
+		 * The user for tests.
+		 *
+		 * @var \Drupal\user\UserInterface
+		 */
+		protected $webUser;
 
-  private $trueKey = "24c370c0d169a482ae1c5db1932b4b29";
+		/**
+		 * The user for tests.
+		 *
+		 * @var \Drupal\user\UserInterface
+		 */
+		protected $gigyaAdmin;
 
-  /**
-   * Modules to enable.
-   *
-   * @var array
-   */
-  public static $modules = array('gigya', 'gigya_raas');
+		protected $helperMock;
 
-  /**
-   * The user for tests.
-   *
-   * @var \Drupal\user\UserInterface
-   */
-  protected $webUser;
+		/**
+		 * @var    GigyaUser
+		 */
+		protected $gigyaUser;
 
-  /**
-   * The user for tests.
-   *
-   * @var \Drupal\user\UserInterface
-   */
-  protected $gigyaAdmin;
+		/**
+		 * {@inheritdoc}
+		 */
+		public function setUp() {
 
+			parent::setUp();
 
-  protected $helperMock;
+			$this->successResponse = new AjaxResponse();
+			$this->successResponse->addCommand(new RedirectCommand("/"));
 
-  protected $gigyaUser;
+			$this->requestMock = $this->getMockBuilder('Symfony\Component\HttpFoundation\Request')->getMock();
 
-  /**
-   * {@inheritdoc}
-   */
-  public function setUp(){
+			$this->gigyaAdmin = $this->drupalCreateUser(['gigya major admin', 'bypass gigya raas']);
+			$this->helperMock = $this->getMockBuilder('\Drupal\gigya\Helper\GigyaHelper')
+				->setMethods(array('getEncryptKey', 'checkEncryptKey', 'sendApiCall', 'validateUid'))
+				->getMock();
+			$this->helperMock->expects($this->any())->method('checkEncryptKey')->will($this->returnValue(TRUE));
 
-    parent::setUp();
+			$key = $this->trueKey;
+			$this->helperMock->expects($this->any())->method('getEncryptKey')->will($this->returnCallback(function() use ($key) {
+				return $this->key;
+			}));
 
-    $this->successResponse = new AjaxResponse();
-    $this->successResponse->addCommand(new RedirectCommand("/"));
+			$this->helperMock->expects($this->any())->method('validateUid')->will($this->returnCallback(function() use ($key) {
+				if ($this->key == $this->trueKey)
+				{
+					return $this->gigyaUser;
+				}
+				else
+				{
+					return false;
+				}
+			}));
 
-    $this->requestMock = $this->getMockBuilder('Symfony\Component\HttpFoundation\Request')->getMock();
-
-    $this->gigyaAdmin = $this->drupalCreateUser(['gigya major admin', 'bypass gigya raas']);
-    $this->helperMock = $this->getMockBuilder('\Drupal\gigya\Helper\GigyaHelper')
-                          ->setMethods(array('getEncryptKey', 'checkEncryptKey', 'sendApiCall', 'validateUid'))
-                          ->getMock();
-    $this->helperMock->expects($this->any())->method('checkEncryptKey')->will($this->returnValue(TRUE));
-
-    $key = $this->trueKey;
-    $this->helperMock->expects($this->any())->method('getEncryptKey')->will($this->returnCallback(function() use ($key)  {
-      return $this->key;
-    }));
-
-    $this->helperMock->expects($this->any())->method('validateUid')->will($this->returnCallback(function() use ($key)  {
-      if ($this->key == $this->trueKey) {
-        return $this->gigyaUser;
-      }
-      else {
-        return false;
-      }
-    }));
-
-    $method = "accounts.getAccountInfo";
-    $json = '{
+			$method = "accounts.getAccountInfo";
+			$json = '{
   "UID": "_guid_-SPzNo7usObOUAUKT0KC-yijanD1CTN4n-syLkRjj5k=",
   "UIDSignature": "cTXiwusSZP3b/VpAZ9ik2PDvAI0=",
   "signatureTimestamp": "1465860265",
@@ -227,117 +236,124 @@ class GigyaTest extends BrowserTestBase {
   "time": "2016-06-13T23:24:25.466Z"
 }';
 
-    $res = new GSResponse($method, $json, null, 0, null, array());
+			$res = new GSResponse($method, $json, null, 0, null, array());
 
-    $dataArray = $res->getData()->serialize();
-    $profileArray = $dataArray['profile'];
-    $gigyaUser    = GigyaUserFactory::createGigyaUserFromArray($dataArray);
-    $gigyaProfile = GigyaUserFactory::createGigyaProfileFromArray($profileArray);
-    $gigyaUser->setProfile($gigyaProfile);
-    $this->gigyaUser = $gigyaUser;
+			$dataArray = $res->getData()->serialize();
+			$profileArray = $dataArray['profile'];
+			$gigyaUser = GigyaUserFactory::createGigyaUserFromArray($dataArray);
+			$gigyaProfile = GigyaUserFactory::createGigyaProfileFromArray($profileArray);
+			$gigyaUser->setProfile($gigyaProfile);
+			$this->gigyaUser = $gigyaUser;
 
+			$this->helperMock
+				->expects($this->any())
+				->method('sendApiCall')
+				->will($this->returnCallback(function($method, $params, $access_params) {
+					$aparams = array();
+					$aparams['api_key'] = 'apikey';
+					$aparams['app_secret'] = 'appsecret';
+					$aparams['app_key'] = 'appkey';
+					$aparams['data_center'] = 'us1.gigya.com';
+					if ($access_params !== $aparams)
+					{
+						if ($access_params['api_key'] !== $aparams['api_key'])
+						{
+							$err_number = 400093;
+							$err_message = "Invalid ApiKey parameter";
+						}
+						elseif ($access_params['app_key'] !== $aparams['app_key'])
+						{
+							$err_number = 403005;
+							$err_message = "Unauthorized user";
+						}
+						elseif ($access_params['app_secret'] !== $aparams['app_secret'])
+						{
+							$err_number = 403003;
+							$err_message = "Invalid request signature";
+						}
+						elseif ($access_params['data_center'] !== $aparams['data_center'])
+						{
+							$err_number = 301001;
+							$err_message = "Invalid data center";
+						}
+						else
+							return false;
 
+						$res = new GSApiException($err_message, $err_number, $err_message);
+					}
+					elseif ($method == 'shortenURL')
+					{
+						$responseStr = '{"shortURL": "http://fw.to/8WgRfqE","statusCode": 200,"errorCode": 0,"statusReason": "OK","callId": "968875481ea94aadb8dc146a7165926c","time": "2016-06-09T13:07:20.861Z"}';
+						$res = new GSResponse('shortenURL', $responseStr);
 
-    $this->helperMock
-      ->expects($this->any())
-      ->method('sendApiCall')
-      ->will($this->returnCallback(function($method, $params, $access_params) {
-        $aparams = array();
-        $aparams['api_key'] = 'apikey';
-        $aparams['app_secret'] = 'appsecret';
-        $aparams['app_key'] = 'appkey';
-        $aparams['data_center'] = 'us1.gigya.com';
-        if ($access_params !== $aparams) {
-          if ($access_params['api_key'] !== $aparams['api_key']) {
-            $err_number = 400093;
-            $err_message = "Invalid ApiKey parameter";
-          }
-          else if ($access_params['app_key'] !== $aparams['app_key']) {
-            $err_number = 403005;
-            $err_message = "Unauthorized user";
-          }
-          else if ($access_params['app_secret'] !== $aparams['app_secret']) {
-            $err_number = 403003;
-            $err_message = "Invalid request signature";
-          }
-          else if ($access_params['data_center'] !== $aparams['data_center']) {
-            $err_number = 301001;
-            $err_message = "Invalid data center";
-          }
+					}
+					else
+						return false;
 
-          $res = new GSApiException($err_message, $err_number, $err_message);
-        }
-        else if($method == 'shortenURL') {
-          $responseStr = '{"shortURL": "http://fw.to/8WgRfqE","statusCode": 200,"errorCode": 0,"statusReason": "OK","callId": "968875481ea94aadb8dc146a7165926c","time": "2016-06-09T13:07:20.861Z"}';
-          $res = new GSResponse('shortenURL', $responseStr);
+					return $res;
+				}));
 
-        }
+			$this->gigyaControl = new GigyaController($this->helperMock);
+		}
 
-        return $res;
-      }));
-
-    $this->gigyaControl = new GigyaController($this->helperMock);
-  }
-
-  /**
-   * Tests encrypt.
-   */
-  public function testEncrypt() {
+		/**
+		 * Tests encrypt.
+		 */
+		public function testEncrypt() {
 
 
 //    1. Go to Drupal admin site (not user 1), Gigya settings not with admin user without Gigya Role permission (create new permission group)
 //       Expected: secret key text box is hidden
 
-    $this->drupalGet('admin/config/gigya/keys');
-    $this->assertSession()->statusCodeEquals('403');
-    $this->drupalLogin($this->gigyaAdmin);
+			$this->drupalGet('admin/config/gigya/keys');
+			$this->assertSession()->statusCodeEquals('403');
+			$this->drupalLogin($this->gigyaAdmin);
 //    2. Give the user permission in Gigya Role and load Gigya settings page
 //       Expected: 1. secret keys is visible.
 
-    $this->drupalGet('admin/config/gigya/keys');
-    $this->assertSession()->statusCodeEquals('200');
+			$this->drupalGet('admin/config/gigya/keys');
+			$this->assertSession()->statusCodeEquals('200');
 
-
-    //    $config = Drupal::service('config.factory')->getEditable('gigya.settings')->set('gigya.gigya_application_secret_key', 'a');
+			//    $config = Drupal::service('config.factory')->getEditable('gigya.settings')->set('gigya.gigya_application_secret_key', 'a');
 //    $config->save();
 
 //  3. Set Gigya apikey, user app and secret and DC and save settings
 //     Expected: Settings saved secret encrypt on DB and in logs doesnt appear
 
 
-    $form_state = new FormState();
-    $values['gigya_api_key'] = 'apikey';
-    $values['gigya_application_key'] = 'appkey';
-    $values['gigya_application_secret_key'] = 'appsecret';
-    $values['gigya_data_center'] = 'us1.gigya.com';
-    $form_state->setValues($values);
+			$form_state = new FormState();
+			$values['gigya_api_key'] = 'apikey';
+			$values['gigya_application_key'] = 'appkey';
+			$values['gigya_application_secret_key'] = 'appsecret';
+			$values['gigya_data_center'] = 'us1.gigya.com';
+			$form_state->setValues($values);
 
-    \Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state, $this->helperMock);
+			/** @noinspection PhpMethodParametersCountMismatchInspection */
+			\Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state, $this->helperMock);
 
-    $key = Drupal::service('config.factory')->getEditable('gigya.settings')->get('gigya.gigya_application_secret_key');
-    $this->assertNotEquals($values['gigya_application_secret_key'], $key, 'Key is not encrypted');
+			$key = Drupal::service('config.factory')->getEditable('gigya.settings')->get('gigya.gigya_application_secret_key');
+			$this->assertNotEquals($values['gigya_application_secret_key'], $key, 'Key is not encrypted');
 
-    $this->drupalGet('admin/config/gigya/keys');
-    $this->assertSession()->statusCodeEquals('200');
-    $this->assertSession()->elementExists('css', '#edit-gigya-application-secret-key');
-    $this->assertSession()->fieldValueEquals('edit-gigya-application-secret-key', '*********');
-    $this->drupalLogout();
+			$this->drupalGet('admin/config/gigya/keys');
+			$this->assertSession()->statusCodeEquals('200');
+			$this->assertSession()->elementExists('css', '#edit-gigya-application-secret-key');
+			$this->assertSession()->fieldValueEquals('edit-gigya-application-secret-key', '*********');
+			$this->drupalLogout();
 
-    //@TODO: check logs.
-    //Set other setting and register from front-site without required field - email, enable debug mode
-    //Expected:
-    //1. Error for missing email appears to user
-    //2. Secret doesnt appear in any messages in the logs
+			//@TODO: check logs.
+			//Set other setting and register from front-site without required field - email, enable debug mode
+			//Expected:
+			//1. Error for missing email appears to user
+			//2. Secret doesnt appear in any messages in the logs
 
+			$email = $this->gigyaUser->getProfile()->getEmail();
+			$this->gigyaUser->getProfile()->setEmail("");
+			$res = $this->gigyaControl->gigyaRaasLoginAjax($this->requestMock);
 
-    $email = $this->gigyaUser->getProfile()->getEmail();
-    $this->gigyaUser->getProfile()->setEmail("");
-    $res = $this->gigyaControl->gigyaRaasLoginAjax($this->requestMock);
-
-    $response = new AjaxResponse();
-    $err_msg = t('Email address is required by Drupal and is missing, please contact the site administrator.');
-    $response->addCommand(new AlertCommand($err_msg));
-    $this->assertEquals($response->getCommands(), $res->getCommands());
+			$response = new AjaxResponse();
+			$err_msg = t('Email address is required by Drupal and is missing, please contact the site administrator.');
+			$response->addCommand(new AlertCommand($err_msg));
+			$this->assertEquals($response->getCommands(), $res->getCommands());
 
 //  Set email with required field and register
 //  Expected:
@@ -345,129 +361,127 @@ class GigyaTest extends BrowserTestBase {
 //  2. Secret doesnt appear in any messages in the logs
 //  3. getAccountInfo fired without any error
 
-    $this->gigyaUser->getProfile()->setEmail($email);
-    $res = $this->gigyaControl->gigyaRaasLoginAjax($this->requestMock);
-    $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
-    $this->assertTrue(\Drupal::currentUser()->isAuthenticated());
+			$this->gigyaUser->getProfile()->setEmail($email);
+			$res = $this->gigyaControl->gigyaRaasLoginAjax($this->requestMock);
+			$user = User::load(\Drupal::currentUser()->id());
+			$this->assertTrue(\Drupal::currentUser()->isAuthenticated());
 
-    $this->assertEquals($this->successResponse->getCommands(), $res->getCommands());
-    $this->assertEquals($this->gigyaUser->getProfile()->getEmail(), $user->getEmail());
+			$this->assertEquals($this->successResponse->getCommands(), $res->getCommands());
+			$this->assertEquals($this->gigyaUser->getProfile()->getEmail(), $user->getEmail());
 
+			$this->key = "aa";
 
-    $this->key = "aa";
+			$this->drupalLogin($this->gigyaAdmin);
+			$this->drupalLogout();
 
-    $this->drupalLogin($this->gigyaAdmin);
-    $this->drupalLogout();
-
-    $this->checkBadForm($form_state);
-
-
-    $err_msg = t("Oops! Something went wrong during your login/registration process. Please try to login/register again.");
-
-    $this->checkBadLogin($err_msg);
-
-    $this->key = $this->trueKey;
-    $this->checkGoodLogin();
-    $this->drupalLogin($this->gigyaAdmin);
-    $this->drupalLogout();
-
-    $this->key = "";
-
-    $this->checkBadForm($form_state);
-    $this->checkBadLogin($err_msg);
-
-    $this->key = $this->trueKey;
-    $this->checkGoodLogin();
-    $this->drupalLogin($this->gigyaAdmin);
-    $this->drupalLogout();
-  }
-
-  public function checkBadForm($form_state) {
-    $form_state->setValue('gigya_application_secret_key', '*********');
-    \Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state, $this->helperMock);
-    $msg = drupal_get_messages();
-    $this->assertArrayHasKey('error', $msg);
-    $this->assertArrayHasKey('0', $msg['error']);
-    $this->assertStringStartsWith('Gigya API error', $msg['error'][0]);
-  }
-
-  public function checkBadLogin($err_msg) {
-    $res = $this->gigyaControl->gigyaRaasLoginAjax($this->requestMock);
-
-    $response = new AjaxResponse();
-    $response->addCommand(new AlertCommand($err_msg));
-    $this->assertEquals($response->getCommands(), $res->getCommands());
-    $this->assertTrue(\Drupal::currentUser()->isAnonymous());
-  }
-
-  public function checkGoodLogin() {
-
-    $res = $this->gigyaControl->gigyaRaasLoginAjax($this->requestMock);
-    $this->assertEquals($this->successResponse->getCommands(), $res->getCommands());
-    $this->assertTrue(\Drupal::currentUser()->isAuthenticated());
-
-  }
-
-  public function testUI() {
-    $this->drupalLogin($this->gigyaAdmin);
-    $this->drupalGet('admin/config/gigya/keys');
-    $this->assertSession()->statusCodeEquals('200');
-    $this->assertSession()->elementExists('css', '#edit-gigya-application-secret-key');
-    $this->assertSession()->elementExists('css', '#edit-gigya-api-key');
-    $this->assertSession()->elementExists('css', '#edit-gigya-application-key');
-
-    $form_state = new FormState();
-    $values['gigya_api_key'] = ' apikey ';
-    $values['gigya_application_key'] = ' appkey ';
-    $values['gigya_application_secret_key'] = ' appsecret ';
-    $values['gigya_data_center'] = 'us1.gigya.com';
-    $form_state->setValues($values);
-
-    \Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state, $this->helperMock);
-    $msg = drupal_get_messages();
-    $this->assertArrayNotHasKey('error', $msg);
-
-    $this->drupalLogout();
-
-    $this->checkGoodLogin();
-
-    $form_state = new FormState();
-    $values['gigya_api_key'] = 'apikey';
-    $values['gigya_application_key'] = 'appkey';
-    $values['gigya_application_secret_key'] = 'appsecret';
-    $values['gigya_data_center'] = 'other';
-    $form_state->setValues($values);
-
-    $this->checkBadForm($form_state);
-
-    $form_state = new FormState();
-    $values['gigya_api_key'] = 'apikey';
-    $values['gigya_application_key'] = 'appkey';
-    $values['gigya_application_secret_key'] = 'wrong';
-    $values['gigya_data_center'] = 'us1.gigya.com';
-    $form_state->setValues($values);
-
-    $this->checkBadForm($form_state);
+			$this->checkBadForm($form_state);
 
 
-    $form_state = new FormState();
-    $values['gigya_api_key'] = 'apikey';
-    $values['gigya_application_key'] = 'appkey';
-    $values['gigya_application_secret_key'] = 'wrong';
-    $values['gigya_data_center'] = 'us1.gigya.com';
-    $form_state->setValues($values);
+			$err_msg = t("Oops! Something went wrong during your login/registration process. Please try to login/register again.");
 
-    $this->checkBadForm($form_state);
+			$this->checkBadLogin($err_msg);
 
-    $form_state = new FormState();
-    $values['gigya_api_key'] = 'apikey';
-    $values['gigya_application_key'] = 'wrong';
-    $values['gigya_application_secret_key'] = 'appsecret';
-    $values['gigya_data_center'] = 'us1.gigya.com';
-    $form_state->setValues($values);
+			$this->key = $this->trueKey;
+			$this->checkGoodLogin();
+			$this->drupalLogin($this->gigyaAdmin);
+			$this->drupalLogout();
 
-    $this->checkBadForm($form_state);
+			$this->key = "";
 
-  }
+			$this->checkBadForm($form_state);
+			$this->checkBadLogin($err_msg);
 
-}
+			$this->key = $this->trueKey;
+			$this->checkGoodLogin();
+			$this->drupalLogin($this->gigyaAdmin);
+			$this->drupalLogout();
+		}
+
+		public function checkBadForm($form_state) {
+			$form_state->setValue('gigya_application_secret_key', '*********');
+			/** @noinspection PhpMethodParametersCountMismatchInspection */
+			\Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state, $this->helperMock);
+			$msg = drupal_get_messages();
+			$this->assertArrayHasKey('error', $msg);
+			$this->assertArrayHasKey('0', $msg['error']);
+			$this->assertStringStartsWith('Gigya API error', $msg['error'][0]);
+		}
+
+		public function checkBadLogin($err_msg) {
+			$res = $this->gigyaControl->gigyaRaasLoginAjax($this->requestMock);
+
+			$response = new AjaxResponse();
+			$response->addCommand(new AlertCommand($err_msg));
+			$this->assertEquals($response->getCommands(), $res->getCommands());
+			$this->assertTrue(\Drupal::currentUser()->isAnonymous());
+		}
+
+		public function checkGoodLogin() {
+			$res = $this->gigyaControl->gigyaRaasLoginAjax($this->requestMock);
+			$this->assertEquals($this->successResponse->getCommands(), $res->getCommands());
+			$this->assertTrue(\Drupal::currentUser()->isAuthenticated());
+		}
+
+		public function testUI() {
+			$this->drupalLogin($this->gigyaAdmin);
+			$this->drupalGet('admin/config/gigya/keys');
+			$this->assertSession()->statusCodeEquals('200');
+			$this->assertSession()->elementExists('css', '#edit-gigya-application-secret-key');
+			$this->assertSession()->elementExists('css', '#edit-gigya-api-key');
+			$this->assertSession()->elementExists('css', '#edit-gigya-application-key');
+
+			$form_state = new FormState();
+			$values['gigya_api_key'] = ' apikey ';
+			$values['gigya_application_key'] = ' appkey ';
+			$values['gigya_application_secret_key'] = ' appsecret ';
+			$values['gigya_data_center'] = 'us1.gigya.com';
+			$form_state->setValues($values);
+
+			/** @noinspection PhpMethodParametersCountMismatchInspection */
+			\Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state, $this->helperMock);
+			$msg = drupal_get_messages();
+			$this->assertArrayNotHasKey('error', $msg);
+
+			$this->drupalLogout();
+
+			$this->checkGoodLogin();
+
+			$form_state = new FormState();
+			$values['gigya_api_key'] = 'apikey';
+			$values['gigya_application_key'] = 'appkey';
+			$values['gigya_application_secret_key'] = 'appsecret';
+			$values['gigya_data_center'] = 'other';
+			$form_state->setValues($values);
+
+			$this->checkBadForm($form_state);
+
+			$form_state = new FormState();
+			$values['gigya_api_key'] = 'apikey';
+			$values['gigya_application_key'] = 'appkey';
+			$values['gigya_application_secret_key'] = 'wrong';
+			$values['gigya_data_center'] = 'us1.gigya.com';
+			$form_state->setValues($values);
+
+			$this->checkBadForm($form_state);
+
+
+			$form_state = new FormState();
+			$values['gigya_api_key'] = 'apikey';
+			$values['gigya_application_key'] = 'appkey';
+			$values['gigya_application_secret_key'] = 'wrong';
+			$values['gigya_data_center'] = 'us1.gigya.com';
+			$form_state->setValues($values);
+
+			$this->checkBadForm($form_state);
+
+			$form_state = new FormState();
+			$values['gigya_api_key'] = 'apikey';
+			$values['gigya_application_key'] = 'wrong';
+			$values['gigya_application_secret_key'] = 'appsecret';
+			$values['gigya_data_center'] = 'us1.gigya.com';
+			$form_state->setValues($values);
+
+			$this->checkBadForm($form_state);
+		}
+
+	}

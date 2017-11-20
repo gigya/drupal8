@@ -14,7 +14,7 @@
 	use Drupal\Core\Form\FormState;
 	use Drupal\gigya_raas\GigyaController;
 	use Drupal\Tests\BrowserTestBase;
-	use Drupal\user\Entity\User;
+	use Drupal\User\Entity\User;
 	use Gigya\CmsStarterKit\sdk\GSApiException;
 	use Gigya\CmsStarterKit\sdk\GSResponse;
 	use Gigya\CmsStarterKit\user\GigyaUser;
@@ -27,19 +27,19 @@
 	 */
 	class GigyaTest extends BrowserTestBase
 	{
-		private $key = "24c370c0d169a482ae1c5db1932b4b29";
-
 		/**
-		 * @var    GigyaController
+		 * @var string $key
+		 */
+		private $key = "24c370c0d169a482ae1c5db1932b4b29";
+		/**
+		 * @var    GigyaController $gigyaControl
 		 */
 		private $gigyaControl;
 		private $requestMock;
-
 		/**
-		 * @var    AjaxResponse
+		 * @var    AjaxResponse $successResponse
 		 */
 		private $successResponse;
-
 		private $trueKey = "24c370c0d169a482ae1c5db1932b4b29";
 
 		/**
@@ -55,18 +55,15 @@
 		 * @var \Drupal\user\UserInterface
 		 */
 		protected $webUser;
-
 		/**
 		 * The user for tests.
 		 *
 		 * @var \Drupal\user\UserInterface
 		 */
 		protected $gigyaAdmin;
-
 		protected $helperMock;
-
 		/**
-		 * @var    GigyaUser
+		 * @var    GigyaUser $gigyaUser
 		 */
 		protected $gigyaUser;
 
@@ -74,7 +71,6 @@
 		 * {@inheritdoc}
 		 */
 		public function setUp() {
-
 			parent::setUp();
 
 			$this->successResponse = new AjaxResponse();
@@ -277,7 +273,10 @@
 							$err_message = "Invalid data center";
 						}
 						else
-							return false;
+						{
+							$err_message = '';
+							$err_number = 0;
+						}
 
 						$res = new GSApiException($err_message, $err_number, $err_message);
 					}
@@ -285,10 +284,9 @@
 					{
 						$responseStr = '{"shortURL": "http://fw.to/8WgRfqE","statusCode": 200,"errorCode": 0,"statusReason": "OK","callId": "968875481ea94aadb8dc146a7165926c","time": "2016-06-09T13:07:20.861Z"}';
 						$res = new GSResponse('shortenURL', $responseStr);
-
 					}
 					else
-						return false;
+						$res = null;
 
 					return $res;
 				}));
@@ -300,8 +298,6 @@
 		 * Tests encrypt.
 		 */
 		public function testEncrypt() {
-
-
 //    1. Go to Drupal admin site (not user 1), Gigya settings not with admin user without Gigya Role permission (create new permission group)
 //       Expected: secret key text box is hidden
 
@@ -318,8 +314,7 @@
 //    $config->save();
 
 //  3. Set Gigya apikey, user app and secret and DC and save settings
-//     Expected: Settings saved secret encrypt on DB and in logs doesnt appear
-
+//     Expected: Settings saved secret encrypt on DB and in logs doesn't appear
 
 			$form_state = new FormState();
 			$values['gigya_api_key'] = 'apikey';
@@ -332,6 +327,7 @@
 			\Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state, $this->helperMock);
 
 			$key = Drupal::service('config.factory')->getEditable('gigya.settings')->get('gigya.gigya_application_secret_key');
+			file_put_contents('php://stderr', var_export(Drupal::service('config.factory')->getEditable('gigya.settings')->get(), true));
 			$this->assertNotEquals($values['gigya_application_secret_key'], $key, 'Key is not encrypted');
 
 			$this->drupalGet('admin/config/gigya/keys');
@@ -344,7 +340,8 @@
 			//Set other setting and register from front-site without required field - email, enable debug mode
 			//Expected:
 			//1. Error for missing email appears to user
-			//2. Secret doesnt appear in any messages in the logs
+			//2. Secret doesn't appear in any messages in the logs
+
 
 			$email = $this->gigyaUser->getProfile()->getEmail();
 			$this->gigyaUser->getProfile()->setEmail("");
@@ -358,7 +355,7 @@
 //  Set email with required field and register
 //  Expected:
 //  1.Registration succeed, user appears in Drupal users list
-//  2. Secret doesnt appear in any messages in the logs
+//  2. Secret doesn't appear in any messages in the logs
 //  3. getAccountInfo fired without any error
 
 			$this->gigyaUser->getProfile()->setEmail($email);
@@ -369,13 +366,12 @@
 			$this->assertEquals($this->successResponse->getCommands(), $res->getCommands());
 			$this->assertEquals($this->gigyaUser->getProfile()->getEmail(), $user->getEmail());
 
-			$this->key = "aa";
+			$this->key = 'aa';
 
 			$this->drupalLogin($this->gigyaAdmin);
 			$this->drupalLogout();
 
 			$this->checkBadForm($form_state);
-
 
 			$err_msg = t("Oops! Something went wrong during your login/registration process. Please try to login/register again.");
 
@@ -386,7 +382,7 @@
 			$this->drupalLogin($this->gigyaAdmin);
 			$this->drupalLogout();
 
-			$this->key = "";
+			$this->key = '';
 
 			$this->checkBadForm($form_state);
 			$this->checkBadLogin($err_msg);
@@ -397,10 +393,13 @@
 			$this->drupalLogout();
 		}
 
+		/**
+		 * @param FormState $form_state
+		 */
 		public function checkBadForm($form_state) {
 			$form_state->setValue('gigya_application_secret_key', '*********');
-			/** @noinspection PhpMethodParametersCountMismatchInspection */
-			\Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state, $this->helperMock);
+			\Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state);
+//			\Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state, $this->helperMock);
 			$msg = drupal_get_messages();
 			$this->assertArrayHasKey('error', $msg);
 			$this->assertArrayHasKey('0', $msg['error']);
@@ -464,7 +463,6 @@
 
 			$this->checkBadForm($form_state);
 
-
 			$form_state = new FormState();
 			$values['gigya_api_key'] = 'apikey';
 			$values['gigya_application_key'] = 'appkey';
@@ -483,5 +481,4 @@
 
 			$this->checkBadForm($form_state);
 		}
-
 	}

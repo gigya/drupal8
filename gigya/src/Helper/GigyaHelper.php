@@ -275,8 +275,17 @@ class GigyaHelper implements GigyaHelperInterface{
         $val = $this->getNestedValue($gigya_data, $raas_field_parts);
         if ($val !== NULL) {
           $drupal_field_type = $drupal_user->get($drupal_field)->getFieldDefinition()->getType();
-          if ((is_bool($val)) && ($drupal_field_type == 'boolean')) {
-            $val = intval($val);
+          if ($drupal_field_type == 'boolean') {
+              if (is_bool($val))  {
+                  $val = intval($val);
+              }
+              else{
+                  \Drupal::logger('gigya_ds')->error('Failed to map boolean type field from Gigya - Drupal type is boolean but Gigya type isn\'t: Drupal field is ' . $drupal_field_type);
+              }
+          }
+          else
+          {
+
           }
           $drupal_user->set($drupal_field, $val);
         }

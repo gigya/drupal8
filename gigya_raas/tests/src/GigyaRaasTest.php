@@ -336,12 +336,7 @@ class GigyaTest extends BrowserTestBase {
 
     $this->assertEquals($this->successResponse->getCommands(), $res->getCommands());
     $this->assertEquals($this->gigyaUser->getProfile()->getEmail(), $user->getEmail());
-
-
-
   }
-
-
 
 
   public function checkGoodLogin() {
@@ -377,3 +372,4 @@ class GigyaTest extends BrowserTestBase {
   }
 
 }
+

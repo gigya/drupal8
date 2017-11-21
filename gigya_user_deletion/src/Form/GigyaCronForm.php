@@ -49,10 +49,15 @@
 			{
 				$this->helper = $helper;
 			}
+
+			/* Show error on missing dependencies */
 			if (!$this->helper->checkEncryptKey())
-			{
 				drupal_set_message($this->t('Cannot read encrypt key'), 'error');
-			}
+			if (!class_exists('Aws\\S3\\S3Client'))
+				drupal_set_message($this->t('This module requires Amazon\'s PHP SDK'), 'error');
+			if (!class_exists('Gigya\\CmsStarterKit\\GigyaApiHelper'))
+				drupal_set_message($this->t('This module requires Gigya\'s PHP CMS Kit'), 'error');
+
 			$form = parent::buildForm($form, $form_state);
 			$config = $this->config('gigya.job');
 
@@ -72,7 +77,6 @@
 			$form['jobFrequency'] = array(
 				'#type' => 'textfield',
 				'#title' => $this->t('Job frequency (minutes)'),
-//				'#required' => true,
 			);
 			$jobFrequency = $config->get('gigya.jobFrequency') / 60;
 			if ($jobFrequency == 0)
@@ -111,7 +115,6 @@
 			$form['storageDetails']['bucketName'] = array(
 				'#type' => 'textfield',
 				'#title' => $this->t('Bucket name'),
-//				'#required' => true,
 				'#default_value' => $config->get('gigya.storageDetails.bucketName'),
 			);
 
@@ -119,7 +122,6 @@
 			$form['storageDetails']['accessKey'] = array(
 				'#type' => 'textfield',
 				'#title' => $this->t('Access key'),
-//				'#required' => true,
 				'#default_value' => $config->get('gigya.storageDetails.accessKey'),
 			);
 
@@ -133,7 +135,6 @@
 			$form['storageDetails']['secretKey'] = array(
 				'#type' => 'textfield',
 				'#title' => $this->t('Secret key'),
-//				'#required' => true,
 			);
 			if (!empty($access_key))
 			{
@@ -150,6 +151,7 @@
 				'#title' => $this->t('Object key prefix'),
 				'#default_value' => $config->get('gigya.storageDetails.objectKeyPrefix'),
 			);
+
 			/* .S3 Storage Details */
 
 			return $form;
@@ -173,16 +175,22 @@
 
 			$jobRequiredFields = ['jobFrequency', 'storageDetails.bucketName', 'storageDetails.accessKey', 'storageDetails.secretKey'];
 
-			// if $_enableJob is true verify all required fields with value
+			/* If $_enableJob is true verify all required fields with value */
 			$_enableJob = $this->getValue($form_state, 'enableJob');
 
 			if ($_enableJob)
 			{
+				if (!class_exists('Gigya\\CmsStarterKit\\GigyaApiHelper'))
+				{
+					$msg = 'This module requires the PHP CMS Kit package. Please install it before enabling this module.';
+					\Drupal::logger('gigya_user_deletion')->error($msg);
+					$form_state->setErrorByName('storageDetails.secretKey', $this->t($msg));
+					return;
+				}
+
 				$helper = new GigyaHelper();
 				if (!$helper->checkEncryptKey())
-				{
 					drupal_set_message($this->t('Cannot read encrypt key'), 'error');
-				}
 
 				foreach ($jobRequiredFields as $field)
 				{
@@ -199,7 +207,7 @@
 
 					if (empty($fieldValue))
 					{
-						$form_state->setErrorByName($field, $this->t($field . " is required field if job enabled."));
+						$form_state->setErrorByName($field, $this->t($field . " is a required field if the job enabled."));
 						break;
 					}
 				}
@@ -208,26 +216,35 @@
 				$accessKey = $this->getValue($form_state, 'accessKey');
 				$secretKey = $this->getValue($form_state, 'secretKey');
 
-				//if secret encrypt -> decrypt it
-				if (empty($secretKey) || $secretKey === "*********")
+				/* If secret encrypt -> decrypt it */
+				if (empty($secretKey) or $secretKey === "*********")
 				{
 					$secretKeyEnc = \Drupal::config('gigya.job')->get('gigya.storageDetails.secretKey');
 					$secretKey = $helper->decrypt($secretKeyEnc);
 				}
 
-				$s3Client = S3Client::factory(array(
-										 'key' => $accessKey,
-										 'secret' => $secretKey,
-									 ));
+				if (class_exists('Aws\\S3\\S3Client'))
+				{
+					$s3Client = S3Client::factory(array(
+											 'key' => $accessKey,
+											 'secret' => $secretKey,
+										 ));
 
-				try
-				{
-					$s3Client->GetBucketLocation(array('Bucket' => $bucketName,));
+					try
+					{
+						$s3Client->GetBucketLocation(array('Bucket' => $bucketName,));
+					}
+					catch (S3Exception $e)
+					{
+						\Drupal::logger('gigya_user_deletion')->error("Failed to connect to S3 server (form) - " . $e->getMessage());
+						$form_state->setErrorByName('storageDetails.secretKey', $this->t("Failed connecting to S3 server with error: " . $e->getMessage()));
+					}
 				}
-				catch (S3Exception $e)
+				else
 				{
-					\Drupal::logger('gigya_user_deletion')->error("Failed to connect to S3 server (form) - " . $e->getMessage());
-					$form_state->setErrorByName('storageDetails.secretKey', $this->t("Failed connecting to S3 server with error: " . $e->getMessage()));
+					$msg = 'This module requires the Amazon SDK for PHP. Please install the SDK before enabling the module.';
+					\Drupal::logger('gigya_user_deletion')->error($msg);
+					drupal_set_message($this->t($msg), 'error');
 				}
 			}
 		}

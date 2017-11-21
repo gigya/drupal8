@@ -34,6 +34,12 @@
 		$messageSucceed = "User successfully deleted from CMS - UID: ";
 		if ($enable_job)
 		{
+			if (!class_exists('S3Client'))
+			{
+				\Drupal::logger('gigya_user_deletion')->error('Cron could not continue. This module requires the Amazon SDK for PHP. Please install the SDK before enabling the module.');
+				return false;
+			}
+
 			$helper = new GigyaHelper();
 			$job_frequency = \Drupal::config('gigya.job')->get('gigya.jobFrequency');
 			//REQUEST_TIME
@@ -170,6 +176,12 @@
 	 * Function connect to S3 and retrieves all files in bucket (name only)
 	 */
 	function getFileList() {
+		if (!class_exists('S3Client'))
+		{
+			\Drupal::logger('gigya_user_deletion')->error('This module requires the Amazon SDK for PHP. Please install the SDK before enabling the module.');
+			return false;
+		}
+
 		try
 		{
 			$secretKey = '';

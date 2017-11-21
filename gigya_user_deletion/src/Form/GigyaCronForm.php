@@ -15,8 +15,16 @@
 
 	class GigyaCronForm extends ConfigFormBase
 	{
+		/**
+		 * @var bool | GigyaHelper
+		 */
 		public $helper = false;
 
+		/**
+		 * @param FormStateInterface $form_state
+		 * @param string             $prop_name
+		 * @return string
+		 */
 		private function getValue($form_state, $prop_name) {
 			return trim($form_state->getValue($prop_name));
 		}
@@ -65,8 +73,8 @@
 				'#type' => 'label',
 				'#title' => $this->t('Enable'),
 				"#attributes" => array(
-					'class' => 'gigya-label-cb'
-				)
+					'class' => 'gigya-label-cb',
+				),
 			);
 			$form['enableJob'] = array(
 				'#type' => 'checkbox',
@@ -107,8 +115,8 @@
 				'#type' => 'label',
 				'#title' => $this->t('Amazon S3 settings'),
 				'#attributes' => array(
-					'class' => 'gigya-label-custom'
-				)
+					'class' => 'gigya-label-custom',
+				),
 			);
 
 			/* Bucket name */
@@ -226,9 +234,9 @@
 				if (class_exists('Aws\\S3\\S3Client'))
 				{
 					$s3Client = S3Client::factory(array(
-											 'key' => $accessKey,
-											 'secret' => $secretKey,
-										 ));
+													  'key' => $accessKey,
+													  'secret' => $secretKey,
+												  ));
 
 					try
 					{

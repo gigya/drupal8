@@ -327,7 +327,6 @@
 			\Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state, $this->helperMock);
 
 			$key = Drupal::service('config.factory')->getEditable('gigya.settings')->get('gigya.gigya_application_secret_key');
-			file_put_contents('php://stderr', var_export(Drupal::service('config.factory')->getEditable('gigya.settings')->get(), true));
 			$this->assertNotEquals($values['gigya_application_secret_key'], $key, 'Key is not encrypted');
 
 			$this->drupalGet('admin/config/gigya/keys');
@@ -341,7 +340,6 @@
 			//Expected:
 			//1. Error for missing email appears to user
 			//2. Secret doesn't appear in any messages in the logs
-
 
 			$email = $this->gigyaUser->getProfile()->getEmail();
 			$this->gigyaUser->getProfile()->setEmail("");

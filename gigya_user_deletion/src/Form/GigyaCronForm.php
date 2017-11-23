@@ -30,7 +30,7 @@
 		 */
 		protected function getEditableConfigNames() {
 			return [
-				'gigya.job',
+				'gigya_user_deletion.job',
 			];
 		}
 
@@ -54,7 +54,7 @@
 				drupal_set_message($this->t('Cannot read encrypt key'), 'error');
 			}
 			$form = parent::buildForm($form, $form_state);
-			$config = $this->config('gigya.job');
+			$config = $this->config('gigya_user_deletion.job');
 
 			$form['enableJobLabel'] = array(
 				'#type' => 'label',
@@ -65,7 +65,7 @@
 			);
 			$form['enableJob'] = array(
 				'#type' => 'checkbox',
-				'#default_value' => $config->get('gigya.enableJob'),
+				'#default_value' => $config->get('gigya_user_deletion.enableJob'),
 			);
 
 			/* Job frequency */
@@ -74,7 +74,7 @@
 				'#title' => $this->t('Job frequency (minutes)'),
 //				'#required' => true,
 			);
-			$jobFrequency = $config->get('gigya.jobFrequency') / 60;
+			$jobFrequency = $config->get('gigya_user_deletion.jobFrequency') / 60;
 			if ($jobFrequency == 0)
 				$form['jobFrequency']['#default_value'] = "";
 			else
@@ -85,7 +85,7 @@
 				'#type' => 'textfield',
 				'#title' => $this->t('Email on success'),
 				'#description' => $this->t('A comma-separated list of emails that will be notified when the job completes successfully'),
-				'#default_value' => $config->get('gigya.emailOnSuccess'),
+				'#default_value' => $config->get('gigya_user_deletion.emailOnSuccess'),
 			);
 
 			/* Email on failure */
@@ -93,7 +93,7 @@
 				'#type' => 'textfield',
 				'#title' => $this->t('Email on failure'),
 				'#description' => $this->t('A comma-separated list of emails that will be notified when the job fails or completes with errors'),
-				'#default_value' => $config->get('gigya.emailOnFailure'),
+				'#default_value' => $config->get('gigya_user_deletion.emailOnFailure'),
 			);
 
 			/* S3 Storage Details */
@@ -111,18 +111,18 @@
 			$form['storageDetails']['bucketName'] = array(
 				'#type' => 'textfield',
 				'#title' => $this->t('Bucket name'),
-				'#default_value' => $config->get('gigya.storageDetails.bucketName'),
+				'#default_value' => $config->get('gigya_user_deletion.storageDetails.bucketName'),
 			);
 
 			/* Access key */
 			$form['storageDetails']['accessKey'] = array(
 				'#type' => 'textfield',
 				'#title' => $this->t('Access key'),
-				'#default_value' => $config->get('gigya.storageDetails.accessKey'),
+				'#default_value' => $config->get('gigya_user_deletion.storageDetails.accessKey'),
 			);
 
 			/* Secret key */
-			$key = $config->get('gigya.storageDetails.secretKey');
+			$key = $config->get('gigya_user_deletion.storageDetails.secretKey');
 			$access_key = "";
 			if (!empty($key))
 			{
@@ -148,7 +148,7 @@
 			$form['storageDetails']['objectKeyPrefix'] = array(
 				'#type' => 'textfield',
 				'#title' => $this->t('Object key prefix'),
-				'#default_value' => $config->get('gigya.storageDetails.objectKeyPrefix'),
+				'#default_value' => $config->get('gigya_user_deletion.storageDetails.objectKeyPrefix'),
 			);
 			/* .S3 Storage Details */
 
@@ -211,7 +211,7 @@
 				//if secret encrypt -> decrypt it
 				if (empty($secretKey) || $secretKey === "*********")
 				{
-					$secretKeyEnc = \Drupal::config('gigya.job')->get('gigya.storageDetails.secretKey');
+					$secretKeyEnc = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails.secretKey');
 					$secretKey = $helper->decrypt($secretKeyEnc);
 				}
 
@@ -233,30 +233,30 @@
 		}
 
 		public function submitForm(array &$form, FormStateInterface $form_state) {
-			$config = $this->config('gigya.job');
-			$config->set('gigya.enableJob', $this->getValue($form_state, 'enableJob'));
+			$config = $this->config('gigya_user_deletion.job');
+			$config->set('gigya_user_deletion.enableJob', $this->getValue($form_state, 'enableJob'));
 
 			$jobFrequency = $this->getValue($form_state, 'jobFrequency') * 60;
 			if ($jobFrequency == 0)
 			{
-				$config->set('gigya.jobFrequency', "");
+				$config->set('gigya_user_deletion.jobFrequency', "");
 			}
 			else
 			{
-				$config->set('gigya.jobFrequency', $jobFrequency);
+				$config->set('gigya_user_deletion.jobFrequency', $jobFrequency);
 			}
-			$config->set('gigya.emailOnSuccess', $this->getValue($form_state, 'emailOnSuccess'));
-			$config->set('gigya.emailOnFailure', $this->getValue($form_state, 'emailOnFailure'));
-			$config->set('gigya.storageDetails.bucketName', $this->getValue($form_state, 'bucketName'));
-			$config->set('gigya.storageDetails.accessKey', $this->getValue($form_state, 'accessKey'));
+			$config->set('gigya_user_deletion.emailOnSuccess', $this->getValue($form_state, 'emailOnSuccess'));
+			$config->set('gigya_user_deletion.emailOnFailure', $this->getValue($form_state, 'emailOnFailure'));
+			$config->set('gigya_user_deletion.storageDetails.bucketName', $this->getValue($form_state, 'bucketName'));
+			$config->set('gigya_user_deletion.storageDetails.accessKey', $this->getValue($form_state, 'accessKey'));
 			//encrypt storageDetails.secret
 			$temp_access_key = $this->getValue($form_state, 'secretKey');
 			if (!empty($temp_access_key) && $temp_access_key !== "*********")
 			{
 				$enc = $this->helper->enc($temp_access_key);
-				$config->set('gigya.storageDetails.secretKey', $enc);
+				$config->set('gigya_user_deletion.storageDetails.secretKey', $enc);
 			}
-			$config->set('gigya.storageDetails.objectKeyPrefix', $this->getValue($form_state, 'objectKeyPrefix'));
+			$config->set('gigya_user_deletion.storageDetails.objectKeyPrefix', $this->getValue($form_state, 'objectKeyPrefix'));
 			$config->save();
 			parent::submitForm($form, $form_state);
 		}

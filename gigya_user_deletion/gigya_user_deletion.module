@@ -24,7 +24,7 @@
 	 */
 	function gigya_user_deletion_cron() {
 		\Drupal::logger('gigya_user_deletion')->info('Gigya cron started');
-		$enable_job = \Drupal::config('gigya.job')->get('gigya.enableJob');
+		$enable_job = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.enableJob');
 
 		//Get counters from DB or set 0 if null
 		$counter_succeed = \Drupal::state()->get('job.counter_succeed', 0);
@@ -36,7 +36,7 @@
 			$gigyaHelper = new GigyaHelper();
 			$userDeletionHelper = new GigyaUserDeletionHelper();
 
-			$job_frequency = \Drupal::config('gigya.job')->get('gigya.jobFrequency');
+			$job_frequency = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.jobFrequency');
 			//REQUEST_TIME
 			$request_time = \Drupal::time()->getRequestTime();
 			//get last run
@@ -150,7 +150,7 @@
 						$subject = "Users deleted successfully";
 						$message = "The user deletion job scheduled to run for " . $_SERVER['SERVER_NAME'] . ' at ' . $last_run . ' completed successfully.' . $counter_succeed . " out of " . $total . ' users were deleted.';
 					}
-					$to = \Drupal::config('gigya.job')->get('gigya.emailOnSuccess');
+					$to = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.emailOnSuccess');
 					$userDeletionHelper->sendEmail($subject, $message, $to);
 				}
 				/* If job failed, send email */
@@ -158,7 +158,7 @@
 				{
 					$subject = "Failed to delete users";
 					$message = "The user deletion job scheduled to run for " . $_SERVER['SERVER_NAME'] . ' at ' . $last_run . ' has failed. No users were deleted.';
-					$to = \Drupal::config('gigya.job')->get('gigya.emailOnFailure');
+					$to = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.emailOnFailure');
 					$userDeletionHelper->sendEmail($subject, $message, $to);
 				}
 				//Reset counters on DB

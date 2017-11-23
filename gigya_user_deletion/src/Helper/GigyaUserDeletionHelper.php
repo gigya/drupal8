@@ -21,7 +21,7 @@
 			try
 			{
 				$secretKey = '';
-				$storageDetails = \Drupal::config('gigya.job')->get('gigya.storageDetails');
+				$storageDetails = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
 				$helper = new GigyaHelper();
 				$bucketName = $storageDetails['bucketName'];
 				$accessKey = $storageDetails['accessKey'];
@@ -69,7 +69,7 @@
 		public function loadFileFromServer($file_name) {
 			/* Get S3 connection details from DB */
 			$secretKey = '';
-			$storageDetails = \Drupal::config('gigya.job')->get('gigya.storageDetails');
+			$storageDetails = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
 			$helper = new GigyaHelper();
 			$bucketName = $storageDetails['bucketName'];
 			$accessKey = $storageDetails['accessKey'];
@@ -170,7 +170,7 @@
 		public function getRegion() {
 			//Get S3 connection details from DB
 			$secretKey = "";
-			$storageDetails = \Drupal::config('gigya.job')->get('gigya.storageDetails');
+			$storageDetails = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
 			$helper = new GigyaHelper();
 			$bucketName = $storageDetails['bucketName'];
 			$accessKey = $storageDetails['accessKey'];

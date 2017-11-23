@@ -111,7 +111,6 @@
 			$form['storageDetails']['bucketName'] = array(
 				'#type' => 'textfield',
 				'#title' => $this->t('Bucket name'),
-//				'#required' => true,
 				'#default_value' => $config->get('gigya.storageDetails.bucketName'),
 			);
 
@@ -119,7 +118,6 @@
 			$form['storageDetails']['accessKey'] = array(
 				'#type' => 'textfield',
 				'#title' => $this->t('Access key'),
-//				'#required' => true,
 				'#default_value' => $config->get('gigya.storageDetails.accessKey'),
 			);
 
@@ -133,7 +131,9 @@
 			$form['storageDetails']['secretKey'] = array(
 				'#type' => 'textfield',
 				'#title' => $this->t('Secret key'),
-//				'#required' => true,
+				'#attributes' => array(
+					'autocomplete' => 'off',
+				),
 			);
 			if (!empty($access_key))
 			{

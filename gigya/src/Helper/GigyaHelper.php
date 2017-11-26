@@ -287,12 +287,8 @@ class GigyaHelper implements GigyaHelperInterface {
                   $val = intval($val);
               }
               else{
-                  \Drupal::logger('gigya_ds')->error('Failed to map boolean type field from Gigya - Drupal type is boolean but Gigya type isn\'t: Drupal field is ' . $drupal_field_type);
+                  \Drupal::logger('gigya')->error('Failed to map ' . $drupal_field . ' from Gigya - Drupal type is boolean but Gigya type isn\'t');
               }
-          }
-          else
-          {
-
           }
           $drupal_user->set($drupal_field, $val);
         }

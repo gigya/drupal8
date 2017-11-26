@@ -76,7 +76,7 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
   public function getEncryptKey() {
-    $path = \Drupal::config('gigya.global')->get('gigya.keyPath');
+  	$path = \Drupal::config('gigya.global')->get('gigya.keyPath');
     $keypath = $this->getEncKeyFile($path);
     try
 	{

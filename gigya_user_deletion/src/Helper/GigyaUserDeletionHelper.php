@@ -62,7 +62,7 @@
 		/**
 		 * Function return file content
 		 *
-		 * @param    array $file_name File name
+		 * @param    string $file_name File name
 		 *
 		 * @return    bool                File content
 		 */
@@ -165,7 +165,7 @@
 		/**
 		 * Get S3 Region
 		 *
-		 * @param null | GigyaHelper $helper	Dependency injection for testability
+		 * @param null | GigyaHelper $helper Dependency injection for testability
 		 *
 		 * @return string | false
 		 */

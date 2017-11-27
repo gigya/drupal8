@@ -333,6 +333,12 @@ class GigyaHelper implements GigyaHelperInterface {
     return '{"cms_name":"Drupal","cms_version":"Drupal_' . \Drupal::VERSION . '","gigya_version":"Gigya_module_' .$info['version'] . '"}';
   }
 
+	/**
+	 * Gets real full path of the key even if only relative path is provided
+	 *
+	 * @param string	$uri	URI for the key, recommended to use full path
+	 * @return string
+	 */
   protected function getEncKeyFile($uri) {
     /** @var Drupal\Core\StreamWrapper\StreamWrapperInterface $stream */
     $stream = \Drupal::service('stream_wrapper_manager')->getViaUri($uri);

@@ -165,13 +165,16 @@
 		/**
 		 * Get S3 Region
 		 *
+		 * @param null | GigyaHelper $helper	Dependency injection for testability
+		 *
 		 * @return string | false
 		 */
-		public function getRegion() {
+		public function getRegion($helper = null) {
 			//Get S3 connection details from DB
 			$secretKey = "";
 			$storageDetails = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
-			$helper = new GigyaHelper();
+			if (!$helper)
+				$helper = new GigyaHelper();
 			$bucketName = $storageDetails['bucketName'];
 			$accessKey = $storageDetails['accessKey'];
 			$secretKeyEnc = $storageDetails['secretKey'];

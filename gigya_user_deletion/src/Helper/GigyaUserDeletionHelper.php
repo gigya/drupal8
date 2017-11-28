@@ -158,25 +158,32 @@
 			$params['subject'] = $subject;
 			$params['message'] = $body;
 			$key = 'job_email';
-			$langcode = \Drupal::currentUser()->getPreferredLangcode();
-			if (!$langcode)
+
+			try /* For testability */
+			{
+				$langcode = \Drupal::currentUser()->getPreferredLangcode();
+			}
+			catch (\Exception $e)
 			{
 				$langcode = 'en';
 			}
+			if (!isset($langcode))
+				$langcode = 'en';
+
 			try
 			{
-				foreach (explode(",", $to) as $email)
+				foreach (explode(',', $to) as $email)
 				{
-					$result = $mailManager->mail($module, $key, $email, $langcode, $params, null, $send = true);
+					$result = $mailManager->mail($module, $key, trim($email), $langcode, $params, null, $send = true);
 					if (!$result)
 					{
-						\Drupal::logger('gigya_user_deletion')->error("Failed to send email to " . $email);
+						\Drupal::logger('gigya_user_deletion')->error('Failed to send email to ' . $email);
 					}
 				}
 			}
 			catch (\Exception $e)
 			{
-				\Drupal::logger('gigya_user_deletion')->error("Failed to send emails - " . $e->getMessage());
+				\Drupal::logger('gigya_user_deletion')->error('Failed to send emails - ' . $e->getMessage());
 				return false;
 			}
 			return true;

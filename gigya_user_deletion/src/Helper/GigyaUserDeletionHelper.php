@@ -29,7 +29,10 @@
 			{
 				$secretKey = '';
 				$storageDetails = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
-				$helper = new GigyaHelper();
+				if ($this->helper)
+					$helper = $this->helper;
+				else
+					$helper = new GigyaHelper();
 				$bucketName = $storageDetails['bucketName'];
 				$accessKey = $storageDetails['accessKey'];
 				$secretKeyEnc = $storageDetails['secretKey'];
@@ -52,15 +55,18 @@
 													   'MaxKeys' => 15,
 													   'Prefix' => $objectKeyPrefix)
 				);
-				return $files = $response->getPath('Contents');
+				$files = $response->getPath('Contents');
+				return $files;
 			}
 			catch (S3Exception $e)
 			{
+				var_dump('1:' . $e->getMessage());
 				\Drupal::logger('gigya_user_deletion')->error("Failed to get files list from S3 server. Error: " . $e->getMessage());
 				return false;
 			}
 			catch (\Exception $e)
 			{
+				var_dump('2:' . $e->getMessage());
 				\Drupal::logger('gigya_user_deletion')->error("Missing required parameter. Error code: " . $e->getCode() . ". Message: " . $e->getMessage());
 				return false;
 			}
@@ -142,6 +148,8 @@
 		 * @param    $subject
 		 * @param    $body
 		 * @param    $to
+		 *
+		 * @return bool
 		 */
 		public function sendEmail($subject, $body, $to) {
 			$mailManager = \Drupal::service('plugin.manager.mail');
@@ -169,7 +177,9 @@
 			catch (\Exception $e)
 			{
 				\Drupal::logger('gigya_user_deletion')->error("Failed to send emails - " . $e->getMessage());
+				return false;
 			}
+			return true;
 		}
 
 		/**

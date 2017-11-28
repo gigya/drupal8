@@ -14,6 +14,13 @@
 
 	class GigyaUserDeletionHelper implements GigyaUserDeletionHelperInterface
 	{
+		private $helper;
+
+		public function __construct($helper = null) {
+			if ($helper)
+				$this->helper = $helper;
+		}
+
 		/**
 		 * Function connect to S3 and retrieves all files in bucket (name only)
 		 */
@@ -70,7 +77,10 @@
 			/* Get S3 connection details from DB */
 			$secretKey = '';
 			$storageDetails = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
-			$helper = new GigyaHelper();
+			if ($this->helper)
+				$helper = $this->helper;
+			else
+				$helper = new GigyaHelper();
 			$bucketName = $storageDetails['bucketName'];
 			$accessKey = $storageDetails['accessKey'];
 			$secretKeyEnc = $storageDetails['secretKey'];
@@ -169,11 +179,13 @@
 		 *
 		 * @return string | false
 		 */
-		public function getRegion($helper = null) {
+		public function getRegion() {
 			//Get S3 connection details from DB
 			$secretKey = "";
 			$storageDetails = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
-			if (!$helper)
+			if ($this->helper)
+				$helper = $this->helper;
+			else
 				$helper = new GigyaHelper();
 			$bucketName = $storageDetails['bucketName'];
 			$accessKey = $storageDetails['accessKey'];

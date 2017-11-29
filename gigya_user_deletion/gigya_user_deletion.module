@@ -161,6 +161,7 @@
 					$to = \Drupal::config('gigya.job')->get('gigya.emailOnFailure');
 					$userDeletionHelper->sendEmail($subject, $message, $to);
 				}
+
 				//Reset counters on DB
 				\Drupal::state()->set('job.counter_succeed', 0);
 				\Drupal::state()->set('job.counter_failed', 0);

@@ -143,6 +143,9 @@
 			$form['storageDetails']['secretKey'] = array(
 				'#type' => 'textfield',
 				'#title' => $this->t('Secret key'),
+				'#attributes' => array(
+					'autocomplete' => 'off',
+				),
 			);
 			if (!empty($access_key))
 			{

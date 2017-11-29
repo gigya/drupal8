@@ -21,7 +21,7 @@ use Gigya\CmsStarterKit\user\GigyaUser;
 use Gigya\CmsStarterKit\user\GigyaUserFactory;
 use Gigya\CmsStarterKit\ds\DsQueryObject;
 
-class GigyaHelper implements GigyaHelperInterface{
+class GigyaHelper implements GigyaHelperInterface {
     /**
      * @param $obj
      * @param $keys
@@ -52,7 +52,7 @@ class GigyaHelper implements GigyaHelperInterface{
     if (is_array($obj)) {
       $obj = Json::encode($obj);
     }
-      
+
     return $obj;
   }
 
@@ -78,11 +78,18 @@ class GigyaHelper implements GigyaHelperInterface{
   public function getEncryptKey() {
     $path = \Drupal::config('gigya.global')->get('gigya.keyPath');
     $keypath = $this->getEncKeyFile($path);
-    if ($key = file_get_contents($keypath)) {
-      return trim($key);
-    }
-    return FALSE;
-    //@TODO: error handle and logs.
+    try
+	{
+		if ($key = file_get_contents($keypath)) {
+		  return trim($key);
+		}
+		return false;
+	}
+	catch (Exception $e)
+	{
+		\Drupal::logger('gigya')->error('Key file not found. Configure the correct path in your gigya.global TML file.');
+		return false;
+	}
   }
 
   public function getAccessParams() {
@@ -280,12 +287,8 @@ class GigyaHelper implements GigyaHelperInterface{
                   $val = intval($val);
               }
               else{
-                  \Drupal::logger('gigya_ds')->error('Failed to map boolean type field from Gigya - Drupal type is boolean but Gigya type isn\'t: Drupal field is ' . $drupal_field_type);
+                  \Drupal::logger('gigya')->error('Failed to map ' . $drupal_field . ' from Gigya - Drupal type is boolean but Gigya type isn\'t');
               }
-          }
-          else
-          {
-
           }
           $drupal_user->set($drupal_field, $val);
         }

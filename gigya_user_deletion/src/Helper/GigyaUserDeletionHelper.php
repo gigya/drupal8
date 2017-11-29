@@ -14,6 +14,13 @@
 
 	class GigyaUserDeletionHelper implements GigyaUserDeletionHelperInterface
 	{
+		private $helper;
+
+		public function __construct($helper = null) {
+			if ($helper)
+				$this->helper = $helper;
+		}
+
 		/**
 		 * Function connect to S3 and retrieves all files in bucket (name only)
 		 */
@@ -21,8 +28,11 @@
 			try
 			{
 				$secretKey = '';
-				$storageDetails = \Drupal::config('gigya.job')->get('gigya.storageDetails');
-				$helper = new GigyaHelper();
+				$storageDetails = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
+				if ($this->helper)
+					$helper = $this->helper;
+				else
+					$helper = new GigyaHelper();
 				$bucketName = $storageDetails['bucketName'];
 				$accessKey = $storageDetails['accessKey'];
 				$secretKeyEnc = $storageDetails['secretKey'];
@@ -45,15 +55,18 @@
 													   'MaxKeys' => 15,
 													   'Prefix' => $objectKeyPrefix)
 				);
-				return $files = $response->getPath('Contents');
+				$files = $response->getPath('Contents');
+				return $files;
 			}
 			catch (S3Exception $e)
 			{
+				var_dump('1:' . $e->getMessage());
 				\Drupal::logger('gigya_user_deletion')->error("Failed to get files list from S3 server. Error: " . $e->getMessage());
 				return false;
 			}
 			catch (\Exception $e)
 			{
+				var_dump('2:' . $e->getMessage());
 				\Drupal::logger('gigya_user_deletion')->error("Missing required parameter. Error code: " . $e->getCode() . ". Message: " . $e->getMessage());
 				return false;
 			}
@@ -62,15 +75,18 @@
 		/**
 		 * Function return file content
 		 *
-		 * @param    array $file_name File name
+		 * @param    string $file_name File name
 		 *
 		 * @return    bool                File content
 		 */
 		public function loadFileFromServer($file_name) {
 			/* Get S3 connection details from DB */
 			$secretKey = '';
-			$storageDetails = \Drupal::config('gigya.job')->get('gigya.storageDetails');
-			$helper = new GigyaHelper();
+			$storageDetails = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
+			if ($this->helper)
+				$helper = $this->helper;
+			else
+				$helper = new GigyaHelper();
 			$bucketName = $storageDetails['bucketName'];
 			$accessKey = $storageDetails['accessKey'];
 			$secretKeyEnc = $storageDetails['secretKey'];
@@ -132,6 +148,8 @@
 		 * @param    $subject
 		 * @param    $body
 		 * @param    $to
+		 *
+		 * @return bool
 		 */
 		public function sendEmail($subject, $body, $to) {
 			$mailManager = \Drupal::service('plugin.manager.mail');
@@ -140,38 +158,52 @@
 			$params['subject'] = $subject;
 			$params['message'] = $body;
 			$key = 'job_email';
-			$langcode = \Drupal::currentUser()->getPreferredLangcode();
-			if (!$langcode)
+
+			try /* For testability */
+			{
+				$langcode = \Drupal::currentUser()->getPreferredLangcode();
+			}
+			catch (\Exception $e)
 			{
 				$langcode = 'en';
 			}
+			if (!isset($langcode))
+				$langcode = 'en';
+
 			try
 			{
-				foreach (explode(",", $to) as $email)
+				foreach (explode(',', $to) as $email)
 				{
-					$result = $mailManager->mail($module, $key, $email, $langcode, $params, null, $send = true);
+					$result = $mailManager->mail($module, $key, trim($email), $langcode, $params, null, $send = true);
 					if (!$result)
 					{
-						\Drupal::logger('gigya_user_deletion')->error("Failed to send email to " . $email);
+						\Drupal::logger('gigya_user_deletion')->error('Failed to send email to ' . $email);
 					}
 				}
 			}
 			catch (\Exception $e)
 			{
-				\Drupal::logger('gigya_user_deletion')->error("Failed to send emails - " . $e->getMessage());
+				\Drupal::logger('gigya_user_deletion')->error('Failed to send emails - ' . $e->getMessage());
+				return false;
 			}
+			return true;
 		}
 
 		/**
 		 * Get S3 Region
+		 *
+		 * @param null | GigyaHelper $helper Dependency injection for testability
 		 *
 		 * @return string | false
 		 */
 		public function getRegion() {
 			//Get S3 connection details from DB
 			$secretKey = "";
-			$storageDetails = \Drupal::config('gigya.job')->get('gigya.storageDetails');
-			$helper = new GigyaHelper();
+			$storageDetails = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
+			if ($this->helper)
+				$helper = $this->helper;
+			else
+				$helper = new GigyaHelper();
 			$bucketName = $storageDetails['bucketName'];
 			$accessKey = $storageDetails['accessKey'];
 			$secretKeyEnc = $storageDetails['secretKey'];

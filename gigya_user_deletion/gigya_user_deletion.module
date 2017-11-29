@@ -23,20 +23,21 @@
 	 * Implements hook_cron().
 	 */
 	function gigya_user_deletion_cron() {
-		\Drupal::logger('gigya_user_deletion')->info('Gigya cron started');
-		$enable_job = \Drupal::config('gigya.job')->get('gigya.enableJob');
+		$enable_job = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.enableJob');
 
 		//Get counters from DB or set 0 if null
 		$counter_succeed = \Drupal::state()->get('job.counter_succeed', 0);
 		$counter_failed = \Drupal::state()->get('job.counter_failed', 0);
 
-		$messageSucceed = "User successfully deleted from CMS - UID: ";
+		$messageSuccess = "User successfully deleted from CMS - Drupal UID: @drupalUid, Gigya UID: @gigyaUid";
 		if ($enable_job)
 		{
+			\Drupal::logger('gigya_user_deletion')->info('Gigya cron started');
+
 			$gigyaHelper = new GigyaHelper();
 			$userDeletionHelper = new GigyaUserDeletionHelper();
 
-			$job_frequency = \Drupal::config('gigya.job')->get('gigya.jobFrequency');
+			$job_frequency = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.jobFrequency');
 			//REQUEST_TIME
 			$request_time = \Drupal::time()->getRequestTime();
 			//get last run
@@ -72,7 +73,7 @@
 				//save counter value on DB and add to log
 				$queue_files_counter = $queue_file->numberOfItems();
 				\Drupal::state()->set('job.queue_files_counter', $queue_files_counter);
-				\Drupal::logger('gigya_user_deletion')->info($queue_files_counter . ' files added to queue at ' . date('mm/dd/YYYY', \Drupal::time()->getRequestTime()));
+				\Drupal::logger('gigya_user_deletion')->info($queue_files_counter . ' files added to the queue on ' . date('Y-m-d \a\t H:i:s', \Drupal::time()->getRequestTime()));
 			}
 
 			//If queue_file is not empty take item (file) and add all users to queue_users
@@ -111,23 +112,24 @@
 				{
 					try
 					{
-						user_delete($user->get('uid')->value);
+						$drupal_uid = $user->get('uid')->value;
+						user_delete($drupal_uid);
 						$counter_succeed++;
 						\Drupal::state()->set('job.counter_succeed', $counter_succeed);
-						\Drupal::logger('gigya_user_deletion')->notice($messageSucceed . $user->get('uid')->value);
+						\Drupal::logger('gigya_user_deletion')->notice($messageSuccess, array('@drupalUid' => $drupal_uid, '@gigyaUid' => $uid));
 					}
 					catch (\Exception $e)
 					{
-						//add to logs
 						\Drupal::logger('gigya_user_deletion')->error("Failed to delete UID " . $user->get('uid')->value . " from CMS with error - " . $e);
-						//increase failed counter to send in email
 						$counter_failed++;
-						\Drupal::state()->set('job.counter_succeed', $counter_failed);
+						\Drupal::state()->set('job.counter_failed', $counter_failed);
 					}
 				}
 				else
 				{
-					\Drupal::logger('gigya_user_deletion')->error("Failed to delete UID " . $uid . " from CMS with error - user doesn't exist");
+					\Drupal::logger('gigya_user_deletion')->warning("Failed to delete UID " . $uid . " from CMS with error - user doesn't exist");
+					$counter_failed++;
+					\Drupal::state()->set('job.counter_failed', $counter_failed);
 				}
 				$queue_users->deleteItem($item_user);
 			}
@@ -141,24 +143,24 @@
 					//if completed with errors
 					if ($counter_failed > 0)
 					{
-						$subject = "User deletion job completed with errors";
-						$message = "The user deletion job scheduled to run for " . $_SERVER['SERVER_NAME'] . ' at ' . $last_run . ' completed with errors.' . $counter_succeed . " out of " . $total . ' users were deleted.';
+						$subject = 'User deletion job completed with errors';
+						$message = 'The user deletion job scheduled to run for ' . $_SERVER['SERVER_NAME'] . ' on ' . date('F j, Y \a\t H:i:s', $last_run) . ' completed with errors. ' . $counter_succeed . ' out of ' . $total . ' users were deleted.';
 					}
 					/* Send email on succeed */
 					else
 					{
 						$subject = "Users deleted successfully";
-						$message = "The user deletion job scheduled to run for " . $_SERVER['SERVER_NAME'] . ' at ' . $last_run . ' completed successfully.' . $counter_succeed . " out of " . $total . ' users were deleted.';
+						$message = "The user deletion job scheduled to run for " . $_SERVER['SERVER_NAME'] . ' on ' . date('F j, Y \a\t H:i:s', $last_run) . ' completed successfully. ' . $counter_succeed . ' out of ' . $total . ' users were deleted.';
 					}
-					$to = \Drupal::config('gigya.job')->get('gigya.emailOnSuccess');
+					$to = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.emailOnSuccess');
 					$userDeletionHelper->sendEmail($subject, $message, $to);
 				}
 				/* If job failed, send email */
 				elseif ($counter_failed > 0)
 				{
 					$subject = "Failed to delete users";
-					$message = "The user deletion job scheduled to run for " . $_SERVER['SERVER_NAME'] . ' at ' . $last_run . ' has failed. No users were deleted.';
-					$to = \Drupal::config('gigya.job')->get('gigya.emailOnFailure');
+					$message = "The user deletion job scheduled to run for " . $_SERVER['SERVER_NAME'] . ' on ' . date('F j, Y \a\t H:i:s', $last_run) . ' has failed. No users were deleted.';
+					$to = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.emailOnFailure');
 					$userDeletionHelper->sendEmail($subject, $message, $to);
 				}
 
@@ -166,6 +168,10 @@
 				\Drupal::state()->set('job.counter_succeed', 0);
 				\Drupal::state()->set('job.counter_failed', 0);
 			}
+		}
+		else
+		{
+			\Drupal::logger('gigya_user_deletion')->warning('Gigya cron installed by not enabled. No action taken.');
 		}
 	}
 

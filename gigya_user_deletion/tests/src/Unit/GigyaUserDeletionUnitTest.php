@@ -21,7 +21,7 @@
 
 		private $coreModuleHelperMock;
 
-		/* Set AWS details here for test */
+		/* Set AWS details here for test -- these MUST be set for the tests to run. */
 		/**
 		 * @var bool
 		 */

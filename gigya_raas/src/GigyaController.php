@@ -291,12 +291,14 @@
 		private function shouldAddExtCookie($request, $login) {
 			if ("dynamic" != \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type'))
 			{
-				return FALSE;
+				return false;
 			}
+
 			if ($login)
 			{
-				return TRUE;
+				return true;
 			}
+
 			$current_user = \Drupal::currentUser();
 			if ($current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas'))
 			{
@@ -305,7 +307,7 @@
 				$gltexp_cookie = $request->cookies->get('gltexp_' . $api_key);
 				return !empty($gltexp_cookie);
 			}
-			return TRUE;
+			return true;
 		}
 
 		private function calcDynamicSessionSig($token, $expiration, $userKey, $secret) {

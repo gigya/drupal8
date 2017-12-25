@@ -103,6 +103,12 @@ class GigyaHelper implements GigyaHelperInterface {
     return $access_params;
   }
 
+	/**
+	 * @param      $method
+	 * @param null $params
+	 * @param bool $access_params
+	 * @return Exception|GSApiException|\Gigya\CmsStarterKit\sdk\GSResponse
+	 */
   public function sendApiCall($method, $params = null, $access_params = FALSE) {
     try {
       if (!$access_params) {

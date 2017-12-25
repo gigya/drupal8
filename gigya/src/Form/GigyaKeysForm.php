@@ -137,7 +137,6 @@ class GigyaKeysForm extends ConfigFormBase
 
         $config = $this->config('gigya.settings');
 
-
         // API key was changed ?
         if ($this->getValue($form_state, 'gigya_api_key') != $config->get('gigya.gigya_api_key')) {
             $_gigya_api_key = $this->getValue($form_state, 'gigya_api_key');
@@ -166,7 +165,6 @@ class GigyaKeysForm extends ConfigFormBase
         }
 
         // Data Center was changed ?
-
         if ($this->getValue($form_state, 'gigya_data_center') != $config->get('gigya.gigya_data_center') || $this->getValue($form_state, 'gigya_other_data_center') != $config->get('gigya.gigya_other_data_center')) {
             if ($this->getValue($form_state, 'gigya_data_center') == 'other') {
                 $_gigya_data_center = $this->getValue($form_state, 'gigya_other_data_center');
@@ -182,8 +180,7 @@ class GigyaKeysForm extends ConfigFormBase
         $access_params['app_key'] = $_gigya_application_key;
         $access_params['data_center'] = $_gigya_data_center;
         $params = new GSObject();
-        $params->put('url', 'http://gigya.com');
-
+        $params->put('url', 'http://www.gigya.com');
 
         $res = $this->helper->sendApiCall('shortenURL', $params, $access_params);
         $valid = FALSE;

@@ -12,7 +12,7 @@ var gigyaHelper = {
     var gig = document.createElement('script');
     gig.type = 'text/javascript';
     gig.async = true;
-    gig.src = ('https:' == document.location.protocol ? 'https://cdns' : 'http://cdn') + '.' + apiDomain + '/js/gigya.js?apiKey=' + apiKey + '&lang=' + lang;
+    gig.src = ('https:' === document.location.protocol ? 'https://cdns' : 'http://cdn') + '.' + apiDomain + '/js/gigya.js?apiKey=' + apiKey + '&lang=' + lang;
     document.getElementsByTagName('head')[0].appendChild(gig);
   },
 
@@ -42,7 +42,7 @@ var gigyaHelper = {
       global: false
     }).done(function (res) {
       var response = JSON.parse(res);
-      if (response.success == "success") {
+      if (response.success === "success") {
         // Do what is needed to show that the user is logged in (reload the page etc...)
       } else {
         // Logout user from gigya

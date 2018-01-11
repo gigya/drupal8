@@ -7,7 +7,7 @@
 
 namespace Drupal\gigya\Helper;
 
-use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 use Gigya\CmsStarterKit\sdk\GSApiException;
 use Gigya\CmsStarterKit\sdk\GSResponse;
 
@@ -44,7 +44,7 @@ interface GigyaHelperInterface {
 
   public function getUidByName($name);
 
-  public function processFieldMapping($gigya_data, User $drupal_user);
+  public function processFieldMapping($gigya_data, UserInterface $drupal_user);
 
   public function getGigyaUserFromArray($data);
 

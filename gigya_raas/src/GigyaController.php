@@ -76,11 +76,10 @@
 		 * @param \Symfony\Component\HttpFoundation\Request $request
 		 *   The incoming request object.
 		 *
-		 * @return \Drupal\Core\Ajax\AjaxResponse
+		 * @return \Drupal\Core\Ajax\AjaxResponse|false
 		 *   The Ajax response
 		 */
 		public function gigyaRaasLoginAjax(Request $request) {
-
 			if (\Drupal::currentUser()->isAnonymous())
 			{
 				global $raas_login;
@@ -210,7 +209,7 @@
 							\Drupal::moduleHandler()->alter('gigya_raas_create_user', $gigyaUser, $user);
 							try
 							{
-								//@TODO: generate Unique user name.
+							  //@TODO: generate Unique user name.
                 $user->save();
                 $raas_login = true;
                 $this->gigyaRaasExtCookieAjax($request, $raas_login);
@@ -237,6 +236,7 @@
 						"Oops! Something went wrong during your login/registration process. Please try to login/register again."
 					);
 				}
+
 				if ($err_msg !== FALSE)
 				{
 
@@ -246,8 +246,11 @@
 				{
 					$response->addCommand(new RedirectCommand("/"));
 				}
+
 				return $response;
 			}
+
+			return false;
 		}
 
 		/**

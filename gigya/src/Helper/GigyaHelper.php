@@ -284,7 +284,7 @@ class GigyaHelper implements GigyaHelperInterface {
       \Drupal::moduleHandler()
         ->alter('gigya_raas_map_data', $gigya_data, $drupal_user, $field_map);
       foreach ($field_map as $drupal_field => $raas_field) {
-        if ($drupal_field == 'mail') {
+        if ($drupal_field == 'mail' or $drupal_field == 'name') {
           continue;
         }
         $raas_field_parts = explode(".", $raas_field);

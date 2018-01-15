@@ -238,6 +238,13 @@ class GigyaHelper implements GigyaHelperInterface {
   public function getUidByUUID($uuid) {
     return \Drupal::service('entity.repository')->loadEntityByUuid('user', $uuid);
   }
+
+  /**
+   * @param GigyaUser $gigyaUser
+   * @param integer   $uid
+   *
+   * @return bool
+   */
   public function checkEmailsUniqueness($gigyaUser, $uid) {
     if ($this->checkProfileEmail($gigyaUser->getProfile()->getEmail(), $gigyaUser->getLoginIDs()['emails'])) {
       $uid_check = $this->getUidByMail($gigyaUser->getProfile()->getEmail());

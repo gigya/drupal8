@@ -76,11 +76,10 @@
 		 * @param \Symfony\Component\HttpFoundation\Request $request
 		 *   The incoming request object.
 		 *
-		 * @return \Drupal\Core\Ajax\AjaxResponse
+		 * @return \Drupal\Core\Ajax\AjaxResponse|false
 		 *   The Ajax response
 		 */
 		public function gigyaRaasLoginAjax(Request $request) {
-
 			if (\Drupal::currentUser()->isAnonymous())
 			{
 				global $raas_login;
@@ -210,15 +209,15 @@
 							\Drupal::moduleHandler()->alter('gigya_raas_create_user', $gigyaUser, $user);
 							try
 							{
-								//@TODO: generate Unique user name.
-								$user->save();
-								$raas_login = TRUE;
-								$this->gigyaRaasExtCookieAjax($request, $raas_login);
-								user_login_finalize($user);
-
+							  //@TODO: generate Unique user name.
+                $user->save();
+                $raas_login = true;
+                $this->gigyaRaasExtCookieAjax($request, $raas_login);
+                user_login_finalize($user);
 							}
 							catch (\Exception $e)
 							{
+							  \Drupal::logger('gigya_raas')->notice('User with username: '.$username.' could not log in after registration. Exception: '.$e->getMessage());
 								session_destroy();
 								$err_msg = $this->t(
 									"Oops! Something went wrong during your registration process. You are registered to the site but not logged-in. Please try to login again."
@@ -232,10 +231,12 @@
 				else
 				{
 					$this->helper->saveUserLogoutCookie();
+          \Drupal::logger('gigya_raas')->notice('Invalid user. Guid: '.$guid);
 					$err_msg = $this->t(
 						"Oops! Something went wrong during your login/registration process. Please try to login/register again."
 					);
 				}
+
 				if ($err_msg !== FALSE)
 				{
 
@@ -245,8 +246,11 @@
 				{
 					$response->addCommand(new RedirectCommand("/"));
 				}
+
 				return $response;
 			}
+
+			return false;
 		}
 
 		/**

@@ -9,13 +9,12 @@ namespace Drupal\gigya\Helper;
 
 use Drupal;
 use Drupal\Component\Serialization\Json;
-use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Database;
 use Drupal\user\Entity\User;
 use Exception;
 use Gigya\CmsStarterKit\GigyaApiHelper;
 use Gigya\CmsStarterKit\sdk\GigyaApiRequest;
 use Gigya\CmsStarterKit\sdk\GSApiException;
-use Gigya\CmsStarterKit\sdk\GSException;
 use Gigya\CmsStarterKit\sdk\GSObject;
 use Gigya\CmsStarterKit\user\GigyaProfile;
 use Gigya\CmsStarterKit\user\GigyaUser;
@@ -108,10 +107,7 @@ class GigyaHelper implements GigyaHelperInterface {
 	 * @param      $method
 	 * @param null $params
 	 * @param bool $access_params
-	 *
 	 * @return Exception|GSApiException|\Gigya\CmsStarterKit\sdk\GSResponse
-	 *
-	 * @throws \Exception
 	 */
   public function sendApiCall($method, $params = null, $access_params = FALSE) {
     try {
@@ -139,8 +135,8 @@ class GigyaHelper implements GigyaHelperInterface {
       Drupal::logger('gigya')->error('<pre>gigya api error error code :' . $e->getErrorCode() . '</pre>');
       if ($e->getCallId()) {
 
-        Drupal::logger('gigya')->error('Response from gigya <br /><pre>callId : @callId, apicall:@method,
-                                                Error:@error</pre>', array('@callId' => $e->getCallId(),
+        Drupal::logger('gigya')->error('Response from gigya <br /><pre>callId : @callId,apicall:@method
+                                                 ,Error:@error</pre>', array('@callId' => $e->getCallId(),
                                                 '@method' => $method, '@error' => $e->getErrorCode()));
       }
 
@@ -152,7 +148,6 @@ class GigyaHelper implements GigyaHelperInterface {
 	 * @param $uid
 	 * @param $uid_sig
 	 * @param $sig_timestamp
-	 *
 	 * @return bool | GigyaUser
 	 */
   public function validateUid($uid, $uid_sig, $sig_timestamp) {
@@ -219,35 +214,37 @@ class GigyaHelper implements GigyaHelperInterface {
     return $processed;
   }
 
-
   public function saveUserLogoutCookie() {
     user_cookie_save(array('gigya' => 'gigyaLogOut'));
   }
 
   public function getUidByMail($mail) {
-
     return \Drupal::entityQuery('user')
       ->condition('mail',  $mail)
       ->execute();
   }
 
   public function getUidByMails($mails) {
-
     return \Drupal::entityQuery('user')
       ->condition('mail',  $mails)
       ->execute();
   }
 
+  /**
+   * @param $uuid
+   *
+   * @return User
+   */
   public function getUidByUUID($uuid) {
     return \Drupal::service('entity.repository')->loadEntityByUuid('user', $uuid);
   }
 
-	/**
-	 * @param GigyaUser $gigyaUser
-	 * @param string    $uid
-	 *
-	 * @return bool
-	 */
+  /**
+   * @param GigyaUser $gigyaUser
+   * @param integer   $uid
+   *
+   * @return bool
+   */
   public function checkEmailsUniqueness($gigyaUser, $uid) {
     if ($this->checkProfileEmail($gigyaUser->getProfile()->getEmail(), $gigyaUser->getLoginIDs()['emails'])) {
       $uid_check = $this->getUidByMail($gigyaUser->getProfile()->getEmail());
@@ -275,20 +272,19 @@ class GigyaHelper implements GigyaHelperInterface {
     return $exists;
   }
 
-
   public function getUidByName($name) {
     return \Drupal::entityQuery('user')
-      ->condition('name',  \Drupal\Core\Database\Database::getConnection()->escapeLike($name), 'LIKE')
+      ->condition('name',  Database::getConnection()->escapeLike($name), 'LIKE')
       ->execute();
   }
 
-  public function processFieldMapping($gigya_data, User $drupal_user) {
+  public function processFieldMapping($gigya_data, Drupal\user\UserInterface $drupal_user) {
     try {
       $field_map = \Drupal::config('gigya.global')->get('gigya.fieldMapping');
       \Drupal::moduleHandler()
         ->alter('gigya_raas_map_data', $gigya_data, $drupal_user, $field_map);
       foreach ($field_map as $drupal_field => $raas_field) {
-        if ($drupal_field == 'mail') {
+        if ($drupal_field == 'mail' or $drupal_field == 'name') {
           continue;
         }
         $raas_field_parts = explode(".", $raas_field);
@@ -296,12 +292,12 @@ class GigyaHelper implements GigyaHelperInterface {
         if ($val !== NULL) {
           $drupal_field_type = $drupal_user->get($drupal_field)->getFieldDefinition()->getType();
           if ($drupal_field_type == 'boolean') {
-              if (is_bool($val))  {
-                  $val = intval($val);
-              }
-              else{
-                  \Drupal::logger('gigya')->error('Failed to map ' . $drupal_field . ' from Gigya - Drupal type is boolean but Gigya type isn\'t');
-              }
+            if (is_bool($val)) {
+              $val = intval($val);
+            }
+            else {
+              \Drupal::logger('gigya')->error('Failed to map ' . $drupal_field . ' from Gigya - Drupal type is boolean but Gigya type isn\'t');
+            }
           }
           $drupal_user->set($drupal_field, $val);
         }
@@ -310,7 +306,6 @@ class GigyaHelper implements GigyaHelperInterface {
       Drupal::logger('gigya')->debug('processFieldMapping error @message',
         array('@message' => $e->getMessage()));
     }
-
   }
 
   public function getGigyaUserFromArray($data) {

@@ -15,6 +15,7 @@ use Exception;
 use Gigya\CmsStarterKit\GigyaApiHelper;
 use Gigya\CmsStarterKit\sdk\GigyaApiRequest;
 use Gigya\CmsStarterKit\sdk\GSApiException;
+use Gigya\CmsStarterKit\sdk\GSException;
 use Gigya\CmsStarterKit\sdk\GSObject;
 use Gigya\CmsStarterKit\user\GigyaProfile;
 use Gigya\CmsStarterKit\user\GigyaUser;
@@ -107,7 +108,10 @@ class GigyaHelper implements GigyaHelperInterface {
 	 * @param      $method
 	 * @param null $params
 	 * @param bool $access_params
+	 *
 	 * @return Exception|GSApiException|\Gigya\CmsStarterKit\sdk\GSResponse
+	 *
+	 * @throws \Exception
 	 */
   public function sendApiCall($method, $params = null, $access_params = FALSE) {
     try {
@@ -135,24 +139,20 @@ class GigyaHelper implements GigyaHelperInterface {
       Drupal::logger('gigya')->error('<pre>gigya api error error code :' . $e->getErrorCode() . '</pre>');
       if ($e->getCallId()) {
 
-        Drupal::logger('gigya')->error('Response from gigya <br /><pre>callId : @callId,apicall:@method
-                                                 ,Error:@error</pre>', array('@callId' => $e->getCallId(),
+        Drupal::logger('gigya')->error('Response from gigya <br /><pre>callId : @callId, apicall:@method,
+                                                Error:@error</pre>', array('@callId' => $e->getCallId(),
                                                 '@method' => $method, '@error' => $e->getErrorCode()));
       }
 
       return $e;
     }
-//    catch (Exception $e) {
-//      Drupal::logger('gigya')->error('<pre>gigya api error ' . $e->getMessage() . '</pre>');
-//      return $e;
-//    }
-
   }
 
 	/**
 	 * @param $uid
 	 * @param $uid_sig
 	 * @param $sig_timestamp
+	 *
 	 * @return bool | GigyaUser
 	 */
   public function validateUid($uid, $uid_sig, $sig_timestamp) {
@@ -241,6 +241,13 @@ class GigyaHelper implements GigyaHelperInterface {
   public function getUidByUUID($uuid) {
     return \Drupal::service('entity.repository')->loadEntityByUuid('user', $uuid);
   }
+
+	/**
+	 * @param GigyaUser $gigyaUser
+	 * @param string    $uid
+	 *
+	 * @return bool
+	 */
   public function checkEmailsUniqueness($gigyaUser, $uid) {
     if ($this->checkProfileEmail($gigyaUser->getProfile()->getEmail(), $gigyaUser->getLoginIDs()['emails'])) {
       $uid_check = $this->getUidByMail($gigyaUser->getProfile()->getEmail());

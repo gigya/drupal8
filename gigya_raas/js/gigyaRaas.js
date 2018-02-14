@@ -88,21 +88,21 @@
                 gigya.accounts.showScreenSet(drupalSettings.gigya.raas.profile);
             });
             var loginDiv = $('#gigya-raas-login-div');
-            if (loginDiv.size() > 0 && (typeof drupalSettings.gigya.raas.login !== 'undefined')) {
+            if (loginDiv.length > 0 && (typeof drupalSettings.gigya.raas.login !== 'undefined')) {
                 var id = loginDiv.eq(0).attr('id');
                 drupalSettings.gigya.raas.login.containerID = id;
                 drupalSettings.gigya.raas.linkId = id;
                 gigya.accounts.showScreenSet(drupalSettings.gigya.raas.login);
             }
             var regDiv = $('#gigya-raas-register-div');
-            if (regDiv.size() > 0 && (typeof drupalSettings.gigya.raas.register !== 'undefined')) {
+            if (regDiv.length > 0 && (typeof drupalSettings.gigya.raas.register !== 'undefined')) {
                 var id = regDiv.eq(0).attr('id');
                 drupalSettings.gigya.raas.register.containerID = id;
                 drupalSettings.gigya.raas.linkId = id;
                 gigya.accounts.showScreenSet(drupalSettings.gigya.raas.register);
             }
             var profDiv = $('#gigya-raas-profile-div');
-            if ((profDiv.size() > 0) && (typeof drupalSettings.gigya.raas.profile !== 'undefined')) {
+            if ((profDiv.length > 0) && (typeof drupalSettings.gigya.raas.profile !== 'undefined')) {
                 drupalSettings.gigya.raas.profile.containerID = profDiv.eq(0).attr('id');
                 drupalSettings.gigya.raas.profile.onAfterSubmit = profileUpdated;
                 gigya.accounts.showScreenSet(drupalSettings.gigya.raas.profile);

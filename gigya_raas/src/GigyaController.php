@@ -71,13 +71,11 @@
 		}
 
 		/**
-		 * Process gigya raas login.
+		 * @param Request $request      The incoming request object.
 		 *
-		 * @param \Symfony\Component\HttpFoundation\Request $request
-		 *   The incoming request object.
+		 * @return bool|AjaxResponse    The Ajax response
 		 *
-		 * @return \Drupal\Core\Ajax\AjaxResponse|false
-		 *   The Ajax response
+		 * @throws \Drupal\Core\Entity\EntityStorageException
 		 */
 		public function gigyaRaasLoginAjax(Request $request) {
 			if (\Drupal::currentUser()->isAnonymous())

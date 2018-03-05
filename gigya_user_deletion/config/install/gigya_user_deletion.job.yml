@@ -1,0 +1,6 @@
+gigya_user_deletion:
+  jobFrequency : '86400' # 24 hours
+  emailOnSuccess : ''
+  emailOnFailure : ''
+  storageDetails : { bucketName : '' , accessKey : '', secretKey : '', objectKeyPrefix : '' }
+  enableJob : false

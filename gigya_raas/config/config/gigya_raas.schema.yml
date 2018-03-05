@@ -1,0 +1,10 @@
+gigya_raas.settings:
+  type: mapping
+  label: 'Gigya RaaS Session Settings'
+  mapping:
+    session_type:
+      type: text
+      label: 'Session Type'
+    session_time:
+      type: integer
+      label: 'Session Duration'

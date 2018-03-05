@@ -5,8 +5,8 @@
  * Installation functions for Gigya module.
  */
 
-use Drupal\User\RoleInterface;
-
+use Drupal\Core\Config\FileStorage;
+use Drupal\Core\Database\Database;
 /**
  * Implements hook_install.
  */

@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Documentation for Gigya module APIs.
@@ -15,7 +14,7 @@
  *
  * @param $gigya_data
  *   An array of all the gigya data.
-
+ *
  * @param $drupal_user
  *   An drupal user object.
  *
@@ -39,7 +38,7 @@ function hook_gigya_global_parameters_alter(array &$gigya_global_parameters) {
 /**
  * Modify the data gigya_lang before it is added to the js.
  *
- * @param $gigya_global_parameters
+ * @param $lang
  *   An field map arrays.
  *
  * @see CKEditorPluginManager
@@ -49,6 +48,8 @@ function hook_gigya_lang_alter(&$lang) {
     $lang = "en2";
   }
 }
+
+
 
 /**
  * @} End of "addtogroup hooks".

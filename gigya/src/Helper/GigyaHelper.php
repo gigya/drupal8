@@ -9,7 +9,7 @@ namespace Drupal\gigya\Helper;
 
 use Drupal;
 use Drupal\Component\Serialization\Json;
-use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Database;
 use Drupal\user\Entity\User;
 use Exception;
 use Gigya\CmsStarterKit\GigyaApiHelper;
@@ -21,13 +21,19 @@ use Gigya\CmsStarterKit\user\GigyaUser;
 use Gigya\CmsStarterKit\user\GigyaUserFactory;
 use Gigya\CmsStarterKit\ds\DsQueryObject;
 
-class GigyaHelper implements GigyaHelperInterface{
+class GigyaHelper implements GigyaHelperInterface {
+    /**
+     * @param $obj
+     * @param $keys
+     *
+     * @return null | string
+     */
   public function getNestedValue($obj, $keys) {
     while (!empty($keys)) {
       $key = array_shift($keys);
 
       if ($obj instanceof GigyaUser || $obj instanceof GigyaProfile) {
-      $method = "get" . ucfirst($key);
+        $method = "get" . ucfirst($key);
         $obj = $obj->$method();
       }
       else if (is_array($obj)) {
@@ -35,19 +41,18 @@ class GigyaHelper implements GigyaHelperInterface{
           $obj = $obj[$key];
         }
         else {
-          return FALSE;
+          return NULL;
         }
       }
       else {
-        return FALSE;
+        return NULL;
       }
     }
+
     if (is_array($obj)) {
       $obj = Json::encode($obj);
     }
-    else if ($obj instanceof GigyaProfile) {
-      //@TODO: think if / how handle this.
-    }
+
     return $obj;
   }
 
@@ -71,13 +76,20 @@ class GigyaHelper implements GigyaHelperInterface{
   }
 
   public function getEncryptKey() {
-    $path = \Drupal::config('gigya.global')->get('gigya.keyPath');
+  	$path = \Drupal::config('gigya.global')->get('gigya.keyPath');
     $keypath = $this->getEncKeyFile($path);
-    if ($key = file_get_contents($keypath)) {
-      return trim($key);
-    }
-    return FALSE;
-    //@TODO: error handle and logs.
+    try
+	{
+		if ($key = file_get_contents($keypath)) {
+		  return trim($key);
+		}
+		return false;
+	}
+	catch (Exception $e)
+	{
+		\Drupal::logger('gigya')->error('Key file not found. Configure the correct path in your gigya.global TML file.');
+		return false;
+	}
   }
 
   public function getAccessParams() {
@@ -91,6 +103,15 @@ class GigyaHelper implements GigyaHelperInterface{
     return $access_params;
   }
 
+	/**
+	 * @param      $method
+	 * @param null $params
+	 * @param bool $access_params
+	 *
+	 * @return Exception|GSApiException|\Gigya\CmsStarterKit\sdk\GSResponse
+	 *
+	 * @throws \Exception
+	 */
   public function sendApiCall($method, $params = null, $access_params = FALSE) {
     try {
       if (!$access_params) {
@@ -108,7 +129,7 @@ class GigyaHelper implements GigyaHelperInterface{
       if (Drupal::config('gigya.global')->get('gigya.gigyaDebugMode') == true) {
 
         // on first module load, api & secret are empty, so no values in response
-        Drupal::logger('gigya')->debug('Response from gigya <br /><pre>callId : @callId,apicall:@method</pre>',
+        Drupal::logger('gigya')->debug('Response from gigya <br /><pre>callId: @callId, apicall:@method</pre>',
                                                 array('@callId' => $result->getData()->getString('callId'), '@method' => $method));
       }
       return $result;
@@ -117,20 +138,21 @@ class GigyaHelper implements GigyaHelperInterface{
       Drupal::logger('gigya')->error('<pre>gigya api error error code :' . $e->getErrorCode() . '</pre>');
       if ($e->getCallId()) {
 
-        Drupal::logger('gigya')->error('Response from gigya <br /><pre>callId : @callId,apicall:@method
-                                                 ,Error:@error</pre>', array('@callId' => $e->getCallId(),
+        Drupal::logger('gigya')->error('Response from gigya <br /><pre>callId: @callId, apicall:@method,
+                                                 Error:@error</pre>', array('@callId' => $e->getCallId(),
                                                 '@method' => $method, '@error' => $e->getErrorCode()));
       }
 
       return $e;
     }
-//    catch (Exception $e) {
-//      Drupal::logger('gigya')->error('<pre>gigya api error ' . $e->getMessage() . '</pre>');
-//      return $e;
-//    }
-
   }
 
+	/**
+	 * @param $uid
+	 * @param $uid_sig
+	 * @param $sig_timestamp
+	 * @return bool | GigyaUser
+	 */
   public function validateUid($uid, $uid_sig, $sig_timestamp) {
     try {
       $params = array('environment' => $this->getEnvString());
@@ -175,11 +197,12 @@ class GigyaHelper implements GigyaHelperInterface{
     return $res->serialize()['data'];
   }
 
-  public function doSingleDsSearch($type, $fields, $uid) {
+  public function doSingleDsSearch($type, $oid, $fields, $uid) {
     $dsQueryObj = $this->getGigyaDsQuery();
     $dsQueryObj->setFields($fields);
     $dsQueryObj->setTable($type);
     $dsQueryObj->addWhere("UID", "=", $uid, "string");
+    $dsQueryObj->addWhere("oid", "=", $oid, "string");
     $res = $dsQueryObj->dsSearch()->serialize()['results'];
     return $this->dsProcessSearch($res);
   }
@@ -194,28 +217,37 @@ class GigyaHelper implements GigyaHelperInterface{
     return $processed;
   }
 
-
   public function saveUserLogoutCookie() {
     user_cookie_save(array('gigya' => 'gigyaLogOut'));
   }
 
   public function getUidByMail($mail) {
-
     return \Drupal::entityQuery('user')
       ->condition('mail',  $mail)
       ->execute();
   }
 
   public function getUidByMails($mails) {
-
     return \Drupal::entityQuery('user')
       ->condition('mail',  $mails)
       ->execute();
   }
 
+  /**
+   * @param $uuid
+   *
+   * @return User
+   */
   public function getUidByUUID($uuid) {
     return \Drupal::service('entity.repository')->loadEntityByUuid('user', $uuid);
   }
+
+  /**
+   * @param GigyaUser $gigyaUser
+   * @param integer   $uid
+   *
+   * @return bool
+   */
   public function checkEmailsUniqueness($gigyaUser, $uid) {
     if ($this->checkProfileEmail($gigyaUser->getProfile()->getEmail(), $gigyaUser->getLoginIDs()['emails'])) {
       $uid_check = $this->getUidByMail($gigyaUser->getProfile()->getEmail());
@@ -243,27 +275,32 @@ class GigyaHelper implements GigyaHelperInterface{
     return $exists;
   }
 
-
   public function getUidByName($name) {
     return \Drupal::entityQuery('user')
-      ->condition('name',  \Drupal\Core\Database\Database::getConnection()->escapeLike($name), 'LIKE')
+      ->condition('name',  Database::getConnection()->escapeLike($name), 'LIKE')
       ->execute();
   }
 
-  public function processFieldMapping($gigya_data, User $drupal_user) {
+  public function processFieldMapping($gigya_data, Drupal\user\UserInterface $drupal_user) {
     try {
       $field_map = \Drupal::config('gigya.global')->get('gigya.fieldMapping');
       \Drupal::moduleHandler()
         ->alter('gigya_raas_map_data', $gigya_data, $drupal_user, $field_map);
       foreach ($field_map as $drupal_field => $raas_field) {
-        if ($drupal_field == 'mail') {
+        if ($drupal_field == 'mail' or $drupal_field == 'name') {
           continue;
         }
         $raas_field_parts = explode(".", $raas_field);
         $val = $this->getNestedValue($gigya_data, $raas_field_parts);
         if ($val !== NULL) {
-          if (is_bool($val)) {
-            $val = intval($val);
+          $drupal_field_type = $drupal_user->get($drupal_field)->getFieldDefinition()->getType();
+          if ($drupal_field_type == 'boolean') {
+            if (is_bool($val)) {
+              $val = intval($val);
+            }
+            else {
+              \Drupal::logger('gigya')->error('Failed to map ' . $drupal_field . ' from Gigya - Drupal type is boolean but Gigya type isn\'t');
+            }
           }
           $drupal_user->set($drupal_field, $val);
         }
@@ -272,7 +309,6 @@ class GigyaHelper implements GigyaHelperInterface{
       Drupal::logger('gigya')->debug('processFieldMapping error @message',
         array('@message' => $e->getMessage()));
     }
-
   }
 
   public function getGigyaUserFromArray($data) {
@@ -304,6 +340,12 @@ class GigyaHelper implements GigyaHelperInterface{
     return '{"cms_name":"Drupal","cms_version":"Drupal_' . \Drupal::VERSION . '","gigya_version":"Gigya_module_' .$info['version'] . '"}';
   }
 
+	/**
+	 * Gets real full path of the key even if only relative path is provided
+	 *
+	 * @param string	$uri	URI for the key, recommended to use full path
+	 * @return string
+	 */
   protected function getEncKeyFile($uri) {
     /** @var Drupal\Core\StreamWrapper\StreamWrapperInterface $stream */
     $stream = \Drupal::service('stream_wrapper_manager')->getViaUri($uri);

@@ -6,14 +6,9 @@ configure: gigya.raas.config
 # core: 8.x
 dependencies:
   - gigya
-# Information added by Drupal.org packaging script on 2016-06-20
-# version: '8.x-1.0'
-# core: '8.x'
-# project: 'gigya'
-# datestamp: 1466432041
 
 # Information added by Drupal.org packaging script on 2017-05-14
-version: '8.x-1.7'
+version: '8.x-2.0'
 core: '8.x'
 project: 'gigya'
 datestamp: 1494803025

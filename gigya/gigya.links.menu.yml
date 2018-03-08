@@ -1,0 +1,5 @@
+gigya.configuration_form:
+  route_name: gigya.admin.form
+  title: Gigya credentials settings
+  description: 'Enter Gigya API key, user key and application secret key and data center.'
+  parent: system.admin_config_services

@@ -1,6 +1,7 @@
 gigya_user_deletion:
+  enableJob : false
+  deletionType : 'soft'
   jobFrequency : '86400' # 24 hours
   emailOnSuccess : ''
   emailOnFailure : ''
   storageDetails : { bucketName : '' , accessKey : '', secretKey : '', objectKeyPrefix : '' }
-  enableJob : false

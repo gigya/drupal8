@@ -13,8 +13,7 @@
 	use Aws\S3\S3Client;
 	use Aws\S3\Exception\S3Exception;
 
-	class GigyaCronForm extends ConfigFormBase
-	{
+	class GigyaCronForm extends ConfigFormBase {
 		/**
 		 * @var bool | GigyaHelper
 		 */
@@ -23,6 +22,7 @@
 		/**
 		 * @param FormStateInterface $form_state
 		 * @param string             $prop_name
+		 *
 		 * @return string
 		 */
 		private function getValue($form_state, $prop_name) {
@@ -46,10 +46,11 @@
 		 * @param array                                $form
 		 * @param \Drupal\Core\Form\FormStateInterface $form_state
 		 * @param GigyaHelperInterface                 $helper
+		 *
 		 * @return array
 		 */
 		public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = null) {
-			if ($helper == NULL)
+			if ($helper == null)
 			{
 				$this->helper = new GigyaHelper();
 			}
@@ -70,41 +71,52 @@
 			$config = $this->config('gigya_user_deletion.job');
 
 			$form['enableJobLabel'] = array(
-				'#type' => 'label',
-				'#title' => $this->t('Enable'),
+				'#type'       => 'label',
+				'#title'      => $this->t('Enable'),
 				"#attributes" => array(
 					'class' => 'gigya-label-cb',
 				),
 			);
 			$form['enableJob'] = array(
-				'#type' => 'checkbox',
+				'#type'          => 'checkbox',
 				'#default_value' => $config->get('gigya_user_deletion.enableJob'),
+			);
+
+			/* Deletion type – soft/hard */
+			$form['deletionType'] = array(
+				'#type'          => 'select',
+				'#title'         => $this->t('Deletion type'),
+				'#options'       => array(
+					'soft' => $this->t('Tag deleted user'),
+					'hard' => $this->t('Full user deletion'),
+				),
+				'#default_value' => $config->get('gigya_user_deletion.deletionType'),
 			);
 
 			/* Job frequency */
 			$form['jobFrequency'] = array(
-				'#type' => 'textfield',
+				'#type'  => 'textfield',
 				'#title' => $this->t('Job frequency (minutes)'),
 			);
 			$jobFrequency = $config->get('gigya_user_deletion.jobFrequency') / 60;
 			if ($jobFrequency == 0)
-				$form['jobFrequency']['#default_value'] = "";
+				$form['jobFrequency']['#default_value'] = '';
 			else
 				$form['jobFrequency']['#default_value'] = $jobFrequency;
 
 			/* Email on success */
 			$form['emailOnSuccess'] = array(
-				'#type' => 'textfield',
-				'#title' => $this->t('Email on success'),
-				'#description' => $this->t('A comma-separated list of emails that will be notified when the job completes successfully'),
+				'#type'          => 'textfield',
+				'#title'         => $this->t('Email on success'),
+				'#description'   => $this->t('A comma-separated list of emails that will be notified when the job completes successfully'),
 				'#default_value' => $config->get('gigya_user_deletion.emailOnSuccess'),
 			);
 
 			/* Email on failure */
 			$form['emailOnFailure'] = array(
-				'#type' => 'textfield',
-				'#title' => $this->t('Email on failure'),
-				'#description' => $this->t('A comma-separated list of emails that will be notified when the job fails or completes with errors'),
+				'#type'          => 'textfield',
+				'#title'         => $this->t('Email on failure'),
+				'#description'   => $this->t('A comma-separated list of emails that will be notified when the job fails or completes with errors'),
 				'#default_value' => $config->get('gigya_user_deletion.emailOnFailure'),
 			);
 
@@ -112,8 +124,8 @@
 
 			/* Label */
 			$form['storage'] = array(
-				'#type' => 'label',
-				'#title' => $this->t('Amazon S3 settings'),
+				'#type'       => 'label',
+				'#title'      => $this->t('Amazon S3 settings'),
 				'#attributes' => array(
 					'class' => 'gigya-label-custom',
 				),
@@ -121,15 +133,15 @@
 
 			/* Bucket name */
 			$form['storageDetails']['bucketName'] = array(
-				'#type' => 'textfield',
-				'#title' => $this->t('Bucket name'),
+				'#type'          => 'textfield',
+				'#title'         => $this->t('Bucket name'),
 				'#default_value' => $config->get('gigya_user_deletion.storageDetails.bucketName'),
 			);
 
 			/* Access key */
 			$form['storageDetails']['accessKey'] = array(
-				'#type' => 'textfield',
-				'#title' => $this->t('Access key'),
+				'#type'          => 'textfield',
+				'#title'         => $this->t('Access key'),
 				'#default_value' => $config->get('gigya_user_deletion.storageDetails.accessKey'),
 			);
 
@@ -137,12 +149,10 @@
 			$key = $config->get('gigya_user_deletion.storageDetails.secretKey');
 			$access_key = "";
 			if (!empty($key))
-			{
 				$access_key = $this->helper->decrypt($key);
-			}
 			$form['storageDetails']['secretKey'] = array(
-				'#type' => 'textfield',
-				'#title' => $this->t('Secret key'),
+				'#type'       => 'textfield',
+				'#title'      => $this->t('Secret key'),
 				'#attributes' => array(
 					'autocomplete' => 'off',
 				),
@@ -158,8 +168,8 @@
 
 			/* Object key prefix (directory) */
 			$form['storageDetails']['objectKeyPrefix'] = array(
-				'#type' => 'textfield',
-				'#title' => $this->t('Object key prefix'),
+				'#type'          => 'textfield',
+				'#title'         => $this->t('Object key prefix'),
 				'#default_value' => $config->get('gigya_user_deletion.storageDetails.objectKeyPrefix'),
 			);
 
@@ -184,7 +194,12 @@
 			if ($form_state->getErrors())
 				return;
 
-			$jobRequiredFields = ['jobFrequency', 'storageDetails.bucketName', 'storageDetails.accessKey', 'storageDetails.secretKey'];
+			$jobRequiredFields = [
+				'jobFrequency',
+				'storageDetails.bucketName',
+				'storageDetails.accessKey',
+				'storageDetails.secretKey',
+			];
 
 			/* If $_enableJob is true verify all required fields with value */
 			$_enableJob = $this->getValue($form_state, 'enableJob');
@@ -196,6 +211,7 @@
 					$msg = 'This module requires the PHP CMS Kit package. Please install it before enabling this module.';
 					\Drupal::logger('gigya_user_deletion')->error($msg);
 					$form_state->setErrorByName('storageDetails.secretKey', $this->t($msg));
+
 					return;
 				}
 
@@ -237,9 +253,9 @@
 				if (class_exists('Aws\\S3\\S3Client'))
 				{
 					$s3Client = S3Client::factory(array(
-													  'key' => $accessKey,
-													  'secret' => $secretKey,
-												  ));
+						                              'key'    => $accessKey,
+						                              'secret' => $secretKey,
+					                              ));
 
 					try
 					{
@@ -263,21 +279,21 @@
 		public function submitForm(array &$form, FormStateInterface $form_state) {
 			$config = $this->config('gigya_user_deletion.job');
 			$config->set('gigya_user_deletion.enableJob', $this->getValue($form_state, 'enableJob'));
+			$config->set('gigya_user_deletion.deletionType', $this->getValue($form_state, 'deletionType'));
 
 			$jobFrequency = $this->getValue($form_state, 'jobFrequency') * 60;
+
 			if ($jobFrequency == 0)
-			{
-				$config->set('gigya_user_deletion.jobFrequency', "");
-			}
+				$config->set('gigya_user_deletion.jobFrequency', '');
 			else
-			{
 				$config->set('gigya_user_deletion.jobFrequency', $jobFrequency);
-			}
+
 			$config->set('gigya_user_deletion.emailOnSuccess', $this->getValue($form_state, 'emailOnSuccess'));
 			$config->set('gigya_user_deletion.emailOnFailure', $this->getValue($form_state, 'emailOnFailure'));
 			$config->set('gigya_user_deletion.storageDetails.bucketName', $this->getValue($form_state, 'bucketName'));
 			$config->set('gigya_user_deletion.storageDetails.accessKey', $this->getValue($form_state, 'accessKey'));
-			//encrypt storageDetails.secret
+
+			/* Encrypt storageDetails.secret */
 			$temp_access_key = $this->getValue($form_state, 'secretKey');
 			if (!empty($temp_access_key) && $temp_access_key !== "*********")
 			{

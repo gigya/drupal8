@@ -25,7 +25,7 @@
 	function gigya_user_deletion_cron() {
 		$enable_job = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.enableJob');
 
-		//Get counters from DB or set 0 if null
+		/* Get counters from DB or set 0 if null */
 		$counter_succeed = \Drupal::state()->get('job.counter_succeed', 0);
 		$counter_failed = \Drupal::state()->get('job.counter_failed', 0);
 
@@ -37,15 +37,18 @@
 			$gigyaHelper = new GigyaHelper();
 			$userDeletionHelper = new GigyaUserDeletionHelper();
 
+			/* Job frequency */
 			$job_frequency = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.jobFrequency');
-			//REQUEST_TIME
+			/* Deletion type */
+			$deletion_type = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.deletionType');
+			// REQUEST_TIME
 			$request_time = \Drupal::time()->getRequestTime();
-			//get last run
+			// Get last run
 			$last_run = \Drupal::state()->get('job.last_run', 0);
-			//creates a new queue_file
+			// Creates a new queue_file
 			$queue_file = \Drupal::queue('job_queue_file');
 			$queue_file->createQueue();
-			//create queue_users
+			// Create queue_users
 			$queue_users = \Drupal::queue('job_queue_users');
 			$queue_users->createQueue();
 
@@ -57,7 +60,7 @@
 				$queue_file = \Drupal::queue('job_queue_file');
 				$last_run = \Drupal::state()->get('job.last_run', 0);
 
-				//add files to queue
+				/* Add files to queue */
 				if (!empty($files))
 				{
 					foreach ($files as $file)
@@ -65,22 +68,23 @@
 						$fileDateTimestamp = strtotime($file['LastModified']);
 						if (($fileDateTimestamp > $last_run) and ($file['Size'] > 0))
 						{
-							//Add item - file to queue_file
+							/* Add item - file to queue_file */
 							$queue_file->createItem($file);
 						}
 					}
 				}
-				//save counter value on DB and add to log
+
+				/* Save counter value on DB and add to log */
 				$queue_files_counter = $queue_file->numberOfItems();
 				\Drupal::state()->set('job.queue_files_counter', $queue_files_counter);
 				\Drupal::logger('gigya_user_deletion')->info($queue_files_counter . ' files added to the queue on ' . date('Y-m-d \a\t H:i:s', \Drupal::time()->getRequestTime()));
 			}
 
-			//If queue_file is not empty take item (file) and add all users to queue_users
+			/* If queue_file is not empty take item (file) and add all users to queue_users */
 			while ($queue_file->numberOfItems() > 0)
 			{
 				$item_file = $queue_file->claimItem();
-				$item_array = (array)$item_file;
+				$item_array = (array) $item_file;
 				$file = $item_array['data']['Key'];
 				if ($file !== null)
 				{
@@ -89,34 +93,48 @@
 					{
 						foreach ($account as $gigya_uid)
 						{
-							//Add item - account to queue_users
+							/* Add item - account to queue_users */
 							$item_user = array('gigya_uid' => $gigya_uid);
 							$queue_users->createItem($item_user);
 						}
 					}
 
 				}
-				//remove the file from the queue_file
+
+				/* Remove the file from the queue_file */
 				$queue_file->deleteItem($item_file);
 			}
-			//Update last run when file queue is empty.
+			/* Update last run when file queue is empty */
 			\Drupal::state()->set('job.last_run', $request_time);
 
 			/* Claim uid from queue_users and delete it */
+			\Drupal::logger('gigya_user_deletion')->info(var_export($queue_users->numberOfItems(), true));
 			while ($queue_users->numberOfItems() > 0)
 			{
 				$item_user = $queue_users->claimItem();
-				$item_array = (array)$item_user;
+				$item_array = (array) $item_user;
 				$uid = $item_array['data']['gigya_uid'];
+				\Drupal::logger('gigya_user_deletion')->info(var_export($uid, true));
 				if ($user = $gigyaHelper->getUidByUUID($uid))
 				{
 					try
 					{
 						$drupal_uid = $user->get('uid')->value;
-						user_delete($drupal_uid);
-						$counter_succeed++;
-						\Drupal::state()->set('job.counter_succeed', $counter_succeed);
-						\Drupal::logger('gigya_user_deletion')->notice($messageSuccess, array('@drupalUid' => $drupal_uid, '@gigyaUid' => $uid));
+						if ($deletion_type === 'hard')
+						{
+							user_delete($drupal_uid);
+							$counter_succeed++;
+							\Drupal::state()->set('job.counter_succeed', $counter_succeed);
+							\Drupal::logger('gigya_user_deletion')->notice($messageSuccess, array(
+								'@drupalUid' => $drupal_uid,
+								'@gigyaUid'  => $uid,
+							));
+						}
+						elseif ($deletion_type === 'soft')
+						{
+							\Drupal::service('user.data')->set('gigya_user_deletion', $drupal_uid, 'is_deleted', true);
+							\Drupal::service('user.data')->set('gigya_user_deletion', $drupal_uid, 'deleted_time', time());
+						}
 					}
 					catch (\Exception $e)
 					{
@@ -136,17 +154,18 @@
 
 			if (($queue_users->numberOfItems() == 0) && ($queue_file->numberOfItems() == 0))
 			{
-				//If full succeed or partial
+				/* If full or partial success */
 				if ($counter_succeed > 0)
 				{
 					$total = $counter_failed + $counter_succeed;
-					//if completed with errors
+
+					/* If completed with errors */
 					if ($counter_failed > 0)
 					{
 						$subject = 'User deletion job completed with errors';
 						$message = 'The user deletion job scheduled to run for ' . $_SERVER['SERVER_NAME'] . ' on ' . date('F j, Y \a\t H:i:s', $last_run) . ' completed with errors. ' . $counter_succeed . ' out of ' . $total . ' users were deleted.';
 					}
-					/* Send email on succeed */
+					/* Send email on success */
 					else
 					{
 						$subject = "Users deleted successfully";
@@ -155,6 +174,7 @@
 					$to = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.emailOnSuccess');
 					$userDeletionHelper->sendEmail($subject, $message, $to);
 				}
+
 				/* If job failed, send email */
 				elseif ($counter_failed > 0)
 				{
@@ -164,14 +184,14 @@
 					$userDeletionHelper->sendEmail($subject, $message, $to);
 				}
 
-				//Reset counters on DB
+				/* Reset counters on DB */
 				\Drupal::state()->set('job.counter_succeed', 0);
 				\Drupal::state()->set('job.counter_failed', 0);
 			}
 		}
 		else
 		{
-			\Drupal::logger('gigya_user_deletion')->warning('Gigya cron installed by not enabled. No action taken.');
+			\Drupal::logger('gigya_user_deletion')->warning('Gigya cron installed but not enabled. No action taken.');
 		}
 	}
 

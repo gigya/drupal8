@@ -60,13 +60,11 @@
 			}
 			catch (S3Exception $e)
 			{
-				var_dump('1:' . $e->getMessage());
 				\Drupal::logger('gigya_user_deletion')->error("Failed to get files list from S3 server. Error: " . $e->getMessage());
 				return false;
 			}
 			catch (\Exception $e)
 			{
-				var_dump('2:' . $e->getMessage());
 				\Drupal::logger('gigya_user_deletion')->error("Missing required parameter. Error code: " . $e->getCode() . ". Message: " . $e->getMessage());
 				return false;
 			}

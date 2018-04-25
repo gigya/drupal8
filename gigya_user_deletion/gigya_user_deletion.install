@@ -1,0 +1,35 @@
+<?php
+	/**
+	 * @file
+	 * Installation functions for Gigya module.
+	 */
+
+	/**
+	 * Implements hook_schema().
+	 *
+	 * Defines a new DB table used by Gigya User Deletion.
+	 *
+	 * @ingroup gigya_user_deletion
+	 */
+	function gigya_user_deletion_schema() {
+		$schema['gigya_user_deletion'] = array(
+			'description' => '',
+			'fields'      => array(
+				'filename' => array(
+					'type'        => 'varchar',
+					'length'      => 127,
+					'not null'    => true,
+					'description' => 'File name processed',
+				),
+				'time_processed'     => array(
+					'type'        => 'int',
+					'description' => 'Timestamp of the cron run when this file was successfully processed',
+				),
+			),
+			'primary key' => array(
+				'filename',
+			),
+		);
+
+		return $schema;
+	}

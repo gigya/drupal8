@@ -26,8 +26,8 @@
 		$enable_job = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.enableJob');
 
 		/* Get counters from DB or set 0 if null */
-		$counter_succeed = \Drupal::state()->get('job.counter_succeed', 0);
-		$counter_failed = \Drupal::state()->get('job.counter_failed', 0);
+		$counter_succeed = \Drupal::state()->get('gigya_deletion_job.counter_succeed', 0);
+		$counter_failed = \Drupal::state()->get('gigya_deletion_job.counter_failed', 0);
 
 		$messageSuccess = "User successfully deleted from CMS - Drupal UID: @drupalUid, Gigya UID: @gigyaUid";
 		if ($enable_job)
@@ -41,11 +41,11 @@
 			$job_frequency = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.jobFrequency');
 			/* Deletion type */
 			$deletion_type = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.deletionType');
-			// REQUEST_TIME
+			/* Request time */
 			$request_time = \Drupal::time()->getRequestTime();
-			// Get last run
-			$last_run = \Drupal::state()->get('job.last_run', 0);
-			// Creates a new queue_file
+			/* Get last run */
+			$last_run = \Drupal::state()->get('gigya_deletion_job.last_run', 0);
+			/* Creates a new queue file */
 			$queue_file = \Drupal::queue('job_queue_file');
 			$queue_file->createQueue();
 			// Create queue_users
@@ -58,96 +58,132 @@
 				/* Get files from S3 */
 				$files = $userDeletionHelper->getFileList();
 				$queue_file = \Drupal::queue('job_queue_file');
-				$last_run = \Drupal::state()->get('job.last_run', 0);
+				$last_run = \Drupal::state()->get('gigya_deletion_job.last_run', 0);
 
 				/* Add files to queue */
+				$files_added = array();
 				if (!empty($files))
 				{
-					foreach ($files as $file)
-					{
-						$fileDateTimestamp = strtotime($file['LastModified']);
-						if (($fileDateTimestamp > $last_run) and ($file['Size'] > 0))
+					foreach ($files as $file) {
+						$files_processed = \Drupal::database()
+						  ->select('gigya_user_deletion')
+						  ->fields('gigya_user_deletion', [
+							'filename',
+						  ])
+						  ->orderBy('filename', 'ASC')
+						  ->execute()
+						  ->fetchCol();
+
+						/* Add item - file to queue_file and DB */
+						$file_name = ((array) $file)['Key'];
+						if (!in_array($file_name, $files_processed))
 						{
-							/* Add item - file to queue_file */
-							$queue_file->createItem($file);
+							if (pathinfo($file_name)['extension'] === 'csv') {
+								$queue_file->createItem($file);
+								$files_added[] = $file_name;
+								try {
+									/* Insert processed files into DB */
+									\Drupal::database()
+									  ->merge('gigya_user_deletion')
+									  ->key('filename', $file_name)
+									  ->insertFields([
+										'filename' => $file_name,
+										'time_processed' => time(),
+									  ])
+									  ->updateFields([
+										'time_processed' => time(),
+									  ])
+									  ->execute();
+								} catch (\Exception $e) {
+									\Drupal::logger('gigya_user_deletion')
+									  ->error('Unable to insert file name: ' . $file_name . ' to database.');
+								}
+							}
 						}
 					}
 				}
 
 				/* Save counter value on DB and add to log */
 				$queue_files_counter = $queue_file->numberOfItems();
-				\Drupal::state()->set('job.queue_files_counter', $queue_files_counter);
-				\Drupal::logger('gigya_user_deletion')->info($queue_files_counter . ' files added to the queue on ' . date('Y-m-d \a\t H:i:s', \Drupal::time()->getRequestTime()));
+				\Drupal::state()
+				  ->set('gigya_deletion_job.queue_files_counter', $queue_files_counter);
+				\Drupal::logger('gigya_user_deletion')
+				  ->info($queue_files_counter . ' files added to the queue on ' . date('Y-m-d \a\t H:i:s', \Drupal::time()
+					  ->getRequestTime()) . ': ' . implode(', ', $files_added));
 			}
 
 			/* If queue_file is not empty take item (file) and add all users to queue_users */
 			while ($queue_file->numberOfItems() > 0)
 			{
 				$item_file = $queue_file->claimItem();
-				$item_array = (array) $item_file;
-				$file = $item_array['data']['Key'];
-				if ($file !== null)
+
+				if ($item_file !== false)
 				{
-					$accounts = $userDeletionHelper->getUsers($file);
-					foreach ($accounts as $account)
+					$item_array = (array) $item_file;
+					$file = $item_array['data']['Key'];
+					if ($file !== null)
 					{
-						foreach ($account as $gigya_uid)
+						$accounts = $userDeletionHelper->getUsers($file);
+						foreach ($accounts as $account)
 						{
-							/* Add item - account to queue_users */
-							$item_user = array('gigya_uid' => $gigya_uid);
-							$queue_users->createItem($item_user);
+							foreach ($account as $gigya_uid)
+							{
+								/* Add item - account to queue_users */
+								$item_user = array('gigya_uid' => $gigya_uid);
+								$queue_users->createItem($item_user);
+							}
 						}
 					}
-
 				}
 
 				/* Remove the file from the queue_file */
 				$queue_file->deleteItem($item_file);
 			}
+
 			/* Update last run when file queue is empty */
-			\Drupal::state()->set('job.last_run', $request_time);
+			\Drupal::state()->set('gigya_deletion_job.last_run', $request_time );
 
 			/* Claim uid from queue_users and delete it */
-			\Drupal::logger('gigya_user_deletion')->info(var_export($queue_users->numberOfItems(), true));
 			while ($queue_users->numberOfItems() > 0)
 			{
 				$item_user = $queue_users->claimItem();
 				$item_array = (array) $item_user;
+
 				$uid = $item_array['data']['gigya_uid'];
-				\Drupal::logger('gigya_user_deletion')->info(var_export($uid, true));
-				if ($user = $gigyaHelper->getUidByUUID($uid))
-				{
-					try
-					{
+				if ($user = $gigyaHelper->getUidByUUID($uid)) {
+					try {
 						$drupal_uid = $user->get('uid')->value;
-						if ($deletion_type === 'hard')
-						{
+						if ($deletion_type === 'hard') {
 							user_delete($drupal_uid);
 							$counter_succeed++;
-							\Drupal::state()->set('job.counter_succeed', $counter_succeed);
-							\Drupal::logger('gigya_user_deletion')->notice($messageSuccess, array(
+							\Drupal::state()
+							  ->set('gigya_deletion_job.counter_succeed', $counter_succeed);
+							\Drupal::logger('gigya_user_deletion')
+							  ->notice($messageSuccess, [
 								'@drupalUid' => $drupal_uid,
-								'@gigyaUid'  => $uid,
-							));
+								'@gigyaUid' => $uid,
+							  ]);
 						}
-						elseif ($deletion_type === 'soft')
-						{
-							\Drupal::service('user.data')->set('gigya_user_deletion', $drupal_uid, 'is_deleted', true);
-							\Drupal::service('user.data')->set('gigya_user_deletion', $drupal_uid, 'deleted_time', time());
+						elseif ($deletion_type === 'soft') {
+							\Drupal::service('user.data')
+							  ->set('gigya_user_deletion', $drupal_uid, 'is_deleted', TRUE);
+							\Drupal::service('user.data')
+							  ->set('gigya_user_deletion', $drupal_uid, 'deleted_time', time());
 						}
-					}
-					catch (\Exception $e)
-					{
-						\Drupal::logger('gigya_user_deletion')->error("Failed to delete UID " . $user->get('uid')->value . " from CMS with error - " . $e);
+					} catch (\Exception $e) {
+						\Drupal::logger('gigya_user_deletion')
+						  ->error('Failed to delete UID ' . $user->get('uid')->value . ' from CMS with error - ' . $e);
 						$counter_failed++;
-						\Drupal::state()->set('job.counter_failed', $counter_failed);
+						\Drupal::state()
+						  ->set('gigya_deletion_job.counter_failed', $counter_failed);
 					}
 				}
-				else
-				{
-					\Drupal::logger('gigya_user_deletion')->warning("Failed to delete UID " . $uid . " from CMS with error - user doesn't exist");
+				else {
+					\Drupal::logger('gigya_user_deletion')
+					  ->warning('Failed to delete UID ' . $uid . ' from CMS with error - user doesn\'t exist');
 					$counter_failed++;
-					\Drupal::state()->set('job.counter_failed', $counter_failed);
+					\Drupal::state()
+					  ->set('gigya_deletion_job.counter_failed', $counter_failed);
 				}
 				$queue_users->deleteItem($item_user);
 			}
@@ -185,8 +221,8 @@
 				}
 
 				/* Reset counters on DB */
-				\Drupal::state()->set('job.counter_succeed', 0);
-				\Drupal::state()->set('job.counter_failed', 0);
+				\Drupal::state()->set('gigya_deletion_job.counter_succeed', 0);
+				\Drupal::state()->set('gigya_deletion_job.counter_failed', 0);
 			}
 		}
 		else

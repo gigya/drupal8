@@ -78,7 +78,7 @@
 						$file_name = ((array) $file)['Key'];
 						if (!in_array($file_name, $files_processed))
 						{
-							if (pathinfo($file_name)['extension'] === 'csv') {
+							if (!empty(pathinfo($file_name)['extension']) and pathinfo($file_name)['extension'] === 'csv') {
 								$queue_file->createItem($file);
 								$files_added[] = $file_name;
 								try {
@@ -147,44 +147,49 @@
 			while ($queue_users->numberOfItems() > 0)
 			{
 				$item_user = $queue_users->claimItem();
-				$item_array = (array) $item_user;
 
-				$uid = $item_array['data']['gigya_uid'];
-				if ($user = $gigyaHelper->getUidByUUID($uid)) {
-					try {
-						$drupal_uid = $user->get('uid')->value;
-						if ($deletion_type === 'hard') {
-							user_delete($drupal_uid);
-							$counter_succeed++;
-							\Drupal::state()
-							  ->set('gigya_deletion_job.counter_succeed', $counter_succeed);
+				if (!empty($item_user))
+				{
+					$item_array = (array) $item_user;
+
+					$uid = $item_array['data']['gigya_uid'];
+					if ($user = $gigyaHelper->getUidByUUID($uid)) {
+						try {
+							$drupal_uid = $user->get('uid')->value;
+							if ($deletion_type === 'hard') {
+								user_delete($drupal_uid);
+								$counter_succeed++;
+								\Drupal::state()
+								  ->set('gigya_deletion_job.counter_succeed', $counter_succeed);
+								\Drupal::logger('gigya_user_deletion')
+								  ->notice($messageSuccess, [
+									'@drupalUid' => $drupal_uid,
+									'@gigyaUid' => $uid,
+								  ]);
+							}
+							elseif ($deletion_type === 'soft') {
+								\Drupal::service('user.data')
+								  ->set('gigya_user_deletion', $drupal_uid, 'is_deleted', TRUE);
+								\Drupal::service('user.data')
+								  ->set('gigya_user_deletion', $drupal_uid, 'deleted_time', time());
+							}
+						} catch (\Exception $e) {
 							\Drupal::logger('gigya_user_deletion')
-							  ->notice($messageSuccess, [
-								'@drupalUid' => $drupal_uid,
-								'@gigyaUid' => $uid,
-							  ]);
+							  ->error('Failed to delete UID ' . $user->get('uid')->value . ' from CMS with error - ' . $e);
+							$counter_failed++;
+							\Drupal::state()
+							  ->set('gigya_deletion_job.counter_failed', $counter_failed);
 						}
-						elseif ($deletion_type === 'soft') {
-							\Drupal::service('user.data')
-							  ->set('gigya_user_deletion', $drupal_uid, 'is_deleted', TRUE);
-							\Drupal::service('user.data')
-							  ->set('gigya_user_deletion', $drupal_uid, 'deleted_time', time());
-						}
-					} catch (\Exception $e) {
+					}
+					else {
 						\Drupal::logger('gigya_user_deletion')
-						  ->error('Failed to delete UID ' . $user->get('uid')->value . ' from CMS with error - ' . $e);
+						  ->warning('Failed to delete UID ' . $uid . ' from CMS with error - user doesn\'t exist');
 						$counter_failed++;
 						\Drupal::state()
 						  ->set('gigya_deletion_job.counter_failed', $counter_failed);
 					}
 				}
-				else {
-					\Drupal::logger('gigya_user_deletion')
-					  ->warning('Failed to delete UID ' . $uid . ' from CMS with error - user doesn\'t exist');
-					$counter_failed++;
-					\Drupal::state()
-					  ->set('gigya_deletion_job.counter_failed', $counter_failed);
-				}
+
 				$queue_users->deleteItem($item_user);
 			}
 

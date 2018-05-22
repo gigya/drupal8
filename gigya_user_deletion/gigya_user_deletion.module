@@ -188,9 +188,9 @@
 						\Drupal::state()
 						  ->set('gigya_deletion_job.counter_failed', $counter_failed);
 					}
-				}
 
-				$queue_users->deleteItem($item_user);
+					$queue_users->deleteItem($item_user);
+				}
 			}
 
 			if (($queue_users->numberOfItems() == 0) && ($queue_file->numberOfItems() == 0))

@@ -284,16 +284,30 @@ class GigyaHelper implements GigyaHelperInterface {
   public function processFieldMapping($gigya_data, Drupal\user\UserInterface $drupal_user) {
     try {
       $field_map = \Drupal::config('gigya.global')->get('gigya.fieldMapping');
-      \Drupal::moduleHandler()
-        ->alter('gigya_raas_map_data', $gigya_data, $drupal_user, $field_map);
+      try {
+	      \Drupal::moduleHandler()
+	        ->alter('gigya_raas_map_data', $gigya_data, $drupal_user, $field_map);
+      }
+      catch (Exception $e) {
+	      Drupal::logger('gigya')->debug('Error altering field map data: @message',
+	                                     array('@message' => $e->getMessage()));
+      }
       foreach ($field_map as $drupal_field => $raas_field) {
         if ($drupal_field == 'mail' or $drupal_field == 'name') {
           continue;
         }
         $raas_field_parts = explode(".", $raas_field);
         $val = $this->getNestedValue($gigya_data, $raas_field_parts);
-        if ($val !== NULL) {
-          $drupal_field_type = $drupal_user->get($drupal_field)->getFieldDefinition()->getType();
+        if ($val !== null) {
+	        $drupal_field_type = 'string';
+            try {
+                $drupal_field_type = $drupal_user->get($drupal_field)->getFieldDefinition()->getType();
+	        }
+	        catch (Exception $e)
+	        {
+		        Drupal::logger('gigya')->debug('Error getting field definition for field map: @message',
+		                                       array('@message' => $e->getMessage()));
+	        }
           if ($drupal_field_type == 'boolean') {
             if (is_bool($val)) {
               $val = intval($val);
@@ -302,7 +316,12 @@ class GigyaHelper implements GigyaHelperInterface {
               \Drupal::logger('gigya')->error('Failed to map ' . $drupal_field . ' from Gigya - Drupal type is boolean but Gigya type isn\'t');
             }
           }
-          $drupal_user->set($drupal_field, $val);
+          try {
+            $drupal_user->set($drupal_field, $val);
+          } catch (Exception $e) {
+	        Drupal::logger('gigya')->debug('Error inserting mapped field: @message',
+	                                         array('@message' => $e->getMessage()));
+          }
         }
       }
     } catch (Exception $e) {

@@ -8,10 +8,11 @@
 
 	use Drupal\Core\Ajax\AjaxResponse;
 	use Drupal\Core\Ajax\AlertCommand;
-	use Drupal\Core\Ajax\RedirectCommand;
+	use Drupal\Core\Ajax\InvokeCommand;
 	use Drupal\Core\Controller\ControllerBase;
 	use Drupal\user\Entity\User;
 	use Drupal\user\UserInterface;
+	use Symfony\Component\HttpFoundation\JsonResponse;
 	use Symfony\Component\HttpFoundation\Request;
 	use Drupal\gigya\Helper\GigyaHelper;
 
@@ -73,7 +74,8 @@
 		/**
 		 * @param Request $request      The incoming request object.
 		 *
-		 * @return bool|AjaxResponse    The Ajax response
+		 * @return bool|JsonResponse    The Ajax response
+		 * return bool|AjaxResponse    The Ajax response
 		 *
 		 * @throws \Drupal\Core\Entity\EntityStorageException
 		 */
@@ -138,7 +140,8 @@
 							/* Set global variable so we would know the user as logged in
 							   RaaS in other functions down the line.*/
 							$raas_login = TRUE;
-							//Log the user in.
+
+							/* Log the user in */
 							$this->helper->processFieldMapping($gigyaUser, $user);
 							$this->gigyaRaasExtCookieAjax($request, $raas_login);
 							$user->save();
@@ -207,21 +210,22 @@
 							\Drupal::moduleHandler()->alter('gigya_raas_create_user', $gigyaUser, $user);
 							try
 							{
-							  //@TODO: generate Unique user name.
-                $user->save();
-                $raas_login = true;
-                $this->gigyaRaasExtCookieAjax($request, $raas_login);
-                user_login_finalize($user);
+								//@TODO: generate Unique user name.
+								$user->save();
+								$raas_login = true;
+								$this->gigyaRaasExtCookieAjax($request, $raas_login);
+								user_login_finalize($user);
 							}
 							catch (\Exception $e)
 							{
-							  \Drupal::logger('gigya_raas')->notice('User with username: '.$username.' could not log in after registration. Exception: '.$e->getMessage());
+								\Drupal::logger('gigya_raas')->notice('User with username: '.$username.' could not log in after registration. Exception: '.$e->getMessage());
 								session_destroy();
 								$err_msg = $this->t(
 									"Oops! Something went wrong during your registration process. You are registered to the site but not logged-in. Please try to login again."
 								);
 								$this->helper->saveUserLogoutCookie();
-								$response->addCommand(new RedirectCommand("/"));
+
+								$response->addCommand(new InvokeCommand(NULL, 'loginRedirect', ['/']));
 							}
 						}
 					}
@@ -229,7 +233,7 @@
 				else
 				{
 					$this->helper->saveUserLogoutCookie();
-          \Drupal::logger('gigya_raas')->notice('Invalid user. Guid: '.$guid);
+          			\Drupal::logger('gigya_raas')->notice('Invalid user. Guid: '.$guid);
 					$err_msg = $this->t(
 						"Oops! Something went wrong during your login/registration process. Please try to login/register again."
 					);
@@ -237,12 +241,11 @@
 
 				if ($err_msg !== FALSE)
 				{
-
 					$response->addCommand(new AlertCommand($err_msg));
 				}
 				else
 				{
-					$response->addCommand(new RedirectCommand("/"));
+					$response->addCommand(new InvokeCommand(NULL, 'loginRedirect', ['/']));
 				}
 
 				return $response;

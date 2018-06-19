@@ -74,8 +74,7 @@
 		/**
 		 * @param Request $request      The incoming request object.
 		 *
-		 * @return bool|JsonResponse    The Ajax response
-		 * return bool|AjaxResponse    The Ajax response
+		 * @return bool|AjaxResponse    The Ajax response
 		 *
 		 * @throws \Drupal\Core\Entity\EntityStorageException
 		 */

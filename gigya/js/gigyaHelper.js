@@ -16,15 +16,13 @@ var gigyaHelper = {
     document.getElementsByTagName('head')[0].appendChild(gig);
   },
 
-
   addGigyaFunctionCall: function (method, params) {
     window.gigyaCmsInit = window.gigyaCmsInit || [];
     var func = {function: method, parameters: params};
     window.gigyaCmsInit.push(func);
   },
   onLoginHandler: function (res) {
-    /* This is an example for an onLogin event handler it uses jQuery, if jQuery is not available at your system
-     *  replace with your own version of ajax call
+    /* This is an example for an onLogin event handler. It uses jQuery. If jQuery is not available at your system, replace with your own AJAX call
      *  NOTE: this example should be a edited to work.
      */
 
@@ -45,15 +43,16 @@ var gigyaHelper = {
       if (response.success === "success") {
         // Do what is needed to show that the user is logged in (reload the page etc...)
       } else {
-        // Logout user from gigya
+        // Logout user from Gigya
         gigya.account.logout();
+
         // Show error etc...
       }
     }).fail(function () {
-      // Logout user from gigya
+      // Logout user from Gigya
       gigya.account.logout();
-      // Show error etc...
 
+      // Show error etc...
     });
   },
 

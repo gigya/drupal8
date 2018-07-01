@@ -15,6 +15,24 @@
         }
     };
 
+	/**
+	 * Invoked using InvokeCommand by Drupal's controller
+	 *
+	 * @param redirectTarget
+	 */
+	jQuery.fn.loginRedirect = function(redirectTarget) {
+		/**
+		 * @var bool sendSetSSOToken	Should be set in Gigya's global configuration.
+		 * 								Set this to True if you would like setSSOToken to be called
+		 * 								(a redirect to Gigya to set the site's cookies, for browsers that do not support 3rd party cookies)
+		 */
+
+		if (typeof sendSetSSOToken === 'undefined' || sendSetSSOToken === false)
+			location.replace(redirectTarget);
+		else if (sendSetSSOToken === true)
+			gigya.setSSOToken({redirectURL: redirectTarget});
+	};
+
     var initLoginUI = function () {
         if (typeof drupalSettings.gigya.loginUIParams !== 'undefined') {
             $.each(drupalSettings.gigya.loginUIParams, function (index, value) {

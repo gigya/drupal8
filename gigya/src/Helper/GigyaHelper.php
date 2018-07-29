@@ -159,11 +159,11 @@ class GigyaHelper implements GigyaHelperInterface {
 
       return $this->getGigyaApiHelper()->validateUid($uid, $uid_sig, $sig_timestamp, NULL, NULL, $params);
     } catch (GSApiException $e) {
-      Drupal::logger('gigya')->error("Gigya api call error " . $e->getMessage());
+      Drupal::logger('gigya')->error("Gigya API call error: " . $e->getMessage());
       return false;
     }
     catch (Exception $e) {
-      Drupal::logger('gigya')->error("General error validating gigya uid " . $e->getMessage());
+      Drupal::logger('gigya')->error("General error validating gigya UID: " . $e->getMessage());
       return false;
     }
   }

@@ -135,10 +135,10 @@ class GigyaHelper implements GigyaHelperInterface {
       return $result;
     } catch (GSApiException $e) {
       //Always write error to log.
-      Drupal::logger('gigya')->error('<pre>gigya api error error code :' . $e->getErrorCode() . '</pre>');
+      Drupal::logger('gigya')->error('<pre>Gigya API error. Error code :' . $e->getErrorCode() . '</pre>');
       if ($e->getCallId()) {
 
-        Drupal::logger('gigya')->error('Response from gigya <br /><pre>callId: @callId, apicall:@method,
+        Drupal::logger('gigya')->error('Response from Gigya <br /><pre>Call ID: @callId, apicall:@method,
                                                  Error:@error</pre>', array('@callId' => $e->getCallId(),
                                                 '@method' => $method, '@error' => $e->getErrorCode()));
       }
@@ -159,7 +159,7 @@ class GigyaHelper implements GigyaHelperInterface {
 
       return $this->getGigyaApiHelper()->validateUid($uid, $uid_sig, $sig_timestamp, NULL, NULL, $params);
     } catch (GSApiException $e) {
-      Drupal::logger('gigya')->error("Gigya API call error: " . $e->getMessage());
+      Drupal::logger('gigya')->error("Gigya API call error: @error, Call ID: @callId", array('@callId' => $e->getCallId(), '@error' => $e->getMessage()));
       return false;
     }
     catch (Exception $e) {

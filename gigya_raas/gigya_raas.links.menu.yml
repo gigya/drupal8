@@ -1,0 +1,6 @@
+gigya.raas.configuration_form:
+  route_name: gigya.raas.config
+  weight: 110
+  title: Gigya RaaS session settings
+  description: 'Set the session settings for Gigya&#39;s RaaS module.'
+  parent: system.admin_config_services

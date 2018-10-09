@@ -67,7 +67,7 @@ class GigyaHelper implements GigyaHelperInterface {
   public function checkEncryptKey() {
     $keypath = \Drupal::config('gigya.global')->get('gigya.keyPath');
     $key = $this->getEncKeyFile($keypath);
-    if ($key) {
+    if (!empty(file_get_contents($key))) {
       return TRUE;
     }
     else {
@@ -80,8 +80,9 @@ class GigyaHelper implements GigyaHelperInterface {
     $keypath = $this->getEncKeyFile($path);
     try
 	{
-		if ($key = file_get_contents($keypath)) {
-		  return trim($key);
+		if ($key = trim(file_get_contents($keypath))) {
+			if (!empty($key))
+				return $key;
 		}
 		return false;
 	}

@@ -82,7 +82,7 @@
     };
 
     var logoutCallback = function () {
-        document.location = drupalSettings.path.baseUrl + 'user/logout';
+        document.location = drupalSettings.path.baseUrl + 'user/login';
     };
 
     var initRaas = function () {

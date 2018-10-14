@@ -7,7 +7,6 @@
 
 namespace Drupal\gigya\Form;
 
-
 use Drupal;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -22,7 +21,7 @@ class GigyaKeysForm extends ConfigFormBase
      */
     public $helper = false;
 
-    /**
+	/**
      * Gets the configuration names that will be editable.
      *
      * @return array
@@ -52,14 +51,14 @@ class GigyaKeysForm extends ConfigFormBase
             $this->helper = $helper;
         }
         if (!$this->helper->checkEncryptKey()) {
-            drupal_set_message($this->t('Cannot read encrypt key'), 'error');
+        	$messenger = \Drupal::service('messenger');
+        	$messenger->addError($this->t('Cannot read encryption key. Either the file path is incorrect or the file is empty.'));
         }
         $form = parent::buildForm($form, $form_state);
         $config = $this->config('gigya.settings');
         $form['gigya_api_key'] = array('#type' => 'textfield', '#title' => $this->t('Gigya API Key'),
             '#description' => $this->t('Specify the Gigya API Key for this domain'),
             '#default_value' => $config->get('gigya.gigya_api_key'), '#required' => TRUE);
-
 
         $form['gigya_application_key'] = array('#type' => 'textfield', '#title' => $this->t('Gigya Application Key'),
             '#description' => $this->t('Specify the Gigya Application key for this domain'),
@@ -71,7 +70,7 @@ class GigyaKeysForm extends ConfigFormBase
         }
 
         $form['gigya_application_secret_key'] = array('#type' => 'textfield', '#title' => $this->t('Gigya Application Secret Key'));
-        $form['gigya_application_secret_key']['#description'] = $this->t('Specify the Gigya Application Secret (Base64 encoded) key for this domain');
+        $form['gigya_application_secret_key']['#description'] = $this->t('Specify the Gigya Application Secret Key for this domain');
 		$form['gigya_application_secret_key']['#attributes'] = array(
 			'autocomplete' => 'off'
 		);
@@ -80,7 +79,7 @@ class GigyaKeysForm extends ConfigFormBase
         } else {
             $form['gigya_application_secret_key']['#default_value'] = "*********";
             $form['gigya_application_secret_key']['#required'] = FALSE;
-            $form['gigya_application_secret_key']['#description'] .= $this->t(",current key first and last letters are @accessKey", array('@accessKey' => substr($access_key, 0, 2) . "****" .
+            $form['gigya_application_secret_key']['#description'] .= $this->t(". Current key first and last letters are @accessKey", array('@accessKey' => substr($access_key, 0, 2) . "****" .
                 substr($access_key, strlen($access_key) - 2, 2)));
         }
 
@@ -93,8 +92,7 @@ class GigyaKeysForm extends ConfigFormBase
             '#default_value' => array_key_exists($config->get('gigya.gigya_data_center'), $data_centers) ? $config->get('gigya.gigya_data_center') : 'other'
         );
 
-
-        $form['gigya_other_data_center'] = array(
+		$form['gigya_other_data_center'] = array(
             "#type" => "textfield",
             "#default_value" => $config->get('gigya.gigya_data_center'),
             "#attributes" => array("id" => "gigya-other-data-center"),

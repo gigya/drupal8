@@ -12,7 +12,6 @@
 	use Drupal\Core\Controller\ControllerBase;
 	use Drupal\user\Entity\User;
 	use Drupal\user\UserInterface;
-	use Symfony\Component\HttpFoundation\JsonResponse;
 	use Symfony\Component\HttpFoundation\Request;
 	use Drupal\gigya\Helper\GigyaHelper;
 
@@ -48,6 +47,8 @@
 		 *
 		 * @return \Drupal\Core\Ajax\AjaxResponse
 		 *   The Ajax response
+		 *
+		 * @throws \Drupal\Core\Entity\EntityStorageException
 		 */
 		public function gigyaRaasProfileAjax(Request $request) {
 			$gigya_data = $request->get('gigyaData');
@@ -224,7 +225,7 @@
 								);
 								$this->helper->saveUserLogoutCookie();
 
-								$response->addCommand(new InvokeCommand(NULL, 'loginRedirect', ['/']));
+								$response->addCommand(new InvokeCommand(NULL, 'loginRedirect', [base_path() . '/']));
 							}
 						}
 					}
@@ -244,7 +245,7 @@
 				}
 				else
 				{
-					$response->addCommand(new InvokeCommand(NULL, 'loginRedirect', ['/']));
+					$response->addCommand(new InvokeCommand(NULL, 'loginRedirect', [base_path() . '/']));
 				}
 
 				return $response;

@@ -67,7 +67,7 @@ class GigyaHelper implements GigyaHelperInterface {
   public function checkEncryptKey() {
     $keypath = \Drupal::config('gigya.global')->get('gigya.keyPath');
     $key = $this->getEncKeyFile($keypath);
-    if ($key) {
+    if (!empty(file_get_contents($key))) {
       return TRUE;
     }
     else {
@@ -80,8 +80,9 @@ class GigyaHelper implements GigyaHelperInterface {
     $keypath = $this->getEncKeyFile($path);
     try
 	{
-		if ($key = file_get_contents($keypath)) {
-		  return trim($key);
+		if ($key = trim(file_get_contents($keypath))) {
+			if (!empty($key))
+				return $key;
 		}
 		return false;
 	}
@@ -135,10 +136,10 @@ class GigyaHelper implements GigyaHelperInterface {
       return $result;
     } catch (GSApiException $e) {
       //Always write error to log.
-      Drupal::logger('gigya')->error('<pre>gigya api error error code :' . $e->getErrorCode() . '</pre>');
+      Drupal::logger('gigya')->error('<pre>Gigya API error. Error code :' . $e->getErrorCode() . '</pre>');
       if ($e->getCallId()) {
 
-        Drupal::logger('gigya')->error('Response from gigya <br /><pre>callId: @callId, apicall:@method,
+        Drupal::logger('gigya')->error('Response from Gigya <br /><pre>Call ID: @callId, apicall:@method,
                                                  Error:@error</pre>', array('@callId' => $e->getCallId(),
                                                 '@method' => $method, '@error' => $e->getErrorCode()));
       }
@@ -159,11 +160,11 @@ class GigyaHelper implements GigyaHelperInterface {
 
       return $this->getGigyaApiHelper()->validateUid($uid, $uid_sig, $sig_timestamp, NULL, NULL, $params);
     } catch (GSApiException $e) {
-      Drupal::logger('gigya')->error("Gigya api call error " . $e->getMessage());
+      Drupal::logger('gigya')->error("Gigya API call error: @error, Call ID: @callId", array('@callId' => $e->getCallId(), '@error' => $e->getMessage()));
       return false;
     }
     catch (Exception $e) {
-      Drupal::logger('gigya')->error("General error validating gigya uid " . $e->getMessage());
+      Drupal::logger('gigya')->error("General error validating gigya UID: " . $e->getMessage());
       return false;
     }
   }

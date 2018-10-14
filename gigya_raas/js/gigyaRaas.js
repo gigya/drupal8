@@ -10,7 +10,7 @@
     Drupal.behaviors.gigyaRassDynamicSession = {
 		attach: function (context, settings) {
             if ("dynamic" === drupalSettings.gigyaExtra.session_type) {
-				Drupal.ajax({url: '/gigya/extcookie'}).execute();
+				Drupal.ajax({url: drupalSettings.path.baseUrl + 'gigya/extcookie'}).execute();
             }
         }
     };
@@ -50,7 +50,7 @@
         };
 
         var ajaxSettings = {
-            url: '/gigya/raas-login',
+            url: drupalSettings.path.baseUrl + 'gigya/raas-login',
             submit: data
         };
         var myAjaxObject = Drupal.ajax(ajaxSettings);
@@ -65,7 +65,7 @@
                 signatureTimestamp: data.response.signatureTimestamp
             };
             var ajaxSettings = {
-                url: '/gigya/raas-profile-update',
+                url: drupalSettings.path.baseUrl + 'gigya/raas-profile-update',
 				submit: {gigyaData: gigyaData}
             };
             var myAjaxObject = Drupal.ajax(ajaxSettings);
@@ -82,7 +82,7 @@
     };
 
     var logoutCallback = function () {
-        document.location = drupalSettings.path.baseUrl + 'user/logout';
+        document.location = drupalSettings.path.baseUrl + 'user/login';
     };
 
     var initRaas = function () {

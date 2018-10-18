@@ -88,6 +88,9 @@
 				$guid = $request->get('uid');
 				$uid_sig = $request->get('uid_sig');
 
+				$base_path = base_path();
+				$redirect_path = ($base_path === '/') ? '/' : $base_path . '/';
+
 				$response = new AjaxResponse();
 
 				if ($gigyaUser = $this->helper->validateUid($guid, $uid_sig, $sig_timestamp))
@@ -225,7 +228,7 @@
 								);
 								$this->helper->saveUserLogoutCookie();
 
-								$response->addCommand(new InvokeCommand(NULL, 'loginRedirect', [base_path() . '/']));
+								$response->addCommand(new InvokeCommand(NULL, 'loginRedirect', [$redirect_path]));
 							}
 						}
 					}
@@ -245,7 +248,7 @@
 				}
 				else
 				{
-					$response->addCommand(new InvokeCommand(NULL, 'loginRedirect', [base_path() . '/']));
+					$response->addCommand(new InvokeCommand(NULL, 'loginRedirect', [$redirect_path]));
 				}
 
 				return $response;

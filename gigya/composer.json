@@ -6,6 +6,10 @@
     {
       "name": "Yuval Perelman",
       "email": "perelman.yuval@gmail.com"
+    },
+    {
+      "name": "Yan Nasonov",
+      "email": "yan.na@gigya-inc.com"
     }
   ],
   "minimum-stability": "dev",
@@ -16,6 +20,6 @@
     }
   ],
   "require": {
-    "gigya/cms-starter-kit": "1.1.9"
+    "gigya/cms-starter-kit": "*"
   }
 }

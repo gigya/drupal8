@@ -12,22 +12,23 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Database\Database;
 use Drupal\user\Entity\User;
 use Exception;
-use Gigya\CmsStarterKit\GigyaApiHelper;
-use Gigya\CmsStarterKit\sdk\GigyaApiRequest;
-use Gigya\CmsStarterKit\sdk\GSApiException;
-use Gigya\CmsStarterKit\sdk\GSObject;
-use Gigya\CmsStarterKit\user\GigyaProfile;
-use Gigya\CmsStarterKit\user\GigyaUser;
-use Gigya\CmsStarterKit\user\GigyaUserFactory;
-use Gigya\CmsStarterKit\ds\DsQueryObject;
+use Drupal\gigya\CmsStarterKit\GigyaApiHelper;
+use Drupal\gigya\CmsStarterKit\sdk\GigyaApiRequest;
+use Drupal\gigya\CmsStarterKit\sdk\GSApiException;
+use Drupal\gigya\CmsStarterKit\sdk\GSObject;
+use Drupal\gigya\CmsStarterKit\user\GigyaProfile;
+use Drupal\gigya\CmsStarterKit\user\GigyaUser;
+use Drupal\gigya\CmsStarterKit\user\GigyaUserFactory;
+use Drupal\gigya\CmsStarterKit\ds\DsQueryObject;
 
 class GigyaHelper implements GigyaHelperInterface {
-    /**
-     * @param $obj
-     * @param $keys
-     *
-     * @return null | string
-     */
+
+  /**
+   * @param $obj
+   * @param $keys
+   *
+   * @return null | string
+   */
   public function getNestedValue($obj, $keys) {
     while (!empty($keys)) {
       $key = array_shift($keys);
@@ -109,7 +110,7 @@ class GigyaHelper implements GigyaHelperInterface {
 	 * @param null $params
 	 * @param bool $access_params
 	 *
-	 * @return Exception|GSApiException|\Gigya\CmsStarterKit\sdk\GSResponse
+	 * @return Exception|GSApiException|\Drupal\gigya\CmsStarterKit\sdk\GSResponse
 	 *
 	 * @throws \Exception
 	 */
@@ -178,6 +179,16 @@ class GigyaHelper implements GigyaHelperInterface {
     return new DsQueryObject($this->getGigyaApiHelper());
   }
 
+  /**
+   * @param string $uid
+   * @param string $type
+   * @param string $oid
+   * @param array|object $data
+   *
+   * @return \Drupal\gigya\CmsStarterKit\sdk\GSResponse
+   * @throws GSApiException
+   * @throws \Drupal\gigya\CmsStarterKit\sdk\GSException
+   */
   public function setDsData($uid, $type, $oid, $data) {
     $params = [];
     $params['type'] = $type;

@@ -20,9 +20,9 @@ use Drupal\gigya\Helper;
 use Drupal\gigya_raas\GigyaController;
 use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\Tests\BrowserTestBase;
-use Gigya\CmsStarterKit\sdk\GSApiException;
-use Gigya\CmsStarterKit\sdk\GSResponse;
-use Gigya\CmsStarterKit\user\GigyaUserFactory;
+use Drupal\gigya\CmsStarterKit\sdk\GSApiException;
+use Drupal\gigya\CmsStarterKit\sdk\GSResponse;
+use Drupal\gigya\CmsStarterKit\user\GigyaUserFactory;
 
 /**
  * Tests Gigya module functionality.

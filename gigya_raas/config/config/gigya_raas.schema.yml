@@ -8,3 +8,9 @@ gigya_raas.settings:
     session_time:
       type: integer
       label: 'Session Duration'
+    login_redirect:
+      type: text
+      label: 'Session Type'
+    logout_redirect:
+      type: integer
+      label: 'Session Duration'

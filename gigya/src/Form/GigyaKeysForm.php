@@ -12,7 +12,7 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\gigya\Helper\GigyaHelperInterface;
-use Gigya\CmsStarterKit\sdk\GSObject;
+use Drupal\gigya\CmsStarterKit\sdk\GSObject;
 
 class GigyaKeysForm extends ConfigFormBase
 {

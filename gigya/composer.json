@@ -1,6 +1,6 @@
 {
   "name": "gigya/drupal",
-  "description": "Gigya drupal module",
+  "description": "Gigya Drupal module",
   "license": "MIT",
   "authors": [
     {
@@ -12,14 +12,5 @@
       "email": "yan.na@gigya-inc.com"
     }
   ],
-  "minimum-stability": "dev",
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/gigya/php_cms_kit"
-    }
-  ],
-  "require": {
-    "gigya/cms-starter-kit": "*"
-  }
+  "minimum-stability": "dev"
 }

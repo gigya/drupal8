@@ -1,11 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Yaniv Aran-Shamir
- * Date: 5/23/17
- * Time: 9:19 AM
- */
-
 namespace Drupal\gigya_raas\Form;
 
 use Drupal\Core\Form\ConfigFormBase;

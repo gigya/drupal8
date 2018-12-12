@@ -82,6 +82,7 @@
     };
 
     var logoutCallback = function () {
+        //@TODO: take from rass settings
         document.location = drupalSettings.path.baseUrl + 'user/login';
     };
 

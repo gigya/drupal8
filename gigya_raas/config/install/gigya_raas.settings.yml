@@ -1,3 +1,5 @@
 gigya_raas:
   session_type: 'dynamic'
   session_time: '1800'
+  login_redirect: '/'
+  logout_redirect: '/'

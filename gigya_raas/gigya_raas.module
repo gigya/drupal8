@@ -15,6 +15,8 @@ function gigya_raas_page_attachments(array &$attachments) {
     );
 
     if (\Drupal::config('gigya.global')->get('gigya.enableRaaS') == TRUE) {
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['loginRedirect'] = \Drupal::config('gigya_raas.settings')->get('gigya_raas.login_redirect');
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['logoutRedirect'] = \Drupal::config('gigya_raas.settings')->get('gigya_raas.logout_redirect');
       $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin'] = \Drupal::currentUser()->isAuthenticated();
 
       $session_type = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type');

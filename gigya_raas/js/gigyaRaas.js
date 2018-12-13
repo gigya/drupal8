@@ -10,7 +10,7 @@
     Drupal.behaviors.gigyaRassDynamicSession = {
 		attach: function (context, settings) {
             if ("dynamic" === drupalSettings.gigyaExtra.session_type) {
-				Drupal.ajax({url: drupalSettings.path.baseUrl + 'gigya/extcookie'}).execute();
+				        Drupal.ajax({url: drupalSettings.path.baseUrl + 'gigya/extcookie'}).execute();
             }
         }
     };
@@ -75,7 +75,7 @@
 
     var checkLogout = function () {
         var logoutCookie = gigya.utils.cookie.get('Drupal.visitor.gigya');
-		if (logoutCookie === 'gigyaLogOut') {
+		    if (logoutCookie === 'gigyaLogOut') {
             gigya.accounts.logout();
             gigya.utils.cookie.remove('Drupal.visitor.gigya');
         }
@@ -83,7 +83,11 @@
 
     var logoutCallback = function () {
         //@TODO: take from rass settings
-        document.location = drupalSettings.path.baseUrl + 'user/login';
+        var logoutRedirect = drupalSettings.gigyaExtra.logoutRedirect ? drupalSettings.gigyaExtra.logoutRedirect : 'user/login';
+        if (!logoutRedirect.startsWith('http:')) {
+          logoutRedirect = drupalSettings.path.baseUrl + logoutRedirect;
+        }
+        document.location = logoutRedirect;
     };
 
     var initRaas = function () {

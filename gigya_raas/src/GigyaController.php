@@ -87,11 +87,18 @@
 				$sig_timestamp = $request->get('sig_timestamp');
 				$guid = $request->get('uid');
 				$uid_sig = $request->get('uid_sig');
-        $logout_redirect = \Drupal::config('gigya_raas.settings')->get('gigya_raas.logout_redirect');
+
+				$logout_redirect = \Drupal::config('gigya_raas.settings')->get('gigya_raas.logout_redirect');
         $login_redirect = \Drupal::config('gigya_raas.settings')->get('gigya_raas.login_redirect');
 
 				$base_path = base_path();
 				$redirect_path = ($base_path === '/') ? '/' : $base_path . '/';
+        if (substr($logout_redirect, 0, 4) !== 'http') {
+          $logout_redirect = $redirect_path . $logout_redirect;
+        }
+        if (substr($login_redirect, 0, 4) !== 'http') {
+          $login_redirect = $redirect_path . $login_redirect;
+        }
 
 				$response = new AjaxResponse();
 
@@ -229,7 +236,7 @@
 									"Oops! Something went wrong during your registration process. You are registered to the site but not logged-in. Please try to login again."
 								);
 								$this->helper->saveUserLogoutCookie();
-								$response->addCommand(new InvokeCommand(NULL, 'loginRedirect', [$redirect_path . $logout_redirect]));
+								$response->addCommand(new InvokeCommand(NULL, 'loginRedirect', [$logout_redirect]));
 							}
 						}
 					}
@@ -249,7 +256,7 @@
 				}
 				else
 				{
-          $response->addCommand(new InvokeCommand(NULL, 'loginRedirect', [$redirect_path . $login_redirect]));
+          $response->addCommand(new InvokeCommand(NULL, 'loginRedirect', [$login_redirect]));
 				}
 
 				return $response;

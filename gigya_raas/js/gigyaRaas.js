@@ -82,9 +82,8 @@
     };
 
     var logoutCallback = function () {
-        //@TODO: take from rass settings
         var logoutRedirect = drupalSettings.gigyaExtra.logoutRedirect ? drupalSettings.gigyaExtra.logoutRedirect : 'user/login';
-        if (!logoutRedirect.startsWith('http:')) {
+        if (!logoutRedirect.startsWith('http')) {
           logoutRedirect = drupalSettings.path.baseUrl + logoutRedirect;
         }
         document.location = logoutRedirect;

@@ -88,17 +88,19 @@
 				$guid = $request->get('uid');
 				$uid_sig = $request->get('uid_sig');
 
+				$login_redirect = \Drupal::config('gigya_raas.settings')->get('gigya_raas.login_redirect');
 				$logout_redirect = \Drupal::config('gigya_raas.settings')->get('gigya_raas.logout_redirect');
-        $login_redirect = \Drupal::config('gigya_raas.settings')->get('gigya_raas.login_redirect');
 
 				$base_path = base_path();
 				$redirect_path = ($base_path === '/') ? '/' : $base_path . '/';
-        if (substr($logout_redirect, 0, 4) !== 'http') {
-          $logout_redirect = $redirect_path . $logout_redirect;
-        }
-        if (substr($login_redirect, 0, 4) !== 'http') {
-          $login_redirect = $redirect_path . $login_redirect;
-        }
+				if (substr($login_redirect, 0, 4) !== 'http')
+				{
+					$login_redirect = $redirect_path . $login_redirect;
+				}
+				if (substr($logout_redirect, 0, 4) !== 'http')
+				{
+					$logout_redirect = $redirect_path . $logout_redirect;
+				}
 
 				$response = new AjaxResponse();
 
@@ -256,7 +258,7 @@
 				}
 				else
 				{
-          $response->addCommand(new InvokeCommand(NULL, 'loginRedirect', [$login_redirect]));
+					$response->addCommand(new InvokeCommand(NULL, 'loginRedirect', [$login_redirect]));
 				}
 
 				return $response;

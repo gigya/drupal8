@@ -63,15 +63,15 @@ class GigyaSessionForm extends ConfigFormBase
     //@todo add description
 		$form['login_redirect'] = array(
 			'#type'          => 'textfield',
-			'#title'         => $this->t('Login redirect'),
-			'#description'   => $this->t(''),
+			'#title'         => $this->t('Post login redirect URL'),
+			'#description'   => $this->t('"/" A relative URI path to redirect the user after a successful login.'),
 			'#default_value' => $config->get('gigya_raas.login_redirect'),
 		);
     //@todo add description
 		$form['logout_redirect'] = array(
 			'#type'          => 'textfield',
-			'#title'         => $this->t('Logout redirect'),
-			'#description'   => $this->t('need text'),
+			'#title'         => $this->t('Post logout redirect URL'),
+			'#description'   => $this->t('"/" A relative URI path to redirect the user after a successful logout.'),
 			'#default_value' => $config->get('gigya_raas.logout_redirect'),
 		);
 

@@ -27,6 +27,9 @@
 		 * 								(a redirect to Gigya to set the site's cookies, for browsers that do not support 3rd party cookies)
 		 */
 
+		if (!redirectTarget.startsWith('http'))
+			redirectTarget = window.location.origin + drupalSettings.path.baseUrl + redirectTarget;
+
 		if (typeof sendSetSSOToken === 'undefined' || sendSetSSOToken === false)
 			location.replace(redirectTarget);
 		else if (sendSetSSOToken === true)
@@ -84,7 +87,7 @@
     var logoutCallback = function () {
         var logoutRedirect = drupalSettings.gigyaExtra.logoutRedirect ? drupalSettings.gigyaExtra.logoutRedirect : 'user/login';
         if (!logoutRedirect.startsWith('http')) {
-          logoutRedirect = drupalSettings.path.baseUrl + logoutRedirect;
+        	logoutRedirect = drupalSettings.path.baseUrl + logoutRedirect;
         }
         document.location = logoutRedirect;
     };

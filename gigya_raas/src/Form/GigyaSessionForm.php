@@ -60,18 +60,16 @@ class GigyaSessionForm extends ConfigFormBase
 			'#description'   => $this->t('The session is led by Gigya. For more information visit <a href="@Gigya documentation"><u>Gigya\'s documentation</u></a>.', array('@Gigya documentation' => 'https://developers.gigya.com/display/GD/GConnector+-+CMS+and+E-Commerce+Integrations')),
 			'#default_value' => $config->get('gigya_raas.session_time'),
 		);
-    //@todo add description
 		$form['login_redirect'] = array(
 			'#type'          => 'textfield',
 			'#title'         => $this->t('Post login redirect URL'),
-			'#description'   => $this->t('"/" A relative URI path to redirect the user after a successful login.'),
+			'#description'   => $this->t('A relative URI path or full URL to redirect the user after a successful login.'),
 			'#default_value' => $config->get('gigya_raas.login_redirect'),
 		);
-    //@todo add description
 		$form['logout_redirect'] = array(
 			'#type'          => 'textfield',
 			'#title'         => $this->t('Post logout redirect URL'),
-			'#description'   => $this->t('"/" A relative URI path to redirect the user after a successful logout.'),
+			'#description'   => $this->t('A relative URI path or full URL to redirect the user after a successful logout.'),
 			'#default_value' => $config->get('gigya_raas.logout_redirect'),
 		);
 

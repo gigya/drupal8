@@ -10,7 +10,7 @@
     Drupal.behaviors.gigyaRassDynamicSession = {
 		attach: function (context, settings) {
             if ("dynamic" === drupalSettings.gigyaExtra.session_type) {
-				        Drupal.ajax({url: drupalSettings.path.baseUrl + 'gigya/extcookie'}).execute();
+				Drupal.ajax({url: drupalSettings.path.baseUrl + 'gigya/extcookie'}).execute();
             }
         }
     };

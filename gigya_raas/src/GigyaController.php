@@ -238,6 +238,7 @@
 									"Oops! Something went wrong during your registration process. You are registered to the site but not logged-in. Please try to login again."
 								);
 								$this->helper->saveUserLogoutCookie();
+
 								$response->addCommand(new InvokeCommand(NULL, 'loginRedirect', [$logout_redirect]));
 							}
 						}
@@ -258,6 +259,7 @@
 				}
 				else
 				{
+					\Drupal::moduleHandler()->alter('gigya_post_login_redirect', $login_redirect);
 					$response->addCommand(new InvokeCommand(NULL, 'loginRedirect', [$login_redirect]));
 				}
 
@@ -284,7 +286,7 @@
 				$session_ttl = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
 				$api_key = $gigya_conf->get('gigya.gigya_api_key');
 				$glt_cookie = $request->cookies->get('glt_' . $api_key);
-				$token = (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL; /* PHP 5.4+ */
+				$token = (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL;
 				$now = $_SERVER['REQUEST_TIME'];
 				$expiration = strval($now + $session_ttl);
 				$helper = new GigyaHelper();

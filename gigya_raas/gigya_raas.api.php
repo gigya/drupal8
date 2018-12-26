@@ -12,7 +12,6 @@
 
 /**
  * Modify the raas settings before it is added to the js.
- * FIXME: Does not appear to really do much. Need to check this.
  *
  * @param $raas_login
  *   array with raas login params

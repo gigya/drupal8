@@ -1,11 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Yaniv Aran-Shamir
- * Date: 5/23/17
- * Time: 9:19 AM
- */
-
 namespace Drupal\gigya_raas\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
@@ -67,6 +60,18 @@ class GigyaSessionForm extends ConfigFormBase
 			'#description'   => $this->t('The session is led by Gigya. For more information visit <a href="@Gigya documentation"><u>Gigya\'s documentation</u></a>.', array('@Gigya documentation' => 'https://developers.gigya.com/display/GD/GConnector+-+CMS+and+E-Commerce+Integrations')),
 			'#default_value' => $config->get('gigya_raas.session_time'),
 		);
+		$form['login_redirect'] = array(
+			'#type'          => 'textfield',
+			'#title'         => $this->t('Post login redirect URL'),
+			'#description'   => $this->t('A relative URI path or full URL to redirect the user after a successful login.'),
+			'#default_value' => $config->get('gigya_raas.login_redirect'),
+		);
+		$form['logout_redirect'] = array(
+			'#type'          => 'textfield',
+			'#title'         => $this->t('Post logout redirect URL'),
+			'#description'   => $this->t('A relative URI path or full URL to redirect the user after a successful logout.'),
+			'#default_value' => $config->get('gigya_raas.logout_redirect'),
+		);
 
 		return $form;
 	}
@@ -75,6 +80,8 @@ class GigyaSessionForm extends ConfigFormBase
 		$config = $this->config('gigya_raas.settings');
 		$config->set('gigya_raas.session_type', $this->getValue($form_state, 'session_type'));
 		$config->set('gigya_raas.session_time', $this->getValue($form_state, 'session_time'));
+		$config->set('gigya_raas.login_redirect', $this->getValue($form_state, 'login_redirect'));
+		$config->set('gigya_raas.logout_redirect', $this->getValue($form_state, 'logout_redirect'));
 		$config->save();
 
 		parent::submitForm($form, $form_state);

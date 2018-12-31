@@ -1,12 +1,3 @@
-/**
- *
- * Created with PhpStorm.
- * User: Yaniv Aran-Shamir
- * Date: 4/7/16
- * Time: 12:30 PM
- */
-
-
 var gigyaHelper = {
   addGigyaScript: function (apiKey, lang, apiDomain) {
     var gig = document.createElement('script');
@@ -74,11 +65,3 @@ var gigyaHelper = {
     }
   }
 };
-
-//function onGigyaServiceReady(serviceName) {
-//    gigyaHelper.checkLogout();
-//    gigyaHelper.runGigyaCmsInit();
-//    gigya.accounts.addEventHandlers(
-//        {onLogin: gigyaHelper.onLoginHandler}
-//    );
-//}

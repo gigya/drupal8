@@ -12,7 +12,7 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\gigya\Helper\GigyaHelperInterface;
-use Gigya\CmsStarterKit\sdk\GSObject;
+use Drupal\gigya\CmsStarterKit\sdk\GSObject;
 
 class GigyaKeysForm extends ConfigFormBase
 {
@@ -119,6 +119,12 @@ class GigyaKeysForm extends ConfigFormBase
 
     }
 
+	/**
+	 * @param array $form
+	 * @param \Drupal\Core\Form\FormStateInterface $form_state
+	 *
+	 * @throws \Exception
+	 */
     public function validateForm(array &$form, FormStateInterface $form_state)
     {
         parent::validateForm($form, $form_state);
@@ -203,6 +209,10 @@ class GigyaKeysForm extends ConfigFormBase
         }
     }
 
+	/**
+	 * @param array $form
+	 * @param \Drupal\Core\Form\FormStateInterface $form_state
+	 */
     public function submitForm(array &$form, FormStateInterface $form_state)
     {
         $config = $this->config('gigya.settings');
@@ -224,6 +234,12 @@ class GigyaKeysForm extends ConfigFormBase
         parent::submitForm($form, $form_state);
     }
 
+	/**
+	 * @param FormStateInterface $form_state
+	 * @param $prop_name
+	 *
+	 * @return string
+	 */
     private function getValue($form_state, $prop_name)
     {
         return trim($form_state->getValue($prop_name));

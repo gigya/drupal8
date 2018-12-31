@@ -8,8 +8,8 @@
 namespace Drupal\gigya\Helper;
 
 use Drupal\user\UserInterface;
-use Gigya\CmsStarterKit\sdk\GSApiException;
-use Gigya\CmsStarterKit\sdk\GSResponse;
+use Drupal\gigya\CmsStarterKit\sdk\GSApiException;
+use Drupal\gigya\CmsStarterKit\sdk\GSResponse;
 
 interface GigyaHelperInterface {
   public function getNestedValue($obj, $keys);

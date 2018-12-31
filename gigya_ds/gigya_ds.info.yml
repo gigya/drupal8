@@ -7,7 +7,7 @@ dependencies:
   - gigya
   - gigya_raas
 # Information added by Drupal.org packaging script on 2017-05-14
-version: '8.x-2.3.1'
+version: '8.x-2.4'
 core: '8.x'
 project: 'gigya'
 datestamp: 1494803025

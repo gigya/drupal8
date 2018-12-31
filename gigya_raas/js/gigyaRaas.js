@@ -36,6 +36,13 @@
 			gigya.setSSOToken({redirectURL: redirectTarget});
 	};
 
+	jQuery.fn.logoutRedirect = function(redirectTarget) {
+		if (!redirectTarget.startsWith('http'))
+			redirectTarget = window.location.origin + drupalSettings.path.baseUrl + redirectTarget;
+
+		document.location = redirectTarget;
+	};
+
     var initLoginUI = function () {
         if (typeof drupalSettings.gigya.loginUIParams !== 'undefined') {
             $.each(drupalSettings.gigya.loginUIParams, function (index, value) {
@@ -84,12 +91,15 @@
         }
     };
 
-    var logoutCallback = function () {
-        var logoutRedirect = drupalSettings.gigyaExtra.logoutRedirect ? drupalSettings.gigyaExtra.logoutRedirect : 'user/login';
-        if (!logoutRedirect.startsWith('http')) {
-        	logoutRedirect = drupalSettings.path.baseUrl + logoutRedirect;
-        }
-        document.location = logoutRedirect;
+    var onLogoutHandler = function () {
+		var data = {};
+
+		var ajaxSettings = {
+			url: drupalSettings.path.baseUrl + 'gigya/raas-logout',
+			submit: data
+		};
+		var myAjaxObject = Drupal.ajax(ajaxSettings);
+		myAjaxObject.execute();
     };
 
     var initRaas = function () {
@@ -137,7 +147,7 @@
         if (drupalSettings.gigya.enableRaaS) {
             gigyaHelper.addGigyaFunctionCall('accounts.addEventHandlers', {
                 onLogin: onLoginHandler,
-                onLogout: logoutCallback
+                onLogout: onLogoutHandler
             });
         }
 

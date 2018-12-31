@@ -196,7 +196,7 @@
 							}
 							else
 							{
-								// If user name is taken use first name if it is not empty.
+								/* If user name is taken use first name if it is not empty. */
 								$gigya_firstname = $gigyaUser->getProfile()->getFirstName();
 								if (!empty($gigya_firstname)
 									&& (!$this->helper->getUidByName(
@@ -208,7 +208,7 @@
 								}
 								else
 								{
-									// When all fails add unique id  to the username so we could register the user.
+									/* When all fails add unique id  to the username so we could register the user. */
 									$username = $uname . '_' . uniqid();
 								}
 							}
@@ -218,9 +218,8 @@
 							);
 							$user->save();
 							$this->helper->processFieldMapping($gigyaUser, $user);
-							/* Allow other modules to modify the data before user
-							is created in drupal database. */
 
+							/* Allow other modules to modify the data before user is created in drupal database (create user hook). */
 							\Drupal::moduleHandler()->alter('gigya_raas_create_user', $gigyaUser, $user);
 							try
 							{
@@ -239,7 +238,9 @@
 								);
 								$this->helper->saveUserLogoutCookie();
 
-								$response->addCommand(new InvokeCommand(NULL, 'loginRedirect', [$logout_redirect]));
+								/* Post-logout redirect hook */
+								\Drupal::moduleHandler()->alter('gigya_post_logout_redirect', $logout_redirect);
+								$response->addCommand(new InvokeCommand(NULL, 'logoutRedirect', [$logout_redirect]));
 							}
 						}
 					}
@@ -259,6 +260,7 @@
 				}
 				else
 				{
+					/* Post-login redirect hook */
 					\Drupal::moduleHandler()->alter('gigya_post_login_redirect', $login_redirect);
 					$response->addCommand(new InvokeCommand(NULL, 'loginRedirect', [$login_redirect]));
 				}
@@ -267,6 +269,30 @@
 			}
 
 			return false;
+		}
+
+		/**
+		 * @param Request $request      The incoming request object.
+		 *
+		 * @return bool|AjaxResponse    The Ajax response
+		 */
+		public function gigyaRaasLogoutAjax(Request $request) {
+			$logout_redirect = \Drupal::config('gigya_raas.settings')->get('gigya_raas.logout_redirect');
+
+			$base_path = base_path();
+			$redirect_path = ($base_path === '/') ? '/' : $base_path . '/';
+			if (substr($logout_redirect, 0, 4) !== 'http')
+			{
+				$logout_redirect = $redirect_path . $logout_redirect;
+			}
+
+			$response = new AjaxResponse();
+
+			/* Post-logout redirect hook */
+			\Drupal::moduleHandler()->alter('gigya_post_logout_redirect', $logout_redirect);
+			$response->addCommand(new InvokeCommand(NULL, 'logoutRedirect', [$logout_redirect]));
+
+			return $response;
 		}
 
 		/**

@@ -10,6 +10,7 @@ namespace Drupal\gigya\Form;
 use Drupal;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\gigya\Helper\GigyaHelperInterface;
 use Drupal\gigya\CmsStarterKit\sdk\GSObject;
@@ -184,9 +185,9 @@ class GigyaKeysForm extends ConfigFormBase
         $access_params['app_key'] = $_gigya_application_key;
         $access_params['data_center'] = $_gigya_data_center;
         $params = new GSObject();
-        $params->put('url', 'http://www.gigya.com');
+        $params->put('filter', 'full');
 
-        $res = $this->helper->sendApiCall('shortenURL', $params, $access_params);
+        $res = $this->helper->sendApiCall('accounts.getSchema', $params, $access_params);
         $valid = FALSE;
         if ($res->getErrorCode() == 0) {
             $valid = TRUE;
@@ -195,17 +196,22 @@ class GigyaKeysForm extends ConfigFormBase
             if (is_object($res)) {
                 $code = $res->getErrorCode();
                 $msg = $res->getMessage();
-                //@TODO: see how we can print markup in the error messages.
 
-                $form_state->setErrorByName('gigya_api_key', $this->t("Gigya API error: {$code} - {$msg}.") .
-                    "For more information please refer to <a href=http://developers.gigya.com/037_API_reference/zz_Response_Codes_and_Errors target=_blank>Response_Codes_and_Errors page</a>");
-                Drupal::logger('gigya')->error('Error setting API key, error code: @code - @msg', array('@code' => $code, '@msg' => $msg));
-            } else {
+				$error_message = new TranslatableMarkup('Gigya API error: @code – @msg. For more information, please refer to Gigya\'s documentation page on
+																<a href="https://developers.gigya.com/display/GD/Response+Codes+and+Errors" target="_blank">Response Codes and Errors</a>.',
+				  ['@code' => $code, '@msg' => $msg]);
+				$form_state->setErrorByName('gigya_api_key', $error_message);
+				Drupal::logger('gigya')
+				  ->error('Error setting API key, error code: @code - @msg', [
+					'@code' => $code,
+					'@msg' => $msg,
+				  ]);
+			} else {
                 $form_state->setErrorByName('gigya_api_key', $this->t("Your API key or Secret key could not be validated. Please try again"));
             }
         } else {
-            drupal_set_message($this->t('Gigya validated properly. This site is authorized to use Gigya services'));
-
+			$messenger = \Drupal::service('messenger');
+			$messenger->addMessage($this->t('Gigya validated properly. This site is authorized to use Gigya services'));
         }
     }
 

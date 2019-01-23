@@ -10,6 +10,7 @@ namespace Drupal\gigya\Form;
 use Drupal;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\gigya\Helper\GigyaHelperInterface;
 use Drupal\gigya\CmsStarterKit\sdk\GSObject;
@@ -196,10 +197,16 @@ class GigyaKeysForm extends ConfigFormBase
                 $code = $res->getErrorCode();
                 $msg = $res->getMessage();
 
-                $form_state->setErrorByName('gigya_api_key', $this->t("Gigya API error: {$code} - {$msg}.") .
-                    "For more information please refer to <a href=http://developers.gigya.com/037_API_reference/zz_Response_Codes_and_Errors target=_blank>Response_Codes_and_Errors page</a>");
-                Drupal::logger('gigya')->error('Error setting API key, error code: @code - @msg', array('@code' => $code, '@msg' => $msg));
-            } else {
+				$error_message = new TranslatableMarkup('Gigya API error: @code – @msg. For more information, please refer to Gigya\'s documentation page on
+																<a href="https://developers.gigya.com/display/GD/Response+Codes+and+Errors" target="_blank">Response Codes and Errors</a>.',
+				  ['@code' => $code, '@msg' => $msg]);
+				$form_state->setErrorByName('gigya_api_key', $error_message);
+				Drupal::logger('gigya')
+				  ->error('Error setting API key, error code: @code - @msg', [
+					'@code' => $code,
+					'@msg' => $msg,
+				  ]);
+			} else {
                 $form_state->setErrorByName('gigya_api_key', $this->t("Your API key or Secret key could not be validated. Please try again"));
             }
         } else {

@@ -8,7 +8,7 @@ dependencies:
   - gigya
 
 # Information added by Drupal.org packaging script on 2017-05-14
-version: '8.x-2.4'
+version: '8.x-2.4.1'
 core: '8.x'
 project: 'gigya'
 datestamp: 1494803025

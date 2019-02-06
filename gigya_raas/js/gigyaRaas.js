@@ -15,9 +15,9 @@
         }
     };
 
-    /* For Internet Explorer */
+	/* For Internet Explorer */
 	if (!String.prototype.startsWith) {
-		String.prototype.startsWith = function(searchString, position) {
+		String.prototype.startsWith = function (searchString, position) {
 			position = position || 0;
 			return this.indexOf(searchString, position) === position;
 		};
@@ -28,7 +28,7 @@
 	 *
 	 * @param redirectTarget
 	 */
-	jQuery.fn.loginRedirect = function(redirectTarget) {
+	jQuery.fn.loginRedirect = function (redirectTarget) {
 		/**
 		 * @var bool sendSetSSOToken	Should be set in Gigya's global configuration.
 		 * 								Set this to True if you would like setSSOToken to be called
@@ -44,7 +44,7 @@
 			gigya.setSSOToken({redirectURL: redirectTarget});
 	};
 
-	jQuery.fn.logoutRedirect = function(redirectTarget) {
+	jQuery.fn.logoutRedirect = function (redirectTarget) {
 		if (!redirectTarget.startsWith('http'))
 			redirectTarget = window.location.origin + drupalSettings.path.baseUrl + redirectTarget;
 

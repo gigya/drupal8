@@ -279,6 +279,10 @@
 		public function gigyaRaasLogoutAjax(Request $request) {
 			$logout_redirect = \Drupal::config('gigya_raas.settings')->get('gigya_raas.logout_redirect');
 
+			/* Log out user in SSO */
+			if (!empty(\Drupal::currentUser()->id()))
+				user_logout();
+
 			$base_path = base_path();
 			$redirect_path = ($base_path === '/') ? '/' : $base_path . '/';
 			if (substr($logout_redirect, 0, 4) !== 'http')

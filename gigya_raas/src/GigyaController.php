@@ -166,7 +166,7 @@
 							$uids = $this->helper->getUidByMails($gigyaUser->getLoginIds['emails']);
 							if (!empty($uids))
 							{
-								\Drupal::logger('gigya_raas')->notice(
+								\Drupal::logger('gigya_raas')->warning(
 									"User with uid " . $guid . " that already exists tried to register via gigya"
 								);
 								$this->helper->saveUserLogoutCookie();

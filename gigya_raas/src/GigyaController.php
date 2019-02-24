@@ -166,7 +166,7 @@
 							$uids = $this->helper->getUidByMails($gigyaUser->getLoginIds['emails']);
 							if (!empty($uids))
 							{
-								\Drupal::logger('gigya_raas')->notice(
+								\Drupal::logger('gigya_raas')->warning(
 									"User with uid " . $guid . " that already exists tried to register via gigya"
 								);
 								$this->helper->saveUserLogoutCookie();
@@ -278,6 +278,10 @@
 		 */
 		public function gigyaRaasLogoutAjax(Request $request) {
 			$logout_redirect = \Drupal::config('gigya_raas.settings')->get('gigya_raas.logout_redirect');
+
+			/* Log out user in SSO */
+			if (!empty(\Drupal::currentUser()->id()))
+				user_logout();
 
 			$base_path = base_path();
 			$redirect_path = ($base_path === '/') ? '/' : $base_path . '/';

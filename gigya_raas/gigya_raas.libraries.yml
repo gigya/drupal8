@@ -2,7 +2,6 @@ gigyaRaas:
   version: VERSION
   js:
     js/gigyaRaas.js: {}
-    js/gigyaCustomScreenset.js: {}
   dependencies:
     - core/jquery
     - core/jquery.once

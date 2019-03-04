@@ -7,6 +7,7 @@
 
 namespace Drupal\gigya_raas\Form;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
@@ -96,7 +97,7 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 			$form['gigya_custom_screensets']['screensets'] = [
 				'#type' => 'table',
 				'#header' => [
-					$this->t('Desktop'),
+					new FormattableMarkup('<span class="js-form-required form-required">@desktop</span>', ['@desktop' => $this->t('Desktop')]),
 					$this->t('Mobile'),
 					$this->t('Sync Data ?'),
 					'',
@@ -220,6 +221,14 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 	 */
 	public function validateForm(array &$form, FormStateInterface $form_state) {
 		parent::validateForm($form, $form_state);
+
+		if (empty($form_state->getUserInput()['_triggering_element_name'])) { /* This line is necessary so that validation is only done on save, not add/remove rows where it is irrelevant */
+			$custom_screensets = $form_state->getValue('screensets');
+			foreach ($custom_screensets as $key => $custom_screenset) {
+				if (empty($custom_screenset['desktop']) and !empty($custom_screenset['mobile']))
+					$form_state->setErrorByName('screensets][' . $key . '][desktop', $this->t('The desktop screen-set is required for each screen-set row'));
+			}
+		}
 	}
 
 	/**
@@ -229,13 +238,18 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 	public function submitForm(array &$form, FormStateInterface $form_state) {
 		$config = $this->config('gigya.settings');
 
-		$custom_screensets = json_encode($form_state->getValue('screensets'));
+		$custom_screensets = $form_state->getValue('screensets');
+		foreach ($custom_screensets as $key => $custom_screenset) {
+			unset($custom_screensets[$key]['remove']);
+			if (empty($custom_screenset['desktop']))
+				unset($custom_screensets[$key]);
+		}
 
 		$config->set('gigya.login_screenset', $form_state->getValue('gigya_login_screenset_desktop'));
 		$config->set('gigya.login_screenset_mobile', $form_state->getValue('gigya_login_screenset_mobile'));
 		$config->set('gigya.profile_screenset', $form_state->getValue('gigya_profile_screenset_desktop'));
 		$config->set('gigya.profile_screenset_mobile', $form_state->getValue('gigya_profile_screenset_mobile'));
-		$config->set('gigya.custom_screensets', $custom_screensets);
+		$config->set('gigya.custom_screensets', json_encode($custom_screensets));
 
 		$config->save();
 
@@ -260,7 +274,6 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 				'#type' => 'textfield',
 				'#title' => 'Desktop Screen-Set',
 				'#title_display' => 'invisible',
-				'#required' => TRUE,
 				'#default_value' => $screenset_values[0],
 			],
 			'mobile' => [

@@ -7,7 +7,12 @@
 
     'use strict';
 
-    Drupal.behaviors.gigyaRassDynamicSession = {
+	/**
+	 * @type {{attach: Drupal.behaviors.gigyaRassDynamicSession.attach}}
+	 *
+	 * @property drupalSettings.gigyaExtra.session_type
+	 */
+	Drupal.behaviors.gigyaRassDynamicSession = {
 		attach: function (context, settings) {
             if ("dynamic" === drupalSettings.gigyaExtra.session_type) {
 				Drupal.ajax({url: drupalSettings.path.baseUrl + 'gigya/extcookie'}).execute();
@@ -19,6 +24,8 @@
 	 * Invoked using InvokeCommand by Drupal's controller
 	 *
 	 * @param redirectTarget
+	 *
+	 * @property gigya.setSSOToken
 	 */
 	jQuery.fn.loginRedirect = function(redirectTarget) {
 		/**
@@ -43,6 +50,10 @@
 		document.location = redirectTarget;
 	};
 
+	/**
+	 * @property drupalSettings.gigya.loginUIParams
+	 * @property gigya.services.socialize.showLoginUI
+	 */
     var initLoginUI = function () {
         if (typeof drupalSettings.gigya.loginUIParams !== 'undefined') {
             $.each(drupalSettings.gigya.loginUIParams, function (index, value) {
@@ -91,7 +102,11 @@
         }
     };
 
-    var onLogoutHandler = function () {
+	/**
+	 * @property drupalSettings.path.baseUrl
+	 * @property myAjaxObject.execute()
+	 */
+	var onLogoutHandler = function () {
 		var data = {};
 
 		var ajaxSettings = {
@@ -102,6 +117,12 @@
 		myAjaxObject.execute();
     };
 
+	/**
+	 * @property gigya.accounts.showScreenSet
+	 * @property drupalSettings.gigya.enableRaaS
+	 * @property drupalSettings.gigya.raas
+	 * @property drupalSettings.gigya.raas.login
+	 */
     var initRaas = function () {
         if (drupalSettings.gigya.enableRaaS) {
             var id;
@@ -154,10 +175,21 @@
         drupalSettings.gigya.isRaasInit = true;
     };
 
-    Drupal.behaviors.gigyaRaasInit = {
+	/**
+	 * @type {{attach: Drupal.behaviors.gigyaRaasInit.attach}}
+	 *
+	 * @param context
+	 * @param settings
+	 *
+	 * @property Drupal.behaviors
+	 */
+	Drupal.behaviors.gigyaRaasInit = {
         attach: function (context, settings) {
             if (!('isRaasInit' in drupalSettings.gigya)) {
-                window.onGigyaServiceReady = function (serviceName) {
+				/**
+				 * @param serviceName
+				 */
+				window.onGigyaServiceReady = function (serviceName) {
                     checkLogout();
                     gigyaHelper.runGigyaCmsInit();
                     initLoginUI();

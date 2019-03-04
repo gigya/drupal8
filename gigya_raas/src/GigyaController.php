@@ -73,6 +73,18 @@
 		}
 
 		/**
+		 * Raw method for processing field mapping. Currently an alias for gigyaRaasProfileAjax, but could be modified in the future.
+		 *
+		 * @param \Symfony\Component\HttpFoundation\Request $request
+		 *
+		 * @return \Drupal\Core\Ajax\AjaxResponse
+		 * @throws \Drupal\Core\Entity\EntityStorageException
+		 */
+		public function gigyaRaasProcessFieldMapping(Request $request) {
+			return $this->gigyaRaasProfileAjax($request);
+		}
+
+		/**
 		 * @param Request $request      The incoming request object.
 		 *
 		 * @return bool|AjaxResponse    The Ajax response

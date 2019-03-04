@@ -2,6 +2,6 @@ gigya.admin.form:
   path: '/admin/config/gigya/keys'
   defaults:
     _form: 'Drupal\gigya\Form\GigyaKeysForm'
-    _title: 'Gigya credentials settings'
+    _title: 'Gigya credential settings'
   requirements:
     _permission: 'gigya major admin'

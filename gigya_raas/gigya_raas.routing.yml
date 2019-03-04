@@ -1,4 +1,12 @@
-gigya.rass.login:
+gigya.raas.screensets.form:
+  path: '/admin/config/gigya/screensets'
+  defaults:
+    _form: 'Drupal\gigya_raas\Form\GigyaScreenSetsForm'
+    _title: 'Gigya screen-set settings'
+  requirements:
+    _permission: 'gigya major admin'
+
+gigya.raas.login:
   path: 'gigya/raas-login'
   defaults:
     _controller: '\Drupal\gigya_raas\GigyaController::gigyaRaasLoginAjax'
@@ -7,7 +15,7 @@ gigya.rass.login:
   requirements:
     _permission: 'access content'
 
-gigya.rass.logout:
+gigya.raas.logout:
   path: 'gigya/raas-logout'
   defaults:
     _controller: '\Drupal\gigya_raas\GigyaController::gigyaRaasLogoutAjax'
@@ -16,10 +24,19 @@ gigya.rass.logout:
   requirements:
     _permission: 'access content'
 
-gigya.rass.profile:
+gigya.raas.profile:
   path: 'gigya/raas-profile-update'
   defaults:
     _controller: '\Drupal\gigya_raas\GigyaController::gigyaRaasProfileAjax'
+  options:
+    _theme: ajax_base_page
+  requirements:
+    _permission: 'access content'
+
+gigya.raas.profile:
+  path: 'gigya/raas-process-fieldmapping'
+  defaults:
+    _controller: '\Drupal\gigya_raas\GigyaController::gigyaRaasProcessFieldMapping'
   options:
     _theme: ajax_base_page
   requirements:
@@ -40,6 +57,4 @@ gigya.raas.config:
     _form: 'Drupal\gigya_raas\Form\GigyaSessionForm'
     _title: 'Gigya RaaS Session Settings'
   requirements:
-    _permission: 'gigya major admin' #TODO: maybe change this
-
-
+    _permission: 'gigya major admin'

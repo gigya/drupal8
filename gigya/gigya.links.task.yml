@@ -1,0 +1,4 @@
+gigya.admin.form:
+  title: 'General'
+  route_name: gigya.admin.form
+  base_route: gigya.admin.form

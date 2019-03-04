@@ -33,7 +33,7 @@ gigya.raas.profile:
   requirements:
     _permission: 'access content'
 
-gigya.raas.profile:
+gigya.raas.process.fieldmapping:
   path: 'gigya/raas-process-fieldmapping'
   defaults:
     _controller: '\Drupal\gigya_raas\GigyaController::gigyaRaasProcessFieldMapping'

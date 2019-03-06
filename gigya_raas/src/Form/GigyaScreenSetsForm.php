@@ -288,7 +288,6 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 			],
 			'mobile' => [
 				'#type' => 'textfield',
-				'#size' => 90,
 				'#title' => 'Mobile Screen-Set',
 				'#title_display' => 'invisible',
 				'#default_value' => $screenset_values[1],

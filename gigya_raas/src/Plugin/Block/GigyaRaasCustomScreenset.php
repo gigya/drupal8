@@ -24,7 +24,7 @@ class GigyaRaasCustomScreenset extends BlockBase implements BlockPluginInterface
 	public function __construct(array $configuration, $plugin_id, $plugin_definition) {
 		parent::__construct($configuration, $plugin_id, $plugin_definition);
 
-		$this->gigya_config = \Drupal::config('gigya_raas.settings');
+		$this->gigya_config = \Drupal::config('gigya_raas.screensets');
 	}
 
 	/**

@@ -37,9 +37,9 @@ function gigya_raas_page_attachments(array &$attachments) {
 			$default_login_screenset = 'Default-RegistrationLogin';
 			$default_profile_screenset = 'Default-ProfileUpdate';
 			$default_profile_screenset_mobile = 'Default-ProfileUpdate';
-			$login_screenset = \Drupal::config('gigya_raas.settings')->get('gigya.login_screenset');
-			$profile_screenset = \Drupal::config('gigya_raas.settings')->get('gigya.profile_screenset');
-			$profile_screenset_mobile = \Drupal::config('gigya_raas.settings')->get('gigya.profile_screenset_mobile');
+			$login_screenset = \Drupal::config('gigya_raas.screensets')->get('gigya.login_screenset');
+			$profile_screenset = \Drupal::config('gigya_raas.screensets')->get('gigya.profile_screenset');
+			$profile_screenset_mobile = \Drupal::config('gigya_raas.screensets')->get('gigya.profile_screenset_mobile');
 
       if (\Drupal::currentUser()->isAnonymous()) {
         $raas_login    = array(

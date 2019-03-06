@@ -22,7 +22,7 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 	 */
 	protected function getEditableConfigNames() {
 		return [
-			'gigya_raas.settings',
+			'gigya_raas.screensets',
 		];
 	}
 
@@ -33,7 +33,7 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 	 * @return array
 	 */
 	public function buildForm(array $form, FormStateInterface $form_state) {
-		$config = $this->config('gigya_raas.settings');
+		$config = $this->config('gigya_raas.screensets');
 
 		$form['gigya_login_screensets'] = [
 			'#type' => 'details',
@@ -113,16 +113,21 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 			$custom_screenset_count = count($custom_screensets);
 			$existing_form_keys = $form_state->get('existing_field_keys');
 			if ($custom_screenset_count > 0 and empty($existing_form_keys)) {
-				$existing_form_keys = range(0, $custom_screenset_count - 1);
+				foreach ($custom_screensets as $key => $screenset) {
+					$existing_form_keys[$key] = $key;
+				}
 				$form_state->set('existing_field_keys', $existing_form_keys);
 			}
 
 			if ($custom_screenset_count > 0) {
+				/* Builds elements for existing rows (already in DB) */
 				foreach ($custom_screensets as $key => $custom_screenset) {
 					if (isset($existing_form_keys[$key])) {
 						$form['gigya_custom_screensets']['screensets'][$key] = $this->generateCustomScreensetRow($custom_screenset, $key);
 					}
 				}
+
+				/* Builds elements for new rows (added through Add) */
 				foreach ($form_state->get('field_keys') as $field_key) {
 					$form['gigya_custom_screensets']['screensets'][$field_key] = $this->generateCustomScreensetRow([
 						'',
@@ -155,6 +160,10 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 
 	public static function addScreensetRow(array &$form, FormStateInterface $form_state) {
 		$existing_field_keys_array = $form_state->get('existing_field_keys');
+		if (empty($existing_field_keys_array)) {
+			$existing_field_keys_array = [];
+		}
+
 		$field_keys_array = $form_state->get('field_keys');
 		if (count($field_keys_array) > 0) {
 			$field_keys_array[] = max($field_keys_array) + 1;
@@ -246,7 +255,7 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 	 * @param \Drupal\Core\Form\FormStateInterface $form_state
 	 */
 	public function submitForm(array &$form, FormStateInterface $form_state) {
-		$config = $this->config('gigya_raas.settings');
+		$config = $this->config('gigya_raas.screensets');
 
 		$custom_screensets = $form_state->getValue('screensets');
 		foreach ($custom_screensets as $key => $custom_screenset) {
@@ -259,7 +268,7 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 		$config->set('gigya.login_screenset_mobile', $form_state->getValue('gigya_login_screenset_mobile'));
 		$config->set('gigya.profile_screenset', $form_state->getValue('gigya_profile_screenset_desktop'));
 		$config->set('gigya.profile_screenset_mobile', $form_state->getValue('gigya_profile_screenset_mobile'));
-		$config->set('gigya.custom_screensets', json_encode($custom_screensets));
+		$config->set('gigya.custom_screensets', json_encode($custom_screensets, JSON_FORCE_OBJECT));
 
 		$config->save();
 

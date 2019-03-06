@@ -22,7 +22,7 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 	 */
 	protected function getEditableConfigNames() {
 		return [
-			'gigya.settings',
+			'gigya_raas.settings',
 		];
 	}
 
@@ -33,7 +33,7 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 	 * @return array
 	 */
 	public function buildForm(array $form, FormStateInterface $form_state) {
-		$config = $this->config('gigya.settings');
+		$config = $this->config('gigya_raas.settings');
 
 		$form['gigya_login_screensets'] = [
 			'#type' => 'details',
@@ -222,8 +222,18 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 	public function validateForm(array &$form, FormStateInterface $form_state) {
 		parent::validateForm($form, $form_state);
 
+		$custom_screensets = $form_state->getValue('screensets');
+
+		/* Verifies that no two screen-sets have the same desktop screen-set which serves as the ID @TODO make a new numerical ID */
+		$desktop_screens = array();
+		foreach ($custom_screensets as $key => $custom_screenset) {
+			$desktop_screens[] = $custom_screenset['desktop'];
+		}
+		if (count(array_unique($desktop_screens)) !== count($desktop_screens))
+			$form_state->setErrorByName('custom-screenset-table', $this->t('Two screen-sets cannot have the same desktop screen-set identifier'));
+
+		/* Verifies that for each custom screen-set added, either the whole row is empty (then it is ignored), or the desktop screen-set field is set */
 		if (empty($form_state->getUserInput()['_triggering_element_name'])) { /* This line is necessary so that validation is only done on save, not add/remove rows where it is irrelevant */
-			$custom_screensets = $form_state->getValue('screensets');
 			foreach ($custom_screensets as $key => $custom_screenset) {
 				if (empty($custom_screenset['desktop']) and !empty($custom_screenset['mobile']))
 					$form_state->setErrorByName('screensets][' . $key . '][desktop', $this->t('The desktop screen-set is required for each screen-set row'));
@@ -236,7 +246,7 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 	 * @param \Drupal\Core\Form\FormStateInterface $form_state
 	 */
 	public function submitForm(array &$form, FormStateInterface $form_state) {
-		$config = $this->config('gigya.settings');
+		$config = $this->config('gigya_raas.settings');
 
 		$custom_screensets = $form_state->getValue('screensets');
 		foreach ($custom_screensets as $key => $custom_screenset) {

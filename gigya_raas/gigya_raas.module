@@ -37,9 +37,9 @@ function gigya_raas_page_attachments(array &$attachments) {
 			$default_login_screenset = 'Default-RegistrationLogin';
 			$default_profile_screenset = 'Default-ProfileUpdate';
 			$default_profile_screenset_mobile = 'Default-ProfileUpdate';
-			$login_screenset = \Drupal::config('gigya.settings')->get('gigya.login_screenset');
-			$profile_screenset = \Drupal::config('gigya.settings')->get('gigya.profile_screenset');
-			$profile_screenset_mobile = \Drupal::config('gigya.settings')->get('gigya.profile_screenset_mobile');
+			$login_screenset = \Drupal::config('gigya_raas.settings')->get('gigya.login_screenset');
+			$profile_screenset = \Drupal::config('gigya_raas.settings')->get('gigya.profile_screenset');
+			$profile_screenset_mobile = \Drupal::config('gigya_raas.settings')->get('gigya.profile_screenset_mobile');
 
       if (\Drupal::currentUser()->isAnonymous()) {
         $raas_login    = array(
@@ -80,9 +80,10 @@ function gigya_raas_page_attachments(array &$attachments) {
 					$custom_screensets[] = $settings;
 				}
 			}
-			$screenset_config = json_decode(\Drupal::config('gigya.settings')->get('gigya.custom_screensets'));
+			$screenset_config = (array)json_decode(\Drupal::config('gigya.settings')->get('gigya.custom_screensets'));
 			foreach ($screenset_config as $key => $screenset) {
-				unset($screenset->remove);
+				if (isset($screenset->remove))
+					unset($screenset->remove);
 				$screenset = (array)$screenset;
 				$screenset_config[$screenset['desktop']] = $screenset;
 				unset($screenset_config[$key]);

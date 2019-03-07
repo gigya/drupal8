@@ -80,7 +80,7 @@ function gigya_raas_page_attachments(array &$attachments) {
 					$custom_screensets[] = $settings;
 				}
 			}
-			$screenset_config = (array)json_decode(\Drupal::config('gigya.settings')->get('gigya.custom_screensets'));
+			$screenset_config = (array)json_decode(\Drupal::config('gigya_raas.screensets')->get('gigya.custom_screensets'));
 			foreach ($screenset_config as $key => $screenset) {
 				if (isset($screenset->remove))
 					unset($screenset->remove);

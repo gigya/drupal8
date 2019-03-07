@@ -233,7 +233,7 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 
 		$custom_screensets = $form_state->getValue('screensets');
 
-		/* Verifies that no two screen-sets have the same desktop screen-set which serves as the ID @TODO make a new numerical ID */
+		/* Verifies that no two screen-sets have the same desktop screen-set */
 		$desktop_screens = array();
 		foreach ($custom_screensets as $key => $custom_screenset) {
 			$desktop_screens[] = $custom_screenset['desktop'];

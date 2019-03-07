@@ -11,6 +11,7 @@ use Drupal;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Database\Database;
 use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 use Exception;
 use Drupal\gigya\CmsStarterKit\GigyaApiHelper;
 use Drupal\gigya\CmsStarterKit\sdk\GigyaApiRequest;
@@ -293,7 +294,11 @@ class GigyaHelper implements GigyaHelperInterface {
       ->execute();
   }
 
-  public function processFieldMapping($gigya_data, Drupal\user\UserInterface $drupal_user) {
+	/**
+	 * @param $gigya_data
+	 * @param \Drupal\user\UserInterface $drupal_user
+	 */
+  public function processFieldMapping($gigya_data, UserInterface $drupal_user) {
     try {
       $field_map = \Drupal::config('gigya.global')->get('gigya.fieldMapping');
       try {
@@ -337,11 +342,12 @@ class GigyaHelper implements GigyaHelperInterface {
           }
 
           /* Perform the mapping from Gigya to Drupal */
-          try {
-            $drupal_user->set($drupal_field, $val);
-          } catch (Exception $e) {
-	        Drupal::logger('gigya')->debug('Error inserting mapped field: @message',
-						['@message' => $e->getMessage()]);
+					try {
+						$drupal_user->set($drupal_field, $val);
+					} catch (\InvalidArgumentException $e) {
+						Drupal::logger('gigya')
+							->debug('Error inserting mapped field: @message',
+								['@message' => $e->getMessage()]);
 					}
         }
 			}

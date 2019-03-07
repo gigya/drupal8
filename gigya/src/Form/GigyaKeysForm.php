@@ -44,68 +44,80 @@ class GigyaKeysForm extends ConfigFormBase
      */
     public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL)
     {
-        // Form constructor
+			// Form constructor
 
-        if ($helper == NULL) {
-            $this->helper = new GigyaHelper();
-        } else {
-            $this->helper = $helper;
-        }
-        if (!$this->helper->checkEncryptKey()) {
-        	$messenger = \Drupal::service('messenger');
-        	$messenger->addError($this->t('Cannot read encryption key. Either the file path is incorrect or the file is empty.'));
-        }
-        $form = parent::buildForm($form, $form_state);
-        $config = $this->config('gigya.settings');
-        $form['gigya_api_key'] = array('#type' => 'textfield', '#title' => $this->t('Gigya API Key'),
-            '#description' => $this->t('Specify the Gigya API Key for this domain'),
-            '#default_value' => $config->get('gigya.gigya_api_key'), '#required' => TRUE);
+			if ($helper == NULL) {
+					$this->helper = new GigyaHelper();
+			} else {
+					$this->helper = $helper;
+			}
+			if (!$this->helper->checkEncryptKey()) {
+				$messenger = \Drupal::service('messenger');
+				$messenger->addError($this->t('Cannot read encryption key. Either the file path is incorrect or the file is empty.'));
+			}
+			$form = parent::buildForm($form, $form_state);
+			$config = $this->config('gigya.settings');
 
-        $form['gigya_application_key'] = array('#type' => 'textfield', '#title' => $this->t('Gigya Application Key'),
-            '#description' => $this->t('Specify the Gigya Application key for this domain'),
-            '#default_value' => $config->get('gigya.gigya_application_key'), '#required' => TRUE);
-        $key = $config->get('gigya.gigya_application_secret_key');
-        $access_key = "";
-        if (!empty($key)) {
-            $access_key = $this->helper->decrypt($key);
-        }
+			$form['gigya_api_key'] = array(
+				'#type'          => 'textfield',
+				'#title'         => $this->t('Gigya API Key'),
+				'#description'   => $this->t('Specify the Gigya API Key for this domain'),
+				'#default_value' => $config->get('gigya.gigya_api_key'),
+				'#required'      => true,
+			);
 
-        $form['gigya_application_secret_key'] = array('#type' => 'textfield', '#title' => $this->t('Gigya Application Secret Key'));
-        $form['gigya_application_secret_key']['#description'] = $this->t('Specify the Gigya Application Secret Key for this domain');
-		$form['gigya_application_secret_key']['#attributes'] = array(
-			'autocomplete' => 'off'
-		);
-        if (empty($access_key)) {
-            $form['gigya_application_secret_key']['#required'] = TRUE;
-        } else {
-            $form['gigya_application_secret_key']['#default_value'] = "*********";
-            $form['gigya_application_secret_key']['#required'] = FALSE;
-            $form['gigya_application_secret_key']['#description'] .= $this->t(". Current key first and last letters are @accessKey", array('@accessKey' => substr($access_key, 0, 2) . "****" .
-                substr($access_key, strlen($access_key) - 2, 2)));
-        }
+			$form['gigya_application_key'] = array(
+				'#type'          => 'textfield',
+				'#title'         => $this->t('Gigya Application Key'),
+				'#description'   => $this->t('Specify the Gigya Application key for this domain'),
+				'#default_value' => $config->get('gigya.gigya_application_key'),
+				'#required'      => true,
+			);
+			$key = $config->get('gigya.gigya_application_secret_key');
+			$access_key = "";
+			if (!empty($key)) {
+					$access_key = $this->helper->decrypt($key);
+			}
 
-        $data_centers = array('us1.gigya.com' => 'US', 'eu1.gigya.com' => 'EU', 'au1.gigya.com' => 'AU', 'ru1.gigya.com' => 'RU', 'cn1.gigya-api.cn' => 'CN', 'other' => "Other");
-        $form['gigya_data_center'] = array(
-            '#type' => 'select',
-            '#title' => $this->t('Data Center'),
-            '#description' => $this->t('Please select the Gigya data center in which your site is defined. To verify your site location contact your Gigya implementation manager.'),
-            '#options' => $data_centers,
-            '#default_value' => array_key_exists($config->get('gigya.gigya_data_center'), $data_centers) ? $config->get('gigya.gigya_data_center') : 'other'
-        );
+			$form['gigya_application_secret_key'] = array(
+				'#type'  => 'textfield',
+				'#title' => $this->t('Gigya Application Secret Key'),
+			);
+					$form['gigya_application_secret_key']['#description'] = $this->t('Specify the Gigya Application Secret Key for this domain');
+			$form['gigya_application_secret_key']['#attributes'] = array(
+				'autocomplete' => 'off'
+			);
 
-		$form['gigya_other_data_center'] = array(
-            "#type" => "textfield",
-            "#default_value" => $config->get('gigya.gigya_data_center'),
-            "#attributes" => array("id" => "gigya-other-data-center"),
-            '#states' => array(
-                'visible' => array(
-                    ':input[name="gigya_data_center"]' => array('value' => 'other'),
-                ),
-            ),
-        );
+			if (empty($access_key)) {
+					$form['gigya_application_secret_key']['#required'] = TRUE;
+			} else {
+				$form['gigya_application_secret_key']['#default_value'] = "*********";
+				$form['gigya_application_secret_key']['#required'] = FALSE;
+				$form['gigya_application_secret_key']['#description'] .= $this->t(". Current key first and last letters are @accessKey", array('@accessKey' => substr($access_key, 0, 2) . "****" .
+					substr($access_key, strlen($access_key) - 2, 2)));
+			}
 
-        return $form;
+			$data_centers = array('us1.gigya.com' => 'US', 'eu1.gigya.com' => 'EU', 'au1.gigya.com' => 'AU', 'ru1.gigya.com' => 'RU', 'cn1.gigya-api.cn' => 'CN', 'other' => "Other");
+			$form['gigya_data_center'] = array(
+				'#type' => 'select',
+				'#title' => $this->t('Data Center'),
+				'#description' => $this->t('Please select the Gigya data center in which your site is defined. To verify your site location contact your Gigya implementation manager.'),
+				'#options' => $data_centers,
+				'#default_value' => array_key_exists($config->get('gigya.gigya_data_center'), $data_centers) ? $config->get('gigya.gigya_data_center') : 'other'
+			);
 
+			$form['gigya_other_data_center'] = array(
+				'#type' => "textfield",
+				'#default_value' => $config->get('gigya.gigya_data_center'),
+				"#attributes" => array("id" => "gigya-other-data-center"),
+				'#states' => array(
+					'visible' => array(
+						':input[name="gigya_data_center"]' => array('value' => 'other'),
+					),
+				),
+			);
+
+			return $form;
     }
 
     /**
@@ -251,4 +263,3 @@ class GigyaKeysForm extends ConfigFormBase
         return trim($form_state->getValue($prop_name));
     }
 }
-

@@ -3,7 +3,7 @@
  * Provides a 'Gigya RaaS Register' Block
  *
  * @Block(
- *   id = "gigya_rass_register",
+ *   id = "gigya_raas_register",
  *   admin_label = @Translation("Gigya RaaS Register"),
  *   category = @Translation("Gigya")
  * )

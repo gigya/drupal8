@@ -1,10 +1,10 @@
 <?php
 /**
- * Provides a 'Gigya RaaS links' Block
+ * Provides a 'Gigya RaaS Links' Block
  *
  * @Block(
- *   id = "gigya_rass_links",
- *   admin_label = @Translation("Gigya RaaS links"),
+ *   id = "gigya_raas_links",
+ *   admin_label = @Translation("Gigya RaaS Links"),
  *   category = @Translation("Gigya")
  * )
  */

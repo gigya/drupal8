@@ -6,10 +6,11 @@ use Drupal\gigya\Helper\GigyaHelper;
  * @param array $attachments
  */
 function gigya_page_attachments(array &$attachments) {
-  //Check for api key.
+  /* Check for api key */
   $api_key = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
+
   if (!empty($api_key)) {
-    //Add gigya params to drupalSettings.
+    /* Add gigya params to drupalSettings */
     $global_params = \Drupal::config('gigya.global')->get('gigya.globalParameters');
     \Drupal::moduleHandler()->alter('gigya_global_parameters', $global_params);
 
@@ -19,7 +20,7 @@ function gigya_page_attachments(array &$attachments) {
 
     $lang = \Drupal::config('gigya.global')->get('gigya.language');
 
-    //Check if lang is in auto mode.
+    /* Check if lang is in auto mode */
     if (strtolower($lang) == 'auto') {
       $lang = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
@@ -28,7 +29,7 @@ function gigya_page_attachments(array &$attachments) {
       $languages = $helper->getGigyaLanguages();
 
       if (!array_key_exists($lang, $languages)) {
-        //If we do not have the lang in gigya set the lang to the fallback.
+        /* If we do not have the lang in gigya set the lang to the fallback */
         $lang = \Drupal::config('gigya.global')->get('gigya.languageFallback');
       }
     }

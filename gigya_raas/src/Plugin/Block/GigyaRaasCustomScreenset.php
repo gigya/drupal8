@@ -88,7 +88,7 @@ class GigyaRaasCustomScreenset extends BlockBase implements BlockPluginInterface
 
 		$form['container_id'] = array(
 			'#type' => 'textfield',
-			'#title' => 'Container DOM ID',
+			'#title' => 'Container ID',
 			'#required' => true,
 			'#default_value' => isset($block_config['container_id']) ? $block_config['container_id'] : '',
 		);
@@ -104,7 +104,7 @@ class GigyaRaasCustomScreenset extends BlockBase implements BlockPluginInterface
 
 		$form['link_id'] = array(
 			'#type' => 'textfield',
-			'#title' => 'Link DOM ID',
+			'#title' => 'Link ID',
 			'#default_value' => isset($block_config['link_id']) ? $block_config['link_id'] : '',
 			'#states' => array(
 				'visible' => array(

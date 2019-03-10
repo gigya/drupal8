@@ -1,0 +1,8 @@
+gigya.raas.config:
+  title: 'RaaS'
+  route_name: gigya.raas.config
+  base_route: gigya.admin.form
+gigya.raas.screensets.form:
+  title: 'Screen-Sets'
+  route_name: gigya.raas.screensets.form
+  base_route: gigya.admin.form

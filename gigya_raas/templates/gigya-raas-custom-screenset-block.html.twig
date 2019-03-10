@@ -1,0 +1,20 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display Gigya custom screen-sets.
+ *
+ * @ingroup themeable
+ */
+#}
+<div id="{% if container_id %}{{ container_id }}{% endif %}">
+	{% if display_type == 'popup' %}
+		<span class="gigya-raas">
+            {% if link['popup'] %}
+				{{ link['popup'] }}
+			{% endif %}
+        </span>
+	{% elseif display_type == 'embed' %}
+		{{ container_id }}
+	{% else %}
+	{% endif %}
+</div>

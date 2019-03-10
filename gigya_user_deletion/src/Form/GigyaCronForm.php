@@ -74,7 +74,7 @@
 				'#type'       => 'label',
 				'#title'      => $this->t('Enable'),
 				"#attributes" => array(
-					'class' => 'gigya-label-cb',
+					'class' => ['gigya-label-cb'],
 				),
 			);
 			$form['enableJob'] = array(
@@ -127,7 +127,7 @@
 				'#type'       => 'label',
 				'#title'      => $this->t('Amazon S3 settings'),
 				'#attributes' => array(
-					'class' => 'gigya-label-custom',
+					'class' => ['gigya-label-custom'],
 				),
 			);
 

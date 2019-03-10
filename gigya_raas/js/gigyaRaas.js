@@ -7,7 +7,12 @@
 
     'use strict';
 
-    Drupal.behaviors.gigyaRassDynamicSession = {
+	/**
+	 * @type {{attach: Drupal.behaviors.gigyaRassDynamicSession.attach}}
+	 *
+	 * @property drupalSettings.gigyaExtra.session_type
+	 */
+	Drupal.behaviors.gigyaRassDynamicSession = {
 		attach: function (context, settings) {
             if ("dynamic" === drupalSettings.gigyaExtra.session_type) {
 				Drupal.ajax({url: drupalSettings.path.baseUrl + 'gigya/extcookie'}).execute();
@@ -27,6 +32,8 @@
 	 * Invoked using InvokeCommand by Drupal's controller
 	 *
 	 * @param redirectTarget
+	 *
+	 * @property gigya.setSSOToken
 	 */
 	jQuery.fn.loginRedirect = function (redirectTarget) {
 		/**
@@ -51,6 +58,10 @@
 		document.location = redirectTarget;
 	};
 
+	/**
+	 * @property drupalSettings.gigya.loginUIParams
+	 * @property gigya.services.socialize.showLoginUI
+	 */
     var initLoginUI = function () {
         if (typeof drupalSettings.gigya.loginUIParams !== 'undefined') {
             $.each(drupalSettings.gigya.loginUIParams, function (index, value) {
@@ -99,7 +110,11 @@
         }
     };
 
-    var onLogoutHandler = function () {
+	/**
+	 * @property drupalSettings.path.baseUrl
+	 * @property myAjaxObject.execute()
+	 */
+	var onLogoutHandler = function () {
 		var data = {};
 
 		var ajaxSettings = {
@@ -110,7 +125,13 @@
 		myAjaxObject.execute();
     };
 
-    var initRaas = function () {
+	/**
+	 * @property gigya.accounts.showScreenSet
+	 * @property drupalSettings.gigya.enableRaaS
+	 * @property drupalSettings.gigya.raas
+	 * @property drupalSettings.gigya.raas.login
+	 */
+    var initRaaS = function () {
         if (drupalSettings.gigya.enableRaaS) {
             var id;
             $('.gigya-raas-login').once('gigya-raas').click(function (e) {
@@ -151,6 +172,60 @@
         }
     };
 
+	/**
+	 * @property gigya.accounts.showScreenSet
+	 * @property drupalSettings.gigya.raas.customScreenSets
+	 */
+	var initCustomScreenSet = function () {
+		if (drupalSettings.gigya.enableRaaS) {
+			var customScreenSets = drupalSettings.gigya.raas.customScreenSets;
+
+			/**
+			 * @property custom_screenset.display_type
+			 * @property custom_screenset.link_id
+			 * @property custom_screenset.container_id
+			 * @property custom_screenset.desktop_screenset
+			 * @property custom_screenset.mobile_screenset
+			 * @property custom_screenset.sync_data
+			 */
+			customScreenSets.forEach(function (custom_screenset) {
+				if (typeof custom_screenset.display_type !== 'undefined') {
+					var screenset_params = {
+						screenSet: custom_screenset.desktop_screenset,
+						mobileScreenSet: custom_screenset.mobile_screenset
+					};
+					if (parseInt(custom_screenset.sync_data) === 1)
+						screenset_params['onAfterSubmit'] = processFieldMapping;
+
+					if (custom_screenset.display_type === 'popup') {
+						$('#' + custom_screenset.link_id).once('gigya-raas').click(function (e) {
+							e.preventDefault();
+							gigya.accounts.showScreenSet(screenset_params);
+							drupalSettings.gigya.raas.linkId = $(this).attr('id');
+						});
+					} else if (custom_screenset.display_type === 'embed') {
+						screenset_params['containerID'] = custom_screenset.container_id;
+						gigya.accounts.showScreenSet(screenset_params);
+					}
+				}
+			});
+		}
+	};
+
+	var processFieldMapping = function (data) {
+		var gigyaData = {
+			UID: data.response.UID,
+			UIDSignature: data.response.UIDSignature,
+			signatureTimestamp: data.response.signatureTimestamp
+		};
+		var ajaxSettings = {
+			url: drupalSettings.path.baseUrl + 'gigya/raas-process-fieldmapping',
+			submit: {gigyaData: gigyaData}
+		};
+		var myAjaxObject = Drupal.ajax(ajaxSettings);
+		myAjaxObject.execute();
+	};
+
     var init = function () {
         if (drupalSettings.gigya.enableRaaS) {
             gigyaHelper.addGigyaFunctionCall('accounts.addEventHandlers', {
@@ -162,14 +237,26 @@
         drupalSettings.gigya.isRaasInit = true;
     };
 
-    Drupal.behaviors.gigyaRaasInit = {
+	/**
+	 * @type {{attach: Drupal.behaviors.gigyaRaasInit.attach}}
+	 *
+	 * @param context
+	 * @param settings
+	 *
+	 * @property Drupal.behaviors
+	 */
+	Drupal.behaviors.gigyaRaasInit = {
         attach: function (context, settings) {
             if (!('isRaasInit' in drupalSettings.gigya)) {
-                window.onGigyaServiceReady = function (serviceName) {
+				/**
+				 * @param serviceName
+				 */
+				window.onGigyaServiceReady = function (serviceName) {
                     checkLogout();
                     gigyaHelper.runGigyaCmsInit();
                     initLoginUI();
-                    initRaas();
+                    initRaaS();
+					initCustomScreenSet();
                 };
                 init();
             }

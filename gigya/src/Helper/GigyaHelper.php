@@ -11,6 +11,7 @@ use Drupal;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Database\Database;
 use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 use Exception;
 use Drupal\gigya\CmsStarterKit\GigyaApiHelper;
 use Drupal\gigya\CmsStarterKit\sdk\GigyaApiRequest;
@@ -293,7 +294,11 @@ class GigyaHelper implements GigyaHelperInterface {
       ->execute();
   }
 
-  public function processFieldMapping($gigya_data, Drupal\user\UserInterface $drupal_user) {
+	/**
+	 * @param $gigya_data
+	 * @param \Drupal\user\UserInterface $drupal_user
+	 */
+  public function processFieldMapping($gigya_data, UserInterface $drupal_user) {
     try {
       $field_map = \Drupal::config('gigya.global')->get('gigya.fieldMapping');
       try {
@@ -304,22 +309,29 @@ class GigyaHelper implements GigyaHelperInterface {
 	      Drupal::logger('gigya')->debug('Error altering field map data: @message',
 	                                     array('@message' => $e->getMessage()));
       }
+
       foreach ($field_map as $drupal_field => $raas_field) {
+      	/* Drupal fields to exclude even if configured in field mapping schema */
         if ($drupal_field == 'mail' or $drupal_field == 'name') {
           continue;
         }
-        $raas_field_parts = explode(".", $raas_field);
+
+        $raas_field_parts = explode('.', $raas_field);
         $val = $this->getNestedValue($gigya_data, $raas_field_parts);
+
         if ($val !== null) {
 	        $drupal_field_type = 'string';
-            try {
-                $drupal_field_type = $drupal_user->get($drupal_field)->getFieldDefinition()->getType();
+
+					try {
+						$drupal_field_type = $drupal_user->get($drupal_field)->getFieldDefinition()->getType();
 	        }
 	        catch (Exception $e)
 	        {
 		        Drupal::logger('gigya')->debug('Error getting field definition for field map: @message',
-		                                       array('@message' => $e->getMessage()));
-	        }
+							['@message' => $e->getMessage()]);
+					}
+
+	        /* Handles Boolean types */
           if ($drupal_field_type == 'boolean') {
             if (is_bool($val)) {
               $val = intval($val);
@@ -328,21 +340,24 @@ class GigyaHelper implements GigyaHelperInterface {
               \Drupal::logger('gigya')->error('Failed to map ' . $drupal_field . ' from Gigya - Drupal type is boolean but Gigya type isn\'t');
             }
           }
-          try {
-            $drupal_user->set($drupal_field, $val);
-          } catch (Exception $e) {
-	        Drupal::logger('gigya')->debug('Error inserting mapped field: @message',
-	                                         array('@message' => $e->getMessage()));
-          }
-        }
-      }
-    } catch (Exception $e) {
-      Drupal::logger('gigya')->debug('processFieldMapping error @message',
-        array('@message' => $e->getMessage()));
-    }
-  }
 
-  public function getGigyaUserFromArray($data) {
+          /* Perform the mapping from Gigya to Drupal */
+					try {
+						$drupal_user->set($drupal_field, $val);
+					} catch (\InvalidArgumentException $e) {
+						Drupal::logger('gigya')
+							->debug('Error inserting mapped field: @message',
+								['@message' => $e->getMessage()]);
+					}
+        }
+			}
+		} catch (Exception $e) {
+			Drupal::logger('gigya')->debug('processFieldMapping error @message',
+				['@message' => $e->getMessage()]);
+		}
+	}
+
+	public function getGigyaUserFromArray($data) {
     return GigyaUserFactory::createGigyaProfileFromArray($data);
   }
 

@@ -1,5 +1,6 @@
 <?php
 
+use Drupal\block\BlockInterface;
 use Drupal\block\Entity\Block;
 use Drupal\gigya\Helper\GigyaHelper;
 
@@ -46,13 +47,13 @@ function gigya_raas_page_attachments(array &$attachments) {
           'screenSet'       => $login_screenset ?: $default_login_screenset,
           'mobileScreenSet' => '',
           'startScreen'     => 'gigya-login-screen',
-          'sessionExpiration' => $expiration
+          'sessionExpiration' => $expiration,
         );
         $raas_register = array(
           'screenSet'       => $login_screenset ?: $default_login_screenset,
           'mobileScreenSet' => '',
           'startScreen'     => 'gigya-register-screen',
-          'sessionExpiration' => $expiration
+          'sessionExpiration' => $expiration,
         );
         \Drupal::moduleHandler()->alter('gigya_raas_settings', $raas_login, $raas_register);
         $attachments['#attached']['drupalSettings']['gigya']['raas']['login']    = $raas_login;
@@ -73,6 +74,7 @@ function gigya_raas_page_attachments(array &$attachments) {
 
       /* Load screen-set config into front-end for custom screen-set in UI blocks functionality */
       $custom_screensets = array();
+			/** @var BlockInterface[] $blocks; */
 			$blocks = Block::loadMultiple();
 			foreach ($blocks as $key => $block) {
 				$settings = $block->get('settings');

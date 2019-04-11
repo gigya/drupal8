@@ -110,6 +110,9 @@ class GigyaRaasCustomScreenset extends BlockBase implements BlockPluginInterface
 				'visible' => array(
 					':input[name="settings[display_type]"]' => array('value' => 'popup'),
 				),
+				'required' => array(
+					':input[name="settings[display_type]"]' => array('value' => 'popup'),
+				),
 			),
 		);
 

@@ -6,7 +6,7 @@ package: Gigya
 configure: gigya.admin.form
 
 # Information added by Drupal.org packaging script on 2017-05-14
-version: '8.x-2.6'
+version: '8.x-2.5.1'
 core: '8.x'
 project: 'gigya'
 datestamp: 1494803025

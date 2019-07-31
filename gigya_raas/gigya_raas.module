@@ -248,3 +248,17 @@ function gigya_raas_cron() {
 		}
 	}
 }
+
+/**
+ * Implement hook_mail()
+ *
+ * {@inheritdoc}
+ */
+function gigya_raas_mail($key, &$message, $params) {
+	$options = array(
+		'langcode' => $message['langcode'],
+	);
+
+	$message['subject'] = t($params['subject'], array(), $options);
+	$message['body'][] = $params['message'];
+}

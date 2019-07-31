@@ -107,8 +107,8 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
 	/**
-	 * @param      $method
-	 * @param null $params
+	 * @param string $method
+	 * @param GSObject $params
 	 * @param bool $access_params
 	 *
 	 * @return Exception|GSApiException|\Drupal\gigya\CmsStarterKit\sdk\GSResponse
@@ -126,21 +126,24 @@ class GigyaHelper implements GigyaHelperInterface {
 
       $params->put('environment', $this->getEnvString());
 
-      $request = new GigyaApiRequest($access_params['api_key'], $access_params['app_secret'], $method, $params, $access_params['data_center'], TRUE, $access_params['app_key']);
+			$request = new GigyaApiRequest($access_params['api_key'], $access_params['app_secret'], $method, $params, $access_params['data_center'], TRUE, $access_params['app_key']);
 
-      $result = $request->send();
-      if (Drupal::config('gigya.global')->get('gigya.gigyaDebugMode') == true) {
+			$result = $request->send();
+			if (Drupal::config('gigya.global')->get('gigya.gigyaDebugMode') == TRUE) {
+				/* On first module load, API & secret are empty, so no values in response */
+				Drupal::logger('gigya')
+					->debug('Response from gigya <br /><pre>callId: @callId, apicall: @method</pre>',
+						[
+							'@callId' => $result->getData()->getString('callId'),
+							'@method' => $method,
+						]);
+			}
 
-        // on first module load, api & secret are empty, so no values in response
-        Drupal::logger('gigya')->debug('Response from gigya <br /><pre>callId: @callId, apicall:@method</pre>',
-                                                array('@callId' => $result->getData()->getString('callId'), '@method' => $method));
-      }
-      return $result;
-    } catch (GSApiException $e) {
-      //Always write error to log.
+			return $result;
+		} catch (GSApiException $e) {
+      /* Always write error to log */
       Drupal::logger('gigya')->error('<pre>Gigya API error. Error code :' . $e->getErrorCode() . '</pre>');
       if ($e->getCallId()) {
-
         Drupal::logger('gigya')->error('Response from Gigya <br /><pre>Call ID: @callId, apicall:@method,
                                                  Error:@error</pre>', array('@callId' => $e->getCallId(),
                                                 '@method' => $method, '@error' => $e->getErrorCode()));
@@ -200,6 +203,16 @@ class GigyaHelper implements GigyaHelperInterface {
     return $res;
   }
 
+	/**
+	 * @param $type
+	 * @param $oid
+	 * @param $fields
+	 * @param $uid
+	 *
+	 * @return mixed
+	 * @throws \Drupal\gigya\CmsStarterKit\sdk\GSApiException
+	 * @throws \Drupal\gigya\CmsStarterKit\sdk\GSException
+	 */
   public function doSingleDsGet($type, $oid, $fields, $uid) {
     $dsQueryObj = $this->getGigyaDsQuery();
     $dsQueryObj->setOid($oid);
@@ -210,6 +223,17 @@ class GigyaHelper implements GigyaHelperInterface {
     return $res->serialize()['data'];
   }
 
+	/**
+	 * @param $type
+	 * @param $oid
+	 * @param $fields
+	 * @param $uid
+	 *
+	 * @return array
+	 * @throws \Drupal\gigya\CmsStarterKit\ds\DsQueryException
+	 * @throws \Drupal\gigya\CmsStarterKit\sdk\GSApiException
+	 * @throws \Drupal\gigya\CmsStarterKit\sdk\GSException
+	 */
   public function doSingleDsSearch($type, $oid, $fields, $uid) {
     $dsQueryObj = $this->getGigyaDsQuery();
     $dsQueryObj->setFields($fields);
@@ -295,12 +319,28 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
 	/**
-	 * @param $gigya_data
+	 * @return array|object|null
+	 */
+	public function getFieldMappingConfig() {
+		$config = json_decode(\Drupal::config('gigya_raas.fieldmapping')
+			->get('gigya.fieldmapping_config'));
+		if (empty($config)) {
+			$config = \Drupal::config('gigya.global')->get('gigya.fieldMapping');
+		}
+
+		return $config;
+	}
+
+	/**
+	 * This function enriches the Drupal user with Gigya data, but it does not permanently save the user data!
+	 *
+	 * @param GigyaUser $gigya_data
 	 * @param \Drupal\user\UserInterface $drupal_user
 	 */
   public function processFieldMapping($gigya_data, UserInterface $drupal_user) {
     try {
-      $field_map = \Drupal::config('gigya.global')->get('gigya.fieldMapping');
+			$field_map = $this->getFieldMappingConfig();
+
       try {
 	      \Drupal::moduleHandler()
 	        ->alter('gigya_raas_map_data', $gigya_data, $drupal_user, $field_map);
@@ -319,7 +359,7 @@ class GigyaHelper implements GigyaHelperInterface {
         $raas_field_parts = explode('.', $raas_field);
         $val = $this->getNestedValue($gigya_data, $raas_field_parts);
 
-        if ($val !== null) {
+				if ($val !== NULL) {
 	        $drupal_field_type = 'string';
 
 					try {
@@ -357,6 +397,55 @@ class GigyaHelper implements GigyaHelperInterface {
 		}
 	}
 
+	/**
+	 * Queries Gigya with the accounts.search call
+	 *
+	 * @param string|array $query The literal query to send to accounts.search,
+	 *   or a set of params to send instead (useful for cursors)
+	 * @param bool $use_cursor
+	 *
+	 * @return GigyaUser[]
+	 *
+	 * @throws \Drupal\gigya\CmsStarterKit\sdk\GSApiException
+	 * @throws \Drupal\gigya\CmsStarterKit\sdk\GSException
+	 */
+	public function searchGigyaUsers($query, $use_cursor = FALSE) {
+		$gigya_users = [];
+
+		if (is_array($query)) { /* Query is actually a set of params. Useful for setting cursor ID instead of query */
+			$params = $query;
+		}
+		else {
+			$params = ['query' => $query];
+			if ($use_cursor) {
+				$params['openCursor'] = TRUE;
+			}
+		}
+
+		$gigya_data = $this->getGigyaApiHelper()
+			->sendApiCall('accounts.search', $params)
+			->getData()
+			->serialize();
+
+		foreach ($gigya_data['results'] as $user_data) {
+			if (isset($user_data['profile'])) {
+				$profile_array = $user_data['profile'];
+				$gigya_user = GigyaUserFactory::createGigyaUserFromArray($user_data);
+				$gigya_profile = GigyaUserFactory::createGigyaProfileFromArray($profile_array);
+				$gigya_user->setProfile($gigya_profile);
+
+				$gigya_users[] = $gigya_user;
+			}
+		}
+
+		if (!empty($gigya_data['nextCursorId'])) {
+			$cursorId = $gigya_data['nextCursorId'];
+			return array_merge($gigya_users, $this->searchGigyaUsers(['cursorId' => $cursorId]));
+		}
+
+		return $gigya_users;
+	}
+
 	public function getGigyaUserFromArray($data) {
     return GigyaUserFactory::createGigyaProfileFromArray($data);
   }
@@ -385,6 +474,59 @@ class GigyaHelper implements GigyaHelperInterface {
     $info = system_get_info('module', 'gigya');
     return '{"cms_name":"Drupal","cms_version":"Drupal_' . \Drupal::VERSION . '","gigya_version":"Gigya_module_' .$info['version'] . '"}';
   }
+
+	public function sendCronEmail($job_type, $job_status, $to, $processed_items = NULL, $failed_items = NULL, $custom_email_body = '') {
+		$email_body = $custom_email_body;
+		if ($job_status == 'succeeded' or $job_status == 'completed with errors') {
+			$email_body = 'Job ' . $job_status . ' on ' . gmdate("F n, Y H:i:s") . ' (UTC).';
+			if ($processed_items !== NULL) {
+				$email_body .= ' ' . $processed_items . ' ' . (($processed_items > 1) ? 'items' : 'item') . ' successfully processed, ' . $failed_items . ' failed.';
+			}
+		}
+		elseif ($job_status == 'failed') {
+			$email_body = 'Job failed. No items were processed. Please consult the Drupal log (Administration > Reports > Recent log messages) for more info.';
+		}
+
+		return $this->sendEmail('Gigya cron job of type ' . $job_type . ' ' . $job_status . ' on website ' . \Drupal::request()
+				->getHost(),
+			$email_body,
+			$to);
+	}
+
+	public function sendEmail($subject, $body, $to) {
+		$mail_manager = \Drupal::service('plugin.manager.mail');
+		$module = 'gigya_raas';
+		$params['from'] = 'Gigya IdentitySync';
+		$params['subject'] = $subject;
+		$params['message'] = $body;
+		$key = 'job_email';
+
+		try /* For testability */ {
+			$langcode = \Drupal::currentUser()->getPreferredLangcode();
+		} catch (\Exception $e) {
+			$langcode = 'en';
+		}
+		if (!isset($langcode)) {
+			$langcode = 'en';
+		}
+
+		try {
+			foreach (explode(',', $to) as $email) {
+				$result = $mail_manager->mail($module, $key, trim($email), $langcode, $params, NULL, $send = TRUE);
+				if (!$result) {
+					\Drupal::logger('gigya_raas')
+						->error('Failed to send email to ' . $email);
+				}
+			}
+		} catch (\Exception $e) {
+			\Drupal::logger('gigya_raas')
+				->error('Failed to send emails - ' . $e->getMessage());
+
+			return FALSE;
+		}
+
+		return TRUE;
+	}
 
 	/**
 	 * Gets real full path of the key even if only relative path is provided

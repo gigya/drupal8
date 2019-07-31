@@ -190,8 +190,6 @@
 		/**
 		 * Get S3 Region
 		 *
-		 * @param null | GigyaHelper $helper Dependency injection for testability
-		 *
 		 * @return string | false
 		 */
 		public function getRegion() {

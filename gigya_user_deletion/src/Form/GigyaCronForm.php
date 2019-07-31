@@ -60,12 +60,13 @@
 			}
 
 			/* Show error on missing dependencies */
+			$messenger = \Drupal::messenger();
 			if (!$this->helper->checkEncryptKey())
-				drupal_set_message($this->t('Cannot read encrypt key'), 'error');
+				$messenger->addMessage($this->t('Cannot read encrypt key'), 'error');
 			if (!class_exists('Aws\\S3\\S3Client'))
-				drupal_set_message($this->t('This module requires Amazon\'s PHP SDK'), 'error');
+				$messenger->addMessage($this->t('This module requires Amazon\'s PHP SDK'), 'error');
 			if (!class_exists('Gigya\\CmsStarterKit\\GigyaApiHelper'))
-				drupal_set_message($this->t('This module requires Gigya\'s PHP CMS Kit'), 'error');
+				$messenger->addMessage($this->t('This module requires Gigya\'s PHP CMS Kit'), 'error');
 
 			$form = parent::buildForm($form, $form_state);
 			$config = $this->config('gigya_user_deletion.job');
@@ -206,6 +207,8 @@
 
 			if ($_enableJob)
 			{
+				$messenger = \Drupal::messenger();
+
 				if (!class_exists('Gigya\\CmsStarterKit\\GigyaApiHelper'))
 				{
 					$msg = 'This module requires the PHP CMS Kit package. Please install it before enabling this module.';
@@ -217,7 +220,7 @@
 
 				$helper = new GigyaHelper();
 				if (!$helper->checkEncryptKey())
-					drupal_set_message($this->t('Cannot read encrypt key'), 'error');
+					$messenger->addMessage($this->t('Cannot read encrypt key'), 'error');
 
 				foreach ($jobRequiredFields as $field)
 				{
@@ -271,7 +274,7 @@
 				{
 					$msg = 'This module requires the Amazon SDK for PHP. Please install the SDK before enabling the module.';
 					\Drupal::logger('gigya_user_deletion')->error($msg);
-					drupal_set_message($this->t($msg), 'error');
+					$messenger->addMessage($this->t($msg), 'error');
 				}
 			}
 		}

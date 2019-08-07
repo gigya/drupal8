@@ -125,13 +125,19 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 		if ($enable_job) {
 			$email_on_success = $form_state->getValue('email_on_success');
 			$email_on_failure = $form_state->getValue('email_on_failure');
-			if ($email_on_success !== '' and !\Drupal::service('email.validator')
-					->isValid($email_on_success)) {
-				$form_state->setErrorByName('fieldmapping', $this->t('Invalid email address provided in email on success'));
+
+			foreach (explode(',', $email_on_success) as $email) {
+				if ($email !== '' and !\Drupal::service('email.validator')
+						->isValid(trim($email))) {
+					$form_state->setErrorByName('fieldmapping', $this->t('Invalid email address provided in email on success'));
+				}
 			}
-			if ($email_on_failure !== '' and !\Drupal::service('email.validator')
-					->isValid($email_on_failure)) {
-				$form_state->setErrorByName('fieldmapping', $this->t('Invalid email address provided in email on failure'));
+
+			foreach (explode(',', $email_on_failure) as $email) {
+				if ($email !== '' and !\Drupal::service('email.validator')
+						->isValid(trim($email))) {
+					$form_state->setErrorByName('fieldmapping', $this->t('Invalid email address provided in email on failure'));
+				}
 			}
 		}
 	}

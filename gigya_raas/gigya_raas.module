@@ -5,10 +5,7 @@ use Drupal\block\Entity\Block;
 use Drupal\gigya\CmsStarterKit\sdk\GSApiException;
 use Drupal\gigya\Helper\GigyaHelper;
 
-//\Drupal::configFactory()->getEditable('gigya_raas')->set('offline_sync_update_delay', 60000)->save(); ////
-//\Drupal::configFactory()->getEditable('gigya_raas')->set('offline_sync_max_users', 1000)->save();
-
-const UPDATE_DELAY = 60000;
+const UPDATE_DELAY = 10000;
 const MAX_USERS = 1000;
 
 /**
@@ -196,6 +193,7 @@ function gigya_raas_cron() {
 			$gigya_users = $helper->searchGigyaUsers($gigya_query);
 			$processed_users = 0;
 			$users_not_found = 0;
+			$uids_not_found = [];
 
 			foreach ($gigya_users as $gigya_user) {
 				$gigya_uid = $gigya_user->getUID();
@@ -219,6 +217,7 @@ function gigya_raas_cron() {
 						$processed_users++;
 					} else {
 						$users_not_found++;
+						$uids_not_found[] = $gigya_user->getUID();
 					}
 				}
 				else {
@@ -232,7 +231,11 @@ function gigya_raas_cron() {
 				->set('last_run', round(microtime(TRUE) * 1000))
 				->save();
 			\Drupal::logger('gigya_raas')
-				->info('Gigya offline sync completed. Users processed: ' . $processed_users . (($users_not_found) ? '. Users not found: ' . $users_not_found : ''));
+				->info('Gigya offline sync completed. Users processed: ' . $processed_users .
+					(($users_not_found)
+						? '. Users not found: ' . $users_not_found . PHP_EOL . implode(',' . PHP_EOL, $uids_not_found)
+						: '')
+				);
 			$status = ($users_not_found > 0) ? 'completed with errors' : 'succeeded';
 			$helper->sendCronEmail('offline sync', $status, $email_on_success, $processed_users, $users_not_found);
 		} catch (GSApiException $e) {

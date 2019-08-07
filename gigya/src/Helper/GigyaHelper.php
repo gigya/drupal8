@@ -480,7 +480,7 @@ class GigyaHelper implements GigyaHelperInterface {
 		if ($job_status == 'succeeded' or $job_status == 'completed with errors') {
 			$email_body = 'Job ' . $job_status . ' on ' . gmdate("F n, Y H:i:s") . ' (UTC).';
 			if ($processed_items !== NULL) {
-				$email_body .= ' ' . $processed_items . ' ' . (($processed_items > 1) ? 'items' : 'item') . ' successfully processed, ' . $failed_items . ' failed.';
+				$email_body .= PHP_EOL . $processed_items . ' ' . (($processed_items > 1) ? 'items' : 'item') . ' successfully processed, ' . $failed_items . ' failed.';
 			}
 		}
 		elseif ($job_status == 'failed') {

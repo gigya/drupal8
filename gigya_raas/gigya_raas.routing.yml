@@ -6,6 +6,14 @@ gigya.raas.screensets.form:
   requirements:
     _permission: 'gigya major admin'
 
+gigya.raas.fieldmapping.form:
+  path: '/admin/config/gigya/fieldmapping'
+  defaults:
+    _form: 'Drupal\gigya_raas\Form\GigyaFieldmappingForm'
+    _title: 'Gigya field mapping settings'
+  requirements:
+    _permission: 'gigya major admin'
+
 gigya.raas.login:
   path: 'gigya/raas-login'
   defaults:

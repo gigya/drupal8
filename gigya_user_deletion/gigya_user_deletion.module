@@ -193,35 +193,33 @@
 				}
 			}
 
-			if (($queue_users->numberOfItems() == 0) && ($queue_file->numberOfItems() == 0))
-			{
+			if (($queue_users->numberOfItems() == 0) && ($queue_file->numberOfItems() == 0)) {
 				/* If full or partial success */
-				if ($counter_succeed > 0)
-				{
+				if ($counter_succeed > 0) {
 					$total = $counter_failed + $counter_succeed;
 
 					/* If completed with errors */
-					if ($counter_failed > 0)
-					{
+					if ($counter_failed > 0) {
 						$subject = 'User deletion job completed with errors';
 						$message = 'The user deletion job scheduled to run for ' . $_SERVER['SERVER_NAME'] . ' on ' . date('F j, Y \a\t H:i:s', $last_run) . ' completed with errors. ' . $counter_succeed . ' out of ' . $total . ' users were deleted.';
 					}
 					/* Send email on success */
-					else
-					{
+					else {
 						$subject = "Users deleted successfully";
 						$message = "The user deletion job scheduled to run for " . $_SERVER['SERVER_NAME'] . ' on ' . date('F j, Y \a\t H:i:s', $last_run) . ' completed successfully. ' . $counter_succeed . ' out of ' . $total . ' users were deleted.';
 					}
-					$to = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.emailOnSuccess');
+
+					$to = \Drupal::config('gigya_user_deletion.job')
+						->get('gigya_user_deletion.emailOnSuccess');
 					$userDeletionHelper->sendEmail($subject, $message, $to);
 				}
 
 				/* If job failed, send email */
-				elseif ($counter_failed > 0)
-				{
+				elseif ($counter_failed > 0) {
 					$subject = "Failed to delete users";
 					$message = "The user deletion job scheduled to run for " . $_SERVER['SERVER_NAME'] . ' on ' . date('F j, Y \a\t H:i:s', $last_run) . ' has failed. No users were deleted.';
-					$to = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.emailOnFailure');
+					$to = \Drupal::config('gigya_user_deletion.job')
+						->get('gigya_user_deletion.emailOnFailure');
 					$userDeletionHelper->sendEmail($subject, $message, $to);
 				}
 

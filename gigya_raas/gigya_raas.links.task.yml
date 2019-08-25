@@ -6,3 +6,7 @@ gigya.raas.screensets.form:
   title: 'Screen-Sets'
   route_name: gigya.raas.screensets.form
   base_route: gigya.admin.form
+gigya.raas.fieldmapping.form:
+  title: 'Field Mapping'
+  route_name: gigya.raas.fieldmapping.form
+  base_route: gigya.admin.form

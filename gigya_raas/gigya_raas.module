@@ -2,7 +2,11 @@
 
 use Drupal\block\BlockInterface;
 use Drupal\block\Entity\Block;
+use Drupal\gigya\CmsStarterKit\sdk\GSApiException;
 use Drupal\gigya\Helper\GigyaHelper;
+
+const UPDATE_DELAY = 10000;
+const MAX_USERS = 1000;
 
 /**
  * Implements hook_page_attachments().
@@ -108,6 +112,13 @@ function gigya_raas_page_attachments(array &$attachments) {
 
 /**
  * Implements hook_theme().
+ *
+ * @param $existing
+ * @param $type
+ * @param $theme
+ * @param $path
+ *
+ * @return array
  */
 function gigya_raas_theme($existing, $type, $theme, $path) {
   return array(
@@ -131,6 +142,8 @@ function gigya_raas_theme($existing, $type, $theme, $path) {
 
 /**
  * Implements hook_user_login().
+ *
+ * @param $account
  */
 function gigya_raas_user_login($account) {
   if (\Drupal::config('gigya.global')->get('gigya.enableRaaS') == TRUE) {
@@ -145,7 +158,110 @@ function gigya_raas_user_login($account) {
   }
 }
 
+/**
+ * Implements hook_user_logout().
+ *
+ * @param $account
+ */
 function gigya_raas_user_logout($account) {
   $helper = new GigyaHelper();
   $helper->saveUserLogoutCookie();
+}
+
+/**
+ * Implements hook_cron().
+ */
+function gigya_raas_cron() {
+	/* Retrieve config variables */
+	$config = \Drupal::config('gigya_raas.fieldmapping');
+	$enable_job = $config->get('gigya.offline_sync.enable_job');
+	$email_on_success = $config->get('gigya.offline_sync.email_on_success');
+	$email_on_failure = $config->get('gigya.offline_sync.email_on_failure');
+
+	if ($enable_job) {
+		\Drupal::logger('gigya_raas')->info('Gigya offline sync started');
+
+		$helper = new GigyaHelper();
+		try {
+			$gigya_query = "SELECT * FROM accounts";
+			$last_customer_update = \Drupal::config('gigya_raas.offline_sync')
+				->get('last_customer_update');
+			if ($last_customer_update) {
+				$gigya_query .= ' WHERE lastUpdatedTimestamp > ' . $last_customer_update;
+			}
+			$gigya_query .= " ORDER BY lastUpdatedTimestamp ASC LIMIT " . MAX_USERS;
+			$gigya_users = $helper->searchGigyaUsers($gigya_query);
+			$processed_users = 0;
+			$users_not_found = 0;
+			$uids_not_found = [];
+
+			foreach ($gigya_users as $gigya_user) {
+				$gigya_uid = $gigya_user->getUID();
+				$gigya_last_updated_timestamp = $gigya_user->getLastUpdatedTimestamp();
+
+				if (!empty($gigya_uid) and !empty($gigya_last_updated_timestamp)) {
+					$user = $helper->getUidByUUID($gigya_user->getUID());
+					if (!empty($user)) {
+						$helper->processFieldMapping($gigya_user, $user);
+						$user->save();
+
+						$last_customer_update = $gigya_last_updated_timestamp;
+						if ($last_customer_update) {
+							$last_customer_update -= UPDATE_DELAY;
+							\Drupal::configFactory()
+								->getEditable('gigya_raas.offline_sync')
+								->set('last_customer_update', $last_customer_update)
+								->save();
+						}
+
+						$processed_users++;
+					} else {
+						$users_not_found++;
+						$uids_not_found[] = $gigya_user->getUID();
+					}
+				}
+				else {
+					\Drupal::logger('gigya_raas')
+						->warning('Gigya offline sync: unable to process user due to a lack of essential data. User data received: ' . json_encode($gigya_user, JSON_PRETTY_PRINT));
+				}
+			}
+
+			\Drupal::configFactory()
+				->getEditable('gigya_raas.offline_sync')
+				->set('last_run', round(microtime(TRUE) * 1000))
+				->save();
+			\Drupal::logger('gigya_raas')
+				->info('Gigya offline sync completed. Users processed: ' . $processed_users .
+					(($users_not_found)
+						? '. Users not found: ' . $users_not_found . PHP_EOL . implode(',' . PHP_EOL, $uids_not_found)
+						: '')
+				);
+			$status = ($users_not_found > 0) ? 'completed with errors' : 'succeeded';
+			$helper->sendCronEmail('offline sync', $status, $email_on_success, $processed_users, $users_not_found);
+		} catch (GSApiException $e) {
+			\Drupal::logger('gigya_raas')
+				->error('Offline sync failed: ' . $e->getErrorCode() . ' – ' . $e->getMessage() . '. Call ID: ' . $e->getCallId());
+			$status = 'failed';
+			$helper->sendCronEmail('offline sync', $status, $email_on_failure);
+		} catch (Exception $e) {
+			\Drupal::logger('gigya_raas')
+				->error('Offline sync failed: ' . $e->getMessage());
+			$status = 'failed';
+			$helper->sendCronEmail('offline sync', $status, $email_on_failure);
+		}
+	}
+}
+
+/**
+ * Implement hook_mail()
+ *
+ * {@inheritdoc}
+ */
+function gigya_raas_mail($key, &$message, $params) {
+	$options = array(
+		'langcode' => $message['langcode'],
+	);
+
+	$message['subject'] = t($params['subject'], array(), $options);
+	$message['body'][] = $params['message'];
 }

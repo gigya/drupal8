@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\gigya_raas\Form\GigyaKeysForm.
+ * Contains \Drupal\gigya_raas\Form\GigyaScreenSetsForm.
  */
 
 namespace Drupal\gigya_raas\Form;
@@ -234,18 +234,20 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 		$custom_screensets = $form_state->getValue('screensets');
 
 		/* Verifies that no two screen-sets have the same desktop screen-set */
-		$desktop_screens = array();
+		$desktop_screens = [];
 		foreach ($custom_screensets as $key => $custom_screenset) {
 			$desktop_screens[] = $custom_screenset['desktop'];
 		}
-		if (count(array_unique($desktop_screens)) !== count($desktop_screens))
+		if (count(array_unique($desktop_screens)) !== count($desktop_screens)) {
 			$form_state->setErrorByName('custom-screenset-table', $this->t('Two screen-sets cannot have the same desktop screen-set identifier'));
+		}
 
 		/* Verifies that for each custom screen-set added, either the whole row is empty (then it is ignored), or the desktop screen-set field is set */
 		if (empty($form_state->getUserInput()['_triggering_element_name'])) { /* This line is necessary so that validation is only done on save, not add/remove rows where it is irrelevant */
 			foreach ($custom_screensets as $key => $custom_screenset) {
-				if (empty($custom_screenset['desktop']) and !empty($custom_screenset['mobile']))
+				if (empty($custom_screenset['desktop']) and !empty($custom_screenset['mobile'])) {
 					$form_state->setErrorByName('screensets][' . $key . '][desktop', $this->t('The desktop screen-set is required for each screen-set row'));
+				}
 			}
 		}
 	}
@@ -260,8 +262,9 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 		$custom_screensets = $form_state->getValue('screensets');
 		foreach ($custom_screensets as $key => $custom_screenset) {
 			unset($custom_screensets[$key]['remove']);
-			if (empty($custom_screenset['desktop']))
+			if (empty($custom_screenset['desktop'])) {
 				unset($custom_screensets[$key]);
+			}
 		}
 
 		$config->set('gigya.login_screenset', $form_state->getValue('gigya_login_screenset_desktop'));

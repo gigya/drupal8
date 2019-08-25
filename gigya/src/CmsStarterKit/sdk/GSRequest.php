@@ -162,15 +162,15 @@ class GSRequest {
   public function send($timeout = NULL) {
     $format = $this->params->getString("format", NULL);
 
-    if (!strrpos($this->method, ".")) {
-      $this->host = "socialize." . $this->apiDomain;
-      $this->path = "/socialize." . $this->method;
-    }
-    else {
-      $tokens = explode(".", $this->method);
-      $this->host = $tokens[0] . "." . $this->apiDomain;
-      $this->path = "/" . $this->method;
-    }
+		if (!strrpos($this->method, ".")) {
+			$this->host = "socialize." . $this->apiDomain;
+			$this->path = "/socialize." . $this->method;
+		}
+		else {
+			$tokens = explode(".", $this->method);
+			$this->host = $tokens[0] . "." . $this->apiDomain;
+			$this->path = "/" . $this->method;
+		}
 
     //set json as default format.
     if (empty($format)) {
@@ -189,29 +189,29 @@ class GSRequest {
       return new GSResponse($this->method, NULL, $this->params, 400003, NULL, $this->traceLog);
     }
 
-    try {
-      $this->setParam("httpStatusCodes", "false");
+		try {
+			$this->setParam("httpStatusCodes", "false");
 
-      $this->traceField("userKey", $this->userKey);
-      $this->traceField("apiKey", $this->apiKey);
-      $this->traceField("apiMethod", $this->method);
-      $this->traceField("params", $this->params);
-      $this->traceField("useHTTPS", $this->useHTTPS);
+			$this->traceField("userKey", $this->userKey);
+			$this->traceField("apiKey", $this->apiKey);
+			$this->traceField("apiMethod", $this->method);
+			$this->traceField("params", $this->params);
+			$this->traceField("useHTTPS", $this->useHTTPS);
 
-      $responseStr = $this->sendRequest("POST", $this->host, $this->path, $this->params, $this->apiKey, $this->secretKey, $this->useHTTPS, $timeout, $this->userKey);
+			$responseStr = $this->sendRequest("POST", $this->host, $this->path, $this->params, $this->apiKey, $this->secretKey, $this->useHTTPS, $timeout, $this->userKey);
 
-      return new GSResponse($this->method, $responseStr, NULL, 0, NULL, $this->traceLog);
-    } catch (Exception $ex) {
-      $errcode = 500000;
-      $errMsg = $ex->getMessage();
-      $length = strlen("Operation timed out");
-      if ((substr($ex->getMessage(), 0, $length) === "Operation timed out")) {
-        $errcode = 504002;
-        $errMsg = "Request Timeout";
-      }
+			return new GSResponse($this->method, $responseStr, NULL, 0, NULL, $this->traceLog);
+		} catch (Exception $ex) {
+			$errcode = 500000;
+			$errMsg = $ex->getMessage();
+			$length = strlen("Operation timed out");
+			if ((substr($ex->getMessage(), 0, $length) === "Operation timed out")) {
+				$errcode = 504002;
+				$errMsg = "Request Timeout";
+			}
 
-      return new GSResponse($this->method, NULL, $this->params, $errcode, $errMsg, $this->traceLog);
-    }
+			return new GSResponse($this->method, NULL, $this->params, $errcode, $errMsg, $this->traceLog);
+		}
   }
 
   /**

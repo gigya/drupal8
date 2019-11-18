@@ -120,7 +120,14 @@
 		}
 
 		/**
-		 * Parse file content to array of Gigya UIDs
+		 * Parse file content to array of Gigya UIDs. The final format is:
+		 * array ( 0 => array (
+		 * 											'UID' => '[GIGYA_UID]'
+		 * 										),
+		 * 					1 => array (
+		 * 											'UID' => '85[GIGYA_UID]'
+		 * 											)
+		 * 				)
 		 *
 		 * @param    $fileName
 		 *
@@ -128,14 +135,20 @@
 		 */
 		public function getUsers($fileName) {
 			$file = $this->loadFileFromServer($fileName);
+			$users = [];
+
 			if ($file !== null)
 			{
-				$array = array_map('str_getcsv', explode("\n", $file));
-				array_walk($array, function(&$a) use ($array) {
-					$a = array_combine($array[0], $a);
-				});
-				array_shift($array); /* Remove column header */
-				return $array;
+				$raw_users = array_map('str_getcsv', explode("\n", $file));
+				$col_header = array_shift($raw_users); /* Retrieve and remove column header (e.g. UID) */
+
+				foreach ($raw_users as $user) {
+					if ($user and !empty(array_filter(array_values($user)))) { /* Checks that the user record is not empty--sometimes something like ['gigya_uid' => NULL] is passed */
+						$users[] = array_combine($col_header, $user);
+					}
+				}
+
+				return $users;
 			}
 			return null;
 		}

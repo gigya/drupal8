@@ -511,7 +511,7 @@ class GigyaHelper implements GigyaHelperInterface {
 		}
 
 		try {
-			foreach (explode(',', $to) as $email) {
+			foreach (array_filter(explode(',', $to)) as $email) {
 				$result = $mail_manager->mail($module, $key, trim($email), $langcode, $params, NULL, $send = TRUE);
 				if (!$result) {
 					\Drupal::logger('gigya_raas')

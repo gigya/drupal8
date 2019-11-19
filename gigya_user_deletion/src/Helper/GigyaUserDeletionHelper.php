@@ -163,36 +163,43 @@
 		 * @return bool
 		 */
 		public function sendEmail($subject, $body, $to) {
-			$mailManager = \Drupal::service('plugin.manager.mail');
-			$module = 'gigya_user_deletion';
-			$params['from'] = 'Gigya IdentitySync';
-			$params['subject'] = $subject;
-			$params['message'] = $body;
-			$key = 'job_email';
+			if (!empty($to)) {
+				$mailManager = \Drupal::service('plugin.manager.mail');
+				$module = 'gigya_user_deletion';
+				$params['from'] = 'Gigya IdentitySync';
+				$params['subject'] = $subject;
+				$params['message'] = $body;
+				$key = 'job_email';
 
-			try /* For testability */ {
-				$langcode = \Drupal::currentUser()->getPreferredLangcode();
-			} catch (\Exception $e) {
-				$langcode = 'en';
-			}
-			if (!isset($langcode)) {
-				$langcode = 'en';
-			}
-
-			try {
-				foreach (explode(',', $to) as $email) {
-					$result = $mailManager->mail($module, $key, trim($email), $langcode, $params, NULL, $send = TRUE);
-					if (!$result) {
-						\Drupal::logger('gigya_user_deletion')
-							->error('Failed to send email to ' . $email);
-					}
+				try /* For testability */ {
+					$langcode = \Drupal::currentUser()->getPreferredLangcode();
+				} catch (\Exception $e) {
+					$langcode = 'en';
 				}
-			} catch (\Exception $e) {
+				if (!isset($langcode)) {
+					$langcode = 'en';
+				}
+
+				try {
+					foreach (explode(',', $to) as $email) {
+						$result = $mailManager->mail($module, $key, trim($email), $langcode, $params, NULL, $send = TRUE);
+						if (!$result) {
+							\Drupal::logger('gigya_user_deletion')
+								->error('Failed to send email to ' . $email);
+						}
+					}
+				} catch (\Exception $e) {
+					\Drupal::logger('gigya_user_deletion')
+						->error('Failed to send emails - ' . $e->getMessage());
+					return FALSE;
+				}
+				return TRUE;
+			}
+			else {
 				\Drupal::logger('gigya_user_deletion')
-					->error('Failed to send emails - ' . $e->getMessage());
+					->warning('Unable to send email with subject: ' . $subject . '. No destination address specified.');
 				return FALSE;
 			}
-			return TRUE;
 		}
 
 		/**

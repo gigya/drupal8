@@ -200,13 +200,13 @@
 					if ($counter_failed > 0) {
 						$subject = 'User deletion job completed with errors';
 						$message = 'The user deletion job scheduled to run for ' . $_SERVER['SERVER_NAME'] . ' on ' . date('F j, Y \a\t H:i:s', $last_run) . ' completed with errors. ' . $counter_succeeded . ' out of ' . $total . ' users were deleted.';
-						\Drupal::logger('gigya_user_deletion')->info($message);
+						\Drupal::logger('gigya_user_deletion')->warning($message);
 					}
 					/* Send email on success */
 					else {
 						$subject = 'Users deleted successfully';
 						$message = 'The user deletion job scheduled to run for ' . $_SERVER['SERVER_NAME'] . ' on ' . date('F j, Y \a\t H:i:s', $last_run) . ' completed successfully. ' . $counter_succeeded . ' out of ' . $total . ' users were deleted.';
-						\Drupal::logger('gigya_user_deletion')->warning($message);
+						\Drupal::logger('gigya_user_deletion')->info($message);
 					}
 
 					$to = \Drupal::config('gigya_user_deletion.job')
@@ -222,9 +222,7 @@
 
 					$to = \Drupal::config('gigya_user_deletion.job')
 						->get('gigya_user_deletion.emailOnFailure');
-					if (!empty($to)) {
-						$userDeletionHelper->sendEmail($subject, $message, $to);
-					}
+					$userDeletionHelper->sendEmail($subject, $message, $to);
 				}
 
 				/* Reset counters on DB */

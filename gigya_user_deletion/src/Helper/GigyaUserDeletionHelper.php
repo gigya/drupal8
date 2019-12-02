@@ -120,7 +120,14 @@
 		}
 
 		/**
-		 * Parse file content to array of Gigya UIDs
+		 * Parse file content to array of Gigya UIDs. The final format is:
+		 * array ( 0 => array (
+		 * 											'UID' => '[GIGYA_UID]'
+		 * 										),
+		 * 					1 => array (
+		 * 											'UID' => '85[GIGYA_UID]'
+		 * 											)
+		 * 				)
 		 *
 		 * @param    $fileName
 		 *
@@ -128,14 +135,20 @@
 		 */
 		public function getUsers($fileName) {
 			$file = $this->loadFileFromServer($fileName);
+			$users = [];
+
 			if ($file !== null)
 			{
-				$array = array_map('str_getcsv', explode("\n", $file));
-				array_walk($array, function(&$a) use ($array) {
-					$a = array_combine($array[0], $a);
-				});
-				array_shift($array); /* Remove column header */
-				return $array;
+				$raw_users = array_map('str_getcsv', explode("\n", $file));
+				$col_header = array_shift($raw_users); /* Retrieve and remove column header (e.g. UID) */
+
+				foreach ($raw_users as $user) {
+					if ($user and !empty(array_filter(array_values($user)))) { /* Checks that the user record is not empty--sometimes something like ['gigya_uid' => NULL] is passed */
+						$users[] = array_combine($col_header, $user);
+					}
+				}
+
+				return $users;
 			}
 			return null;
 		}
@@ -150,36 +163,43 @@
 		 * @return bool
 		 */
 		public function sendEmail($subject, $body, $to) {
-			$mailManager = \Drupal::service('plugin.manager.mail');
-			$module = 'gigya_user_deletion';
-			$params['from'] = 'Gigya IdentitySync';
-			$params['subject'] = $subject;
-			$params['message'] = $body;
-			$key = 'job_email';
+			if (!empty($to)) {
+				$mailManager = \Drupal::service('plugin.manager.mail');
+				$module = 'gigya_user_deletion';
+				$params['from'] = 'Gigya IdentitySync';
+				$params['subject'] = $subject;
+				$params['message'] = $body;
+				$key = 'job_email';
 
-			try /* For testability */ {
-				$langcode = \Drupal::currentUser()->getPreferredLangcode();
-			} catch (\Exception $e) {
-				$langcode = 'en';
-			}
-			if (!isset($langcode)) {
-				$langcode = 'en';
-			}
-
-			try {
-				foreach (explode(',', $to) as $email) {
-					$result = $mailManager->mail($module, $key, trim($email), $langcode, $params, NULL, $send = TRUE);
-					if (!$result) {
-						\Drupal::logger('gigya_user_deletion')
-							->error('Failed to send email to ' . $email);
-					}
+				try /* For testability */ {
+					$langcode = \Drupal::currentUser()->getPreferredLangcode();
+				} catch (\Exception $e) {
+					$langcode = 'en';
 				}
-			} catch (\Exception $e) {
+				if (!isset($langcode)) {
+					$langcode = 'en';
+				}
+
+				try {
+					foreach (explode(',', $to) as $email) {
+						$result = $mailManager->mail($module, $key, trim($email), $langcode, $params, NULL, $send = TRUE);
+						if (!$result) {
+							\Drupal::logger('gigya_user_deletion')
+								->error('Failed to send email to ' . $email);
+						}
+					}
+				} catch (\Exception $e) {
+					\Drupal::logger('gigya_user_deletion')
+						->error('Failed to send emails - ' . $e->getMessage());
+					return FALSE;
+				}
+				return TRUE;
+			}
+			else {
 				\Drupal::logger('gigya_user_deletion')
-					->error('Failed to send emails - ' . $e->getMessage());
+					->warning('Unable to send email with subject: ' . $subject . '. No destination address specified.');
 				return FALSE;
 			}
-			return TRUE;
 		}
 
 		/**

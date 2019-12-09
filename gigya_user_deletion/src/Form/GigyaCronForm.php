@@ -65,8 +65,6 @@
 				$messenger->addMessage($this->t('Cannot read encrypt key'), 'error');
 			if (!class_exists('Aws\\S3\\S3Client'))
 				$messenger->addMessage($this->t('This module requires Amazon\'s PHP SDK'), 'error');
-			if (!class_exists('Gigya\\CmsStarterKit\\GigyaApiHelper'))
-				$messenger->addMessage($this->t('This module requires Gigya\'s PHP CMS Kit'), 'error');
 
 			$form = parent::buildForm($form, $form_state);
 			$config = $this->config('gigya_user_deletion.job');
@@ -208,15 +206,6 @@
 			if ($_enableJob)
 			{
 				$messenger = \Drupal::messenger();
-
-				if (!class_exists('Gigya\\CmsStarterKit\\GigyaApiHelper'))
-				{
-					$msg = 'This module requires the PHP CMS Kit package. Please install it before enabling this module.';
-					\Drupal::logger('gigya_user_deletion')->error($msg);
-					$form_state->setErrorByName('storageDetails.secretKey', $this->t($msg));
-
-					return;
-				}
 
 				$helper = new GigyaHelper();
 				if (!$helper->checkEncryptKey())

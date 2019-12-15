@@ -82,6 +82,7 @@
             url: drupalSettings.path.baseUrl + 'gigya/raas-login',
             submit: data
         };
+
         var myAjaxObject = Drupal.ajax(ajaxSettings);
         myAjaxObject.execute();
     };
@@ -93,10 +94,12 @@
                 UIDSignature: data.response.UIDSignature,
                 signatureTimestamp: data.response.signatureTimestamp
             };
+
             var ajaxSettings = {
                 url: drupalSettings.path.baseUrl + 'gigya/raas-profile-update',
 				submit: {gigyaData: gigyaData}
             };
+
             var myAjaxObject = Drupal.ajax(ajaxSettings);
             myAjaxObject.execute();
         }
@@ -125,6 +128,25 @@
 		myAjaxObject.execute();
     };
 
+	var registerGigyaEventMap = function() {
+		gigya.events.addMap({
+			defaultMethod: function (rememberMe) {
+				var data = {
+					"remember_me_status": rememberMe
+				};
+
+				var ajaxSettings = {
+					url: drupalSettings.path.baseUrl + 'gigya/raas-validatesession',
+					submit: data
+				};
+
+				var rememberMeAjaxObject = Drupal.ajax(ajaxSettings);
+				rememberMeAjaxObject.execute();
+			},
+			eventMap: [{events: 'submit', args: ['${formModel.profile.remember}']}]
+		});
+	};
+
 	/**
 	 * @property gigya.accounts.showScreenSet
 	 * @property drupalSettings.gigya.enableRaaS
@@ -133,6 +155,8 @@
 	 */
     var initRaaS = function () {
         if (drupalSettings.gigya.enableRaaS) {
+        	registerGigyaEventMap();
+
             var id;
             $('.gigya-raas-login').once('gigya-raas').click(function (e) {
                 e.preventDefault();

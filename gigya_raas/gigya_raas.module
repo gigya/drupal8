@@ -26,11 +26,11 @@ function gigya_raas_page_attachments(array &$attachments) {
       $attachments['#attached']['drupalSettings']['gigyaExtra']['logoutRedirect'] = \Drupal::config('gigya_raas.settings')->get('gigya_raas.logout_redirect');
       $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin'] = \Drupal::currentUser()->isAuthenticated();
 
-      $session_type = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type');
-      $attachments['#attached']['drupalSettings']['gigyaExtra']['session_type'] =  $session_type;
+			$session_type = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type');
+			$attachments['#attached']['drupalSettings']['gigyaExtra']['session_type'] = $session_type;
 
-      $session_time = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
-      $attachments['#attached']['drupalSettings']['gigyaExtra']['session_time'] =  $session_time;
+			$session_time = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
+			$attachments['#attached']['drupalSettings']['gigyaExtra']['session_time'] = $session_time;
 
       /* Get sessionExpiration from Raas settings and set globalParameters with the value */
       $expiration = $session_type == "dynamic" ? -1 : $session_time;
@@ -143,13 +143,13 @@ function gigya_raas_theme($existing, $type, $theme, $path) {
 /**
  * Implements hook_user_login().
  *
- * @param $account
+ * @param $account \Drupal\Core\Session\AccountProxyInterface
  */
 function gigya_raas_user_login($account) {
   if (\Drupal::config('gigya.global')->get('gigya.enableRaaS') == TRUE) {
     if (!$account->hasPermission('bypass gigya raas')) {
-      // If user didn't login via RaaS.
-      // (if RaaS is enabled in Drupal admin, but a native login link was not disabled, and user still tried to login via Drupal login).
+      /* If user didn't login via RaaS.
+      	(if RaaS is enabled in Drupal admin, but a native login link was not disabled, and user still tried to login via Drupal login). */
       global $raas_login;
       if ($raas_login == NULL) {
         user_logout();
@@ -174,11 +174,11 @@ function gigya_raas_user_logout($account) {
 function gigya_raas_cron() {
 	/* Retrieve config variables */
 	$config = \Drupal::config('gigya_raas.fieldmapping');
-	$enable_job = $config->get('gigya.offline_sync.enable_job');
+	$enable_offline_sync = $config->get('gigya.offline_sync.enable_job');
 	$email_on_success = $config->get('gigya.offline_sync.email_on_success');
 	$email_on_failure = $config->get('gigya.offline_sync.email_on_failure');
 
-	if ($enable_job) {
+	if ($enable_offline_sync) {
 		\Drupal::logger('gigya_raas')->info('Gigya offline sync started');
 
 		$helper = new GigyaHelper();

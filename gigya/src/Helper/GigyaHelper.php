@@ -158,6 +158,8 @@ class GigyaHelper implements GigyaHelperInterface {
 	}
 
 	/**
+	 * Validates and gets Gigya user
+	 *
 	 * @param $uid
 	 * @param $uid_sig
 	 * @param $sig_timestamp
@@ -455,7 +457,6 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
   public function getGigyaLanguages() {
-
     return array("en" => "English (default)","ar" => "Arabic","br" => "Bulgarian","ca" => "Catalan","hr" => "Croatian",
                 "cs" => "Czech","da" => "Danish","nl" => "Dutch","fi" => "Finnish","fr" => "French","de" => "German",
                 "el" => "Greek","he" => "Hebrew","hu" => "Hungarian","id" => "Indonesian (Bahasa)","it" => "Italian",
@@ -467,7 +468,6 @@ class GigyaHelper implements GigyaHelperInterface {
                 "Finnish" => "nl-inf","fr-inf" => "French Informal","German" => "fr-inf","de-inf" => "German Informal","Greek" => "de-inf",
                 "pt-br" => "Portuguese (Brazil)","Romanian" => "pt-br","es-inf" => "Spanish Informal","Spanish (Lat-Am)" => "es-inf",
                 "es-mx" => "Spanish (Lat-Am)","Swedish" => "es-mx");
-
   }
 
   /**

@@ -1,6 +1,6 @@
 gigya_raas.settings:
   type: mapping
-  label: 'Gigya RaaS Session Settings'
+  label: 'Gigya RaaS session settings'
   mapping:
     session_type:
       type: text

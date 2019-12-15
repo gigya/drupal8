@@ -50,6 +50,15 @@ gigya.raas.process.fieldmapping:
   requirements:
     _permission: 'access content'
 
+gigya.raas.setsession:
+  path: 'gigya/raas-validatesession'
+  defaults:
+    _controller: '\Drupal\gigya_raas\GigyaController::gigyaRaasValidateSession'
+  options:
+    _theme: ajax_base_page
+  requirements:
+    _permission: 'access content'
+
 gigya.raas.extcookie:
   path: 'gigya/extcookie'
   defaults:
@@ -63,6 +72,6 @@ gigya.raas.config:
   path: '/admin/config/gigya/raas/session'
   defaults:
     _form: 'Drupal\gigya_raas\Form\GigyaSessionForm'
-    _title: 'Gigya RaaS Session Settings'
+    _title: 'Gigya RaaS session settings'
   requirements:
     _permission: 'gigya major admin'

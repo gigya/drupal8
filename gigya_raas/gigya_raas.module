@@ -30,10 +30,12 @@ function gigya_raas_page_attachments(array &$attachments) {
 			$attachments['#attached']['drupalSettings']['gigyaExtra']['session_type'] = $session_type;
 
 			$session_time = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
+			$remember_me_session_time = \Drupal::config('gigya_raas.settings')->get('gigya_raas.remember_me_session_time');
 			$attachments['#attached']['drupalSettings']['gigyaExtra']['session_time'] = $session_time;
+			$attachments['#attached']['drupalSettings']['gigyaExtra']['remember_me_session_time'] = $session_time;
 
       /* Get sessionExpiration from Raas settings and set globalParameters with the value */
-      $expiration = $session_type == "dynamic" ? -1 : $session_time;
+      $expiration = ($session_type == "dynamic") ? -1 : $session_time;
 
       $global_params = \Drupal::config('gigya.global')->get('gigya.globalParameters');
       $global_params['sessionExpiration'] = $expiration;
@@ -46,20 +48,22 @@ function gigya_raas_page_attachments(array &$attachments) {
 			$profile_screenset = \Drupal::config('gigya_raas.screensets')->get('gigya.profile_screenset');
 			$profile_screenset_mobile = \Drupal::config('gigya_raas.screensets')->get('gigya.profile_screenset_mobile');
 
-      if (\Drupal::currentUser()->isAnonymous()) {
-        $raas_login    = array(
-          'screenSet'       => $login_screenset ?: $default_login_screenset,
-          'mobileScreenSet' => '',
-          'startScreen'     => 'gigya-login-screen',
-          'sessionExpiration' => $expiration,
-        );
-        $raas_register = array(
-          'screenSet'       => $login_screenset ?: $default_login_screenset,
-          'mobileScreenSet' => '',
-          'startScreen'     => 'gigya-register-screen',
-          'sessionExpiration' => $expiration,
-        );
-        \Drupal::moduleHandler()->alter('gigya_raas_settings', $raas_login, $raas_register);
+			if (\Drupal::currentUser()->isAnonymous()) {
+				$raas_login = [
+					'screenSet' => $login_screenset ?: $default_login_screenset,
+					'mobileScreenSet' => '',
+					'startScreen' => 'gigya-login-screen',
+					'sessionExpiration' => $expiration,
+					'rememberSessionExpiration' => $remember_me_session_time,
+				];
+				$raas_register = [
+					'screenSet' => $login_screenset ?: $default_login_screenset,
+					'mobileScreenSet' => '',
+					'startScreen' => 'gigya-register-screen',
+					'sessionExpiration' => $expiration,
+					'rememberSessionExpiration' => $remember_me_session_time,
+				];
+				\Drupal::moduleHandler()->alter('gigya_raas_settings', $raas_login, $raas_register);
         $attachments['#attached']['drupalSettings']['gigya']['raas']['login']    = $raas_login;
         $attachments['#attached']['drupalSettings']['gigya']['raas']['register'] = $raas_register;
         $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin'] = FALSE;

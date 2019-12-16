@@ -77,7 +77,6 @@ class GigyaSessionForm extends ConfigFormBase
 		$form['remember_me_session_time'] = array(
 			'#type'          => 'textfield',
 			'#title'         => $this->t('Remember Me Session Duration (in seconds)'),
-			'#description'   => $this->t('The session is led by Gigya. For more information visit <a href="@Gigya documentation"><u>Gigya\'s documentation</u></a>.', array('@Gigya documentation' => 'https://developers.gigya.com/display/GD/GConnector+-+CMS+and+E-Commerce+Integrations')),
 			'#default_value' => $config->get('gigya_raas.remember_me_session_time'),
 		);
 

@@ -21,9 +21,20 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 		$current_user = \Drupal::currentUser();
 		$uid = $current_user->id();
 
-		/* User is logged in */
+		/* Update DB with session expiration if this hasn't been done before ('session_registered' flag) */
+		$is_remember_me = intval($gigya_raas_session->get('session_is_remember_me'));
+		$cached_session_expiration = $gigya_raas_session->get('session_expiration');
+		if (($gigya_raas_session->get('session_registered') === FALSE) and $cached_session_expiration) {
+			Database::getConnection()
+				->query('UPDATE {sessions} s SET expiration = :expiration, is_remember_me = :is_remember_me WHERE s.uid = :uid',
+					[':expiration' => $cached_session_expiration, ':is_remember_me' => $is_remember_me, ':uid' => $uid]);
+			$gigya_raas_session->set('session_registered', TRUE);
+		}
+
+		/* User is logged in through Gigya */
 		if ($uid and !$current_user->hasPermission('bypass gigya raas')) {
-			$session_params = GigyaRaasHelper::getSessionConfig(); //// @TODO add remember me
+			$session_type = ($is_remember_me) ? 'remember_me' : 'regular';
+			$session_params = GigyaRaasHelper::getSessionConfig($session_type);
 
 			if ($session_params['type'] === 'dynamic') {
 				$this->handleDynamicSession($session_params, $gigya_raas_session);
@@ -72,12 +83,13 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 			$error_message = 'Gigya session information could not be retrieved from the database. It is likely that the Gigya RaaS module has not been installed correctly. Please attempt to reinstall it. Attempted to retrieve details for user ID: ' . $uid;
 
 			try {
-				$session_expiration_row = Database::getConnection()->query('SELECT expiration FROM {sessions} s WHERE s.uid = :uid', [':uid' => $uid])->fetchAssoc();
+				$session_expiration_row = Database::getConnection()->query('SELECT expiration, is_remember_me FROM {sessions} s WHERE s.uid = :uid', [':uid' => $uid])->fetchAssoc();
 				if (!isset($session_expiration_row['expiration'])) {
 					\Drupal::logger('gigya_raas')->error($error_message);
 				}
 				else {
 					$gigya_raas_session->set('session_expiration', $session_expiration_row['expiration']);
+					$gigya_raas_session->set('session_is_remember_me', $session_expiration_row['is_remember_me']);
 				}
 			} catch (\Exception $e) {
 				\Drupal::logger('gigya_raas')->error($error_message . PHP_EOL . 'Exception of type: ' . get_class($e) . ', exception error message: ' . $e->getMessage());
@@ -86,15 +98,7 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 		}
 		/* Right after logging in, the session expiration exists, but isn't yet written to the DB--but by the time this request is executed, it is already written, so it's possible to update the DB. */
 		else {
-			$session_expiration = $cached_session_expiration;
-
-			if ($gigya_raas_session->get('session_registered') === FALSE) {
-				Database::getConnection()->query('UPDATE {sessions} s SET expiration = ' . $session_expiration . ' WHERE s.uid = :uid', [':uid' => $uid]);
-
-				$gigya_raas_session->set('session_registered', TRUE);
-			}
-
-			if ($session_expiration < time()) {
+			if ($cached_session_expiration < time()) {
 				user_logout();
 			}
 		}

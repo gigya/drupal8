@@ -101,6 +101,7 @@
 				$sig_timestamp = $request->get('sig_timestamp');
 				$guid = $request->get('uid');
 				$uid_sig = $request->get('uid_sig');
+				$session_type = ($request->get('remember') == 'true') ? 'remember_me' : 'regular';
 
 				$login_redirect = \Drupal::config('gigya_raas.settings')->get('gigya_raas.login_redirect');
 				$logout_redirect = \Drupal::config('gigya_raas.settings')->get('gigya_raas.logout_redirect');
@@ -182,7 +183,7 @@
 							user_login_finalize($user);
 
 							/* Set user session */
-							$this->gigyaRaasSetLoginSession();
+							$this->gigyaRaasSetLoginSession($session_type);
 						}
 						else
 						{
@@ -252,7 +253,7 @@
 								user_login_finalize($user);
 
 								/* Set user session */
-								$this->gigyaRaasSetLoginSession();
+								$this->gigyaRaasSetLoginSession($session_type);
 							}
 							catch (\Exception $e)
 							{
@@ -328,15 +329,16 @@
 		 * Sets the user $_SESSION with the expiration timestamp, derived from the session time in the RaaS configuration.
 		 * This is only step 1 of the process; in GigyaRaasEventSubscriber, it is supposed to take the $_SESSION and put it in the DB.
 		 *
-		 * @param string $type	Whether the session is a regular session, or a Remember Me session
+		 * @param string $type	Whether the session is a 'regular' session, or a 'remember_me' session
 		 */
 		public function gigyaRaasSetLoginSession($type = 'regular') {
 			$session_params = GigyaRaasHelper::getSessionConfig($type);
+			$is_remember_me = ($type == 'remember_me');
 
 			if ($session_params['type'] == 'dynamic') {
-				$this->gigyaRaasSetSession(-1);
+				$this->gigyaRaasSetSession(-1, $is_remember_me);
 			} else {
-				$this->gigyaRaasSetSession(time() + $session_params['type']);
+				$this->gigyaRaasSetSession(time() + $session_params['time'], $is_remember_me);
 			}
 
 			/*
@@ -351,9 +353,11 @@
 		 * Sets $_SESSION['session_expiration']
 		 *
 		 * @param int $session_expiration
+		 * @param bool $is_remember_me
 		 */
-		public function gigyaRaasSetSession(int $session_expiration) { /* PHP 7.0+ */
+		public function gigyaRaasSetSession(int $session_expiration, bool $is_remember_me) { /* PHP 7.0+ */
 			\Drupal::service('user.private_tempstore')->get('gigya_raas')->set('session_expiration', $session_expiration);
+			\Drupal::service('user.private_tempstore')->get('gigya_raas')->set('session_is_remember_me', $is_remember_me);
 		}
 
 		/**

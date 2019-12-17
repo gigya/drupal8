@@ -158,25 +158,6 @@
 		myAjaxObject.execute();
     };
 
-	// var registerGigyaEventMap = function() {
-	// 	gigya.events.addMap({
-	// 		defaultMethod: function (rememberMe) {
-	// 			var data = {
-	// 				"remember_me_status": rememberMe
-	// 			};
-	//
-	// 			var ajaxSettings = {
-	// 				url: drupalSettings.path.baseUrl + 'gigya/raas-update-rememberme',
-	// 				submit: data
-	// 			};
-	//
-	// 			var rememberMeAjaxObject = Drupal.ajax(ajaxSettings);
-	// 			rememberMeAjaxObject.execute();
-	// 		},
-	// 		eventMap: [{events: 'submit', args: ['${formModel.profile.remember}']}]
-	// 	});
-	// };
-
 	/**
 	 * @property gigya.accounts.showScreenSet
 	 * @property drupalSettings.gigya.enableRaaS

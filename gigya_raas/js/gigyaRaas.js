@@ -71,12 +71,41 @@
         }
     };
 
-    var onLoginHandler = function (res) {
-        var data = {
+    var getRememberMeStatus = function(res) {
+		var remember = false;
+		/* Pull remember me status from the group context */
+		if (typeof res.groupContext !== 'undefined') {
+			var groupRemember = JSON.parse(res.groupContext).remember;
+			if (typeof groupRemember !== 'undefined') {
+				remember = groupRemember;
+			}
+		}
+		/* "Remember Me" clicked on the current site always overrides the group context remember */
+		if (typeof res.remember !== 'undefined') {
+			remember = res.remember;
+		}
+
+		return remember;
+	};
+
+	/**
+	 * @param res
+	 *
+	 * @property gigya.setGroupContext
+	 * @property res.groupContext
+	 */
+	var onLoginHandler = function (res) {
+		var remember = getRememberMeStatus(res);
+		/* Propagate Remember Me status to the SSO group */
+		gigya.setGroupContext({
+			"remember": remember
+		});
+
+		var data = {
             "uid": res.UID,
             "uid_sig": res.UIDSignature,
             "sig_timestamp": res.signatureTimestamp,
-			"remember": res.remember
+			"remember": remember
         };
 
         var ajaxSettings = {

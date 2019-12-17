@@ -2,7 +2,10 @@
 
 namespace Drupal\gigya_raas\EventSubscriber;
 
+use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Database\Database;
+use Drupal\Core\TempStore\TempStoreException;
+use Drupal\Core\TempStore\PrivateTempStore;
 use Drupal\gigya_raas\Helper\GigyaRaasHelper;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -16,8 +19,9 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 	 */
 	public function onLoad(GetResponseEvent $event) {
 		/* Get necessary parameters from outside the class */
-		/** @var SessionInterface $gigya_raas_session */
+		/** @var PrivateTempStore $gigya_raas_session */
 		$gigya_raas_session = \Drupal::service('user.private_tempstore')->get('gigya_raas');
+		$drupal_session = \Drupal::service('session');
 		$current_user = \Drupal::currentUser();
 		$uid = $current_user->id();
 
@@ -26,9 +30,14 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 		$cached_session_expiration = $gigya_raas_session->get('session_expiration');
 		if (($gigya_raas_session->get('session_registered') === FALSE) and $cached_session_expiration) {
 			Database::getConnection()
-				->query('UPDATE {sessions} s SET expiration = :expiration, is_remember_me = :is_remember_me WHERE s.uid = :uid',
-					[':expiration' => $cached_session_expiration, ':is_remember_me' => $is_remember_me, ':uid' => $uid]);
-			$gigya_raas_session->set('session_registered', TRUE);
+				->query('UPDATE {sessions} s SET expiration = :expiration, is_remember_me = :is_remember_me WHERE s.uid = :uid AND s.sid = :sid',
+					[':expiration' => $cached_session_expiration, ':is_remember_me' => $is_remember_me, ':uid' => $uid, ':sid' => Crypt::hashBase64($drupal_session->getId())]);
+
+			try {
+				$gigya_raas_session->set('session_registered', TRUE);
+			} catch (TempStoreException $e) {
+				/* This could lead to some issues, but it should be updated on the next request (probably same-page), therefore no error is necessary */
+			}
 		}
 
 		/* User is logged in through Gigya */
@@ -37,10 +46,10 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 			$session_params = GigyaRaasHelper::getSessionConfig($session_type);
 
 			if ($session_params['type'] === 'dynamic') {
-				$this->handleDynamicSession($session_params, $gigya_raas_session);
+				$this->handleDynamicSession($session_params, $gigya_raas_session, $uid);
 			}
 			elseif ($session_params['type'] === 'fixed') {
-				$this->handleFixedSession($gigya_raas_session, $uid);
+				$this->handleFixedSession($gigya_raas_session, $drupal_session, $uid);
 			}
 		}
 	}
@@ -56,9 +65,10 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 
 	/**
 	 * @param array $session_params
-	 * @param SessionInterface $gigya_raas_session
+	 * @param PrivateTempStore $gigya_raas_session
+	 * @param int $uid
 	 */
-	private function handleDynamicSession($session_params, $gigya_raas_session) {
+	private function handleDynamicSession($session_params, $gigya_raas_session, $uid) {
 		$cached_session_expiration = $gigya_raas_session->get('session_expiration');
 		$new_session_expiration = time() + $session_params['time'];
 		$prev_session_expiration = (empty($cached_session_expiration) or $cached_session_expiration == -1) ? $new_session_expiration : $cached_session_expiration;
@@ -67,14 +77,19 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 			user_logout();
 		}
 
-		$gigya_raas_session->set('session_expiration', $new_session_expiration);
+		try {
+			$gigya_raas_session->set('session_expiration', $new_session_expiration);
+		} catch (TempStoreException $e) {
+			\Drupal::logger('gigya_raas')->error('Unable to store session for user ' . $uid . '. Message from Drupal: ' . $e->getMessage());
+		}
 	}
 
 	/**
-	 * @param SessionInterface $gigya_raas_session
+	 * @param PrivateTempStore $gigya_raas_session
+	 * @param SessionInterface $drupal_session
 	 * @param int $uid
 	 */
-	public function handleFixedSession($gigya_raas_session, $uid) {
+	public function handleFixedSession($gigya_raas_session, $drupal_session, $uid) {
 		$cached_session_expiration = $gigya_raas_session->get('session_expiration');
 		$session_expiration = NULL;
 
@@ -83,7 +98,10 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 			$error_message = 'Gigya session information could not be retrieved from the database. It is likely that the Gigya RaaS module has not been installed correctly. Please attempt to reinstall it. Attempted to retrieve details for user ID: ' . $uid;
 
 			try {
-				$session_expiration_row = Database::getConnection()->query('SELECT expiration, is_remember_me FROM {sessions} s WHERE s.uid = :uid', [':uid' => $uid])->fetchAssoc();
+				$session_expiration_row = Database::getConnection()->query('SELECT expiration, is_remember_me FROM {sessions} s WHERE s.uid = :uid AND s.sid = :sid', [
+					':uid' => $uid,
+					':sid' => Crypt::hashBase64($drupal_session->getId()),
+				])->fetchAssoc();
 				if (!isset($session_expiration_row['expiration'])) {
 					\Drupal::logger('gigya_raas')->error($error_message);
 				}

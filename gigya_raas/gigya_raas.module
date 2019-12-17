@@ -39,6 +39,7 @@ function gigya_raas_page_attachments(array &$attachments) {
 
       $global_params = \Drupal::config('gigya.global')->get('gigya.globalParameters');
       $global_params['sessionExpiration'] = $expiration;
+      $global_params['rememberSessionExpiration'] = $remember_me_session_time;
       $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
 
 			$default_login_screenset = 'Default-RegistrationLogin';

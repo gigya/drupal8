@@ -58,7 +58,7 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 	 * {@inheritdoc}
 	 */
 	public static function getSubscribedEvents() {
-		$events[KernelEvents::REQUEST][] = ['onLoad'];
+		$events[KernelEvents::REQUEST][] = ['onLoad', 28]; /* Priority of dynamic cache is 25 or 27, so the priority here needs to be above 27 */
 
 		return $events;
 	}

@@ -80,7 +80,7 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 		try {
 			$gigya_raas_session->set('session_expiration', $new_session_expiration);
 		} catch (TempStoreException $e) {
-			\Drupal::logger('gigya_raas')->error('Unable to store session for user ' . $uid . '. Message from Drupal: ' . $e->getMessage());
+			/* This could lead to some issues, but it should be updated on the next request (probably same-page), therefore no error is necessary */
 		}
 	}
 
@@ -102,12 +102,17 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 					':uid' => $uid,
 					':sid' => Crypt::hashBase64($drupal_session->getId()),
 				])->fetchAssoc();
-				if (!isset($session_expiration_row['expiration'])) {
+				if (!isset($session_expiration_row['expiration'])) { /* Query succeeded but didn't return any expiration column (should never happen!) */
 					\Drupal::logger('gigya_raas')->error($error_message);
+					user_logout();
 				}
 				else {
-					$gigya_raas_session->set('session_expiration', $session_expiration_row['expiration']);
-					$gigya_raas_session->set('session_is_remember_me', $session_expiration_row['is_remember_me']);
+					if ($session_expiration_row['expiration'] < time()) {
+						user_logout();
+					} else {
+						$gigya_raas_session->set('session_expiration', $session_expiration_row['expiration']);
+						$gigya_raas_session->set('session_is_remember_me', $session_expiration_row['is_remember_me']);
+					}
 				}
 			} catch (\Exception $e) {
 				\Drupal::logger('gigya_raas')->error($error_message . PHP_EOL . 'Exception of type: ' . get_class($e) . ', exception error message: ' . $e->getMessage());

@@ -166,9 +166,7 @@
 	 */
     var initRaaS = function () {
         if (drupalSettings.gigya.enableRaaS) {
-        	// registerGigyaEventMap();
-
-            var id;
+        	var id;
             $('.gigya-raas-login').once('gigya-raas').click(function (e) {
                 e.preventDefault();
                 gigya.accounts.showScreenSet(drupalSettings.gigya.raas.login);

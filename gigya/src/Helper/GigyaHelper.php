@@ -141,19 +141,25 @@ class GigyaHelper implements GigyaHelperInterface {
 
 			return $result;
 		} catch (GSApiException $e) {
-      /* Always write error to log */
-      Drupal::logger('gigya')->error('<pre>Gigya API error. Error code :' . $e->getErrorCode() . '</pre>');
-      if ($e->getCallId()) {
-        Drupal::logger('gigya')->error('Response from Gigya <br /><pre>Call ID: @callId, apicall:@method,
-                                                 Error:@error</pre>', array('@callId' => $e->getCallId(),
-                                                '@method' => $method, '@error' => $e->getErrorCode()));
-      }
+			/* Always write error to log */
+			Drupal::logger('gigya')->error('<pre>Gigya API error. Error code :' . $e->getErrorCode() . '</pre>');
+			if ($e->getCallId()) {
+				Drupal::logger('gigya')->error('Response from Gigya <br /><pre>Call ID: @callId, apicall:@method,
+											 																		Error:@error</pre>',
+					[
+						'@callId' => $e->getCallId(),
+						'@method' => $method,
+						'@error' => $e->getErrorCode(),
+					]);
+			}
 
-      return $e;
-    }
-  }
+			return $e;
+		}
+	}
 
 	/**
+	 * Validates and gets Gigya user
+	 *
 	 * @param $uid
 	 * @param $uid_sig
 	 * @param $sig_timestamp
@@ -451,7 +457,6 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
   public function getGigyaLanguages() {
-
     return array("en" => "English (default)","ar" => "Arabic","br" => "Bulgarian","ca" => "Catalan","hr" => "Croatian",
                 "cs" => "Czech","da" => "Danish","nl" => "Dutch","fi" => "Finnish","fr" => "French","de" => "German",
                 "el" => "Greek","he" => "Hebrew","hu" => "Hungarian","id" => "Indonesian (Bahasa)","it" => "Italian",
@@ -463,7 +468,6 @@ class GigyaHelper implements GigyaHelperInterface {
                 "Finnish" => "nl-inf","fr-inf" => "French Informal","German" => "fr-inf","de-inf" => "German Informal","Greek" => "de-inf",
                 "pt-br" => "Portuguese (Brazil)","Romanian" => "pt-br","es-inf" => "Spanish Informal","Spanish (Lat-Am)" => "es-inf",
                 "es-mx" => "Spanish (Lat-Am)","Swedish" => "es-mx");
-
   }
 
   /**

@@ -42,7 +42,6 @@ class GSRequest {
 
   private $apiDomain = self::DEFAULT_API_DOMAIN;
 
-
   static function __constructStatic() {
     GSRequest::$cafile = realpath(dirname(__FILE__) . "/cacert.pem");
   }

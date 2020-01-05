@@ -4,11 +4,12 @@ namespace Drupal\gigya_raas\Form;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
-class GigyaSessionForm extends ConfigFormBase
-{
+class GigyaSessionForm extends ConfigFormBase {
+
 	/**
 	 * @param $form_state
 	 * @param $prop_name
+	 *
 	 * @return string
 	 */
 	private function getValue($form_state, $prop_name) {
@@ -99,6 +100,23 @@ class GigyaSessionForm extends ConfigFormBase
 		);
 
 		return $form;
+	}
+
+	/**
+	 * @param array $form
+	 * @param \Drupal\Core\Form\FormStateInterface $form_state
+	 *
+	 * @throws \Exception
+	 */
+	public function validateForm(array &$form, FormStateInterface $form_state) {
+		parent::validateForm($form, $form_state);
+
+		$session_time = $form_state->getValue('session_time');
+		$remember_me_session_time = $form_state->getValue('remember_me_session_time');
+
+		if (intval($session_time) < 60 or intval($remember_me_session_time)) {
+			$form_state->setErrorByName('gigya-raas-sessions', $this->t('Session durations should be at least 60 seconds.'));
+		}
 	}
 
 	public function submitForm(array &$form, FormStateInterface $form_state) {

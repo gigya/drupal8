@@ -35,13 +35,13 @@ var gigyaHelper = {
         // Do what is needed to show that the user is logged in (reload the page etc...)
       } else {
         // Logout user from Gigya
-        gigya.account.logout();
+        gigya.accounts.logout();
 
         // Show error etc...
       }
     }).fail(function () {
       // Logout user from Gigya
-      gigya.account.logout();
+      gigya.accounts.logout();
 
       // Show error etc...
     });

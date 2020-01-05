@@ -71,17 +71,48 @@
         }
     };
 
-    var onLoginHandler = function (res) {
-        var data = {
+    var getRememberMeStatus = function(res) {
+		var remember = false;
+		/* Pull remember me status from the group context */
+		if (typeof res.groupContext !== 'undefined') {
+			var groupRemember = JSON.parse(res.groupContext).remember;
+			if (typeof groupRemember !== 'undefined') {
+				remember = groupRemember;
+			}
+		}
+		/* "Remember Me" clicked on the current site always overrides the group context remember */
+		if (typeof res.remember !== 'undefined') {
+			remember = res.remember;
+		}
+
+		return remember;
+	};
+
+	/**
+	 * @param res
+	 *
+	 * @property gigya.setGroupContext
+	 * @property res.groupContext
+	 */
+	var onLoginHandler = function (res) {
+		var remember = getRememberMeStatus(res);
+		/* Propagate Remember Me status to the SSO group */
+		gigya.setGroupContext({
+			"remember": remember
+		});
+
+		var data = {
             "uid": res.UID,
             "uid_sig": res.UIDSignature,
-            "sig_timestamp": res.signatureTimestamp
+            "sig_timestamp": res.signatureTimestamp,
+			"remember": remember
         };
 
         var ajaxSettings = {
             url: drupalSettings.path.baseUrl + 'gigya/raas-login',
             submit: data
         };
+
         var myAjaxObject = Drupal.ajax(ajaxSettings);
         myAjaxObject.execute();
     };
@@ -93,10 +124,12 @@
                 UIDSignature: data.response.UIDSignature,
                 signatureTimestamp: data.response.signatureTimestamp
             };
+
             var ajaxSettings = {
                 url: drupalSettings.path.baseUrl + 'gigya/raas-profile-update',
 				submit: {gigyaData: gigyaData}
             };
+
             var myAjaxObject = Drupal.ajax(ajaxSettings);
             myAjaxObject.execute();
         }
@@ -133,7 +166,7 @@
 	 */
     var initRaaS = function () {
         if (drupalSettings.gigya.enableRaaS) {
-            var id;
+        	var id;
             $('.gigya-raas-login').once('gigya-raas').click(function (e) {
                 e.preventDefault();
                 gigya.accounts.showScreenSet(drupalSettings.gigya.raas.login);

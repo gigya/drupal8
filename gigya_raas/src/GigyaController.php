@@ -10,6 +10,8 @@
 	use Drupal\Core\Ajax\AlertCommand;
 	use Drupal\Core\Ajax\InvokeCommand;
 	use Drupal\Core\Controller\ControllerBase;
+	use Drupal\gigya\CmsStarterKit\user\GigyaUser;
+	use Drupal\gigya_raas\Helper\GigyaRaasHelper;
 	use Drupal\user\Entity\User;
 	use Drupal\user\UserInterface;
 	use Symfony\Component\HttpFoundation\Request;
@@ -99,6 +101,7 @@
 				$sig_timestamp = $request->get('sig_timestamp');
 				$guid = $request->get('uid');
 				$uid_sig = $request->get('uid_sig');
+				$session_type = ($request->get('remember') == 'true') ? 'remember_me' : 'regular';
 
 				$login_redirect = \Drupal::config('gigya_raas.settings')->get('gigya_raas.login_redirect');
 				$logout_redirect = \Drupal::config('gigya_raas.settings')->get('gigya_raas.logout_redirect');
@@ -116,22 +119,26 @@
 
 				$response = new AjaxResponse();
 
+				/* Checks whether the received UID is the correct UID at Gigya */
+				/** @var GigyaUser $gigyaUser */
 				if ($gigyaUser = $this->helper->validateUid($guid, $uid_sig, $sig_timestamp))
 				{
-					if (empty($gigyaUser->getLoginIDs['emails']))
+					/* loginIDs.emails is missing in Gigya */
+					if (empty($gigyaUser->getLoginIDs()['emails']))
 					{
 						$err_msg = $this->t(
 							'Email address is required by Drupal and is missing, please contact the site administrator.'
 						);
 						$this->helper->saveUserLogoutCookie();
 					}
+					/* loginIDs.emails in found in Gigya */
 					else
 					{
 						/** @var UserInterface $user */
 						$user = $this->helper->getUidByUUID($gigyaUser->getUID());
 						if ($user)
 						{
-							/** if a user has the a permission of bypass gigya raas (admin user)
+							/* if a user has the a permission of bypass gigya raas (admin user)
 							 *  they can't login via gigya
 							 */
 							if ($user->hasPermission('bypass gigya raas'))
@@ -148,9 +155,10 @@
 
 								return $response;
 							}
+
 							if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, $user->id()))
 							{
-								if ($user->mail !== $unique_email)
+								if ($user->getEmail() !== $unique_email)
 								{
 									$user->setEmail($unique_email);
 									$user->save();
@@ -163,6 +171,7 @@
 								$response->addCommand(new AlertCommand($err_msg));
 								return $response;
 							}
+
 							/* Set global variable so we would know the user as logged in
 							   RaaS in other functions down the line.*/
 							$raas_login = TRUE;
@@ -172,10 +181,13 @@
 							$this->gigyaRaasExtCookieAjax($request, $raas_login);
 							$user->save();
 							user_login_finalize($user);
+
+							/* Set user session */
+							$this->gigyaRaasSetLoginSession($session_type);
 						}
 						else
 						{
-							$uids = $this->helper->getUidByMails($gigyaUser->getLoginIds['emails']);
+							$uids = $this->helper->getUidByMails($gigyaUser->getLoginIds()['emails']);
 							if (!empty($uids))
 							{
 								\Drupal::logger('gigya_raas')->warning(
@@ -231,15 +243,17 @@
 							$user->save();
 							$this->helper->processFieldMapping($gigyaUser, $user);
 
-							/* Allow other modules to modify the data before user is created in drupal database (create user hook). */
+							/* Allow other modules to modify the data before user is created in the Drupal database (create user hook). */
 							\Drupal::moduleHandler()->alter('gigya_raas_create_user', $gigyaUser, $user);
 							try
 							{
-								//@TODO: generate Unique user name.
 								$user->save();
 								$raas_login = true;
 								$this->gigyaRaasExtCookieAjax($request, $raas_login);
 								user_login_finalize($user);
+
+								/* Set user session */
+								$this->gigyaRaasSetLoginSession($session_type);
 							}
 							catch (\Exception $e)
 							{
@@ -284,7 +298,7 @@
 		}
 
 		/**
-		 * @param Request $request      The incoming request object.
+		 * @param Request $request The incoming request object.
 		 *
 		 * @return bool|AjaxResponse    The Ajax response
 		 */
@@ -292,13 +306,13 @@
 			$logout_redirect = \Drupal::config('gigya_raas.settings')->get('gigya_raas.logout_redirect');
 
 			/* Log out user in SSO */
-			if (!empty(\Drupal::currentUser()->id()))
+			if (!empty(\Drupal::currentUser()->id())) {
 				user_logout();
+			}
 
 			$base_path = base_path();
 			$redirect_path = ($base_path === '/') ? '/' : $base_path . '/';
-			if (substr($logout_redirect, 0, 4) !== 'http')
-			{
+			if (substr($logout_redirect, 0, 4) !== 'http') {
 				$logout_redirect = $redirect_path . $logout_redirect;
 			}
 
@@ -309,6 +323,41 @@
 			$response->addCommand(new InvokeCommand(NULL, 'logoutRedirect', [$logout_redirect]));
 
 			return $response;
+		}
+
+		/**
+		 * Sets the user $_SESSION with the expiration timestamp, derived from the session time in the RaaS configuration.
+		 * This is only step 1 of the process; in GigyaRaasEventSubscriber, it is supposed to take the $_SESSION and put it in the DB.
+		 *
+		 * @param string $type	Whether the session is a 'regular' session, or a 'remember_me' session
+		 */
+		public function gigyaRaasSetLoginSession($type = 'regular') {
+			$session_params = GigyaRaasHelper::getSessionConfig($type);
+			$is_remember_me = ($type == 'remember_me');
+
+			if ($session_params['type'] == 'dynamic') {
+				$this->gigyaRaasSetSession(-1, $is_remember_me);
+			} else {
+				$this->gigyaRaasSetSession(time() + $session_params['time'], $is_remember_me);
+			}
+
+			/*
+			 * The session details are written to the Drupal DB only after a Kernel event (KernelEvents::REQUEST) of AuthenticationSubscriber.
+			 * This means that the session in Drupal isn't yet registered when this code is run, and therefore it isn't possible to update it in the DB.
+			 * This $_SESSION var is therefore set in order to manipulate the session on the next request, which should be run after AuthenticationSubscriber.
+			 * */
+			\Drupal::service('user.private_tempstore')->get('gigya_raas')->set('session_registered', FALSE);
+		}
+
+		/**
+		 * Sets $_SESSION['session_expiration']
+		 *
+		 * @param int $session_expiration
+		 * @param bool $is_remember_me
+		 */
+		public function gigyaRaasSetSession(int $session_expiration, bool $is_remember_me) { /* PHP 7.0+ */
+			\Drupal::service('user.private_tempstore')->get('gigya_raas')->set('session_expiration', $session_expiration);
+			\Drupal::service('user.private_tempstore')->get('gigya_raas')->set('session_is_remember_me', $is_remember_me);
 		}
 
 		/**
@@ -325,14 +374,14 @@
 			if ($this->shouldAddExtCookie($request, $login))
 			{
 				$gigya_conf = \Drupal::config('gigya.settings');
-				$session_ttl = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
+				$session_time = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
 				$api_key = $gigya_conf->get('gigya.gigya_api_key');
 				$glt_cookie = $request->cookies->get('glt_' . $api_key);
 				$token = (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL;
 				$now = $_SERVER['REQUEST_TIME'];
-				$expiration = strval($now + $session_ttl);
-				$helper = new GigyaHelper();
+				$session_expiration = strval($now + $session_time);
 
+				$helper = new GigyaHelper();
 				$gltexp_cookie = $request->cookies->get('gltexp_' . $api_key);
 				$gltexp_cookie_timestamp = explode('_', $gltexp_cookie)[0];
 				if (empty($gltexp_cookie_timestamp) or (time() < $gltexp_cookie_timestamp))
@@ -340,36 +389,35 @@
 					if (!empty($token))
 					{
 						$session_sig = $this->calcDynamicSessionSig(
-							$token, $expiration, $gigya_conf->get('gigya.gigya_application_key'),
+							$token, $session_expiration, $gigya_conf->get('gigya.gigya_application_key'),
 							$helper->decrypt($gigya_conf->get('gigya.gigya_application_secret_key'))
 						);
 						setrawcookie('gltexp_' . $api_key, rawurlencode($session_sig), time() + (10 * 365 * 24 * 60 * 60), '/', $request->getHost());
 					}
 				}
 			}
+
 			return new AjaxResponse();
 		}
 
 		private function shouldAddExtCookie($request, $login) {
-			if ("dynamic" != \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type'))
-			{
-				return false;
+			if ("dynamic" != \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type')) {
+				return FALSE;
 			}
 
-			if ($login)
-			{
-				return true;
+			if ($login) {
+				return TRUE;
 			}
 
 			$current_user = \Drupal::currentUser();
-			if ($current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas'))
-			{
+			if ($current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas')) {
 				$gigya_conf = \Drupal::config('gigya.settings');
 				$api_key = $gigya_conf->get('gigya.gigya_api_key');
 				$gltexp_cookie = $request->cookies->get('gltexp_' . $api_key);
 				return !empty($gltexp_cookie);
 			}
-			return true;
+
+			return TRUE;
 		}
 
 		private function calcDynamicSessionSig($token, $expiration, $userKey, $secret) {
@@ -378,5 +426,4 @@
 			$sig = base64_encode($rawHmac);
 			return $expiration . '_' . $userKey . '_' . $sig;
 		}
-
 	}

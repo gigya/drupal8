@@ -1,0 +1,5 @@
+services:
+  gigya_raas.event_subscriber:
+    class: Drupal\gigya_raas\EventSubscriber\GigyaRaasEventSubscriber
+    tags:
+      - { name: 'event_subscriber' }

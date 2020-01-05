@@ -5,13 +5,54 @@
  * Installation functions for Gigya module.
  */
 
-use Drupal\User\RoleInterface;
+use Drupal\Core\Database\Database;
 
 /**
  * Implements hook_install.
  */
 function gigya_raas_install() {
+	$spec_expiration = [
+		'type' => 'int',
+		'description' => "Gigya session expiration",
+		'length' => 11,
+		'not null' => TRUE,
+		'default' => 0,
+	];
+	$spec_is_remember_me = [
+		'type' => 'int',
+		'description' => "Whether the Gigya session is a Remember Me session",
+		'length' => 11, /* Drupal does not support tinyint in the schema, and with the int type any length defaults to 11 in practice */
+		'not null' => TRUE,
+		'default' => 0,
+	];
 
+	$schema = Database::getConnection()->schema();
+
+	$error_message_format = sprintf('Unable to create column `%s` in the `%s` table during Gigya RaaS module installation.
+														If the column already exists from a previous installation of the module, you may ignore this warning. If the column already exists from another module, please contact Gigya\'s support.
+														If the column does not exist, please try to reinstall the module.');
+	/* Create two new columns. The reason they are separated is that if one exists from a previous install, it should be able to create both, not fail */
+	try {
+		$schema->addField('sessions', 'expiration', $spec_expiration);
+	} catch (Exception $e) {
+		\Drupal::logger('gigya_raas')->warning(sprintf($error_message_format, 'expiration', 'sessions'));
+	}
+	try {
+		$schema->addField('sessions', 'is_remember_me', $spec_is_remember_me);
+	} catch (Exception $e) {
+		\Drupal::logger('gigya_raas')->warning(sprintf($error_message_format, 'is_remember_me', 'sessions'));
+	}
+
+	$current_user = \Drupal::currentUser();
+	$admin_id = $current_user->id();
+
+	/* Make sure the administrator doing the installation has the proper session set */
+	if (in_array('administrator', $current_user->getRoles())) {
+		Database::getConnection()->query('UPDATE {sessions} s SET expiration = :expiration WHERE s.uid = :uid', [
+			':expiration' => (time() + session_get_cookie_params()['lifetime']),
+			':uid' => $admin_id,
+		]);
+	}
 }
 
 function gigya_raas_uninstall() {

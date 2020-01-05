@@ -63,6 +63,6 @@ gigya.raas.config:
   path: '/admin/config/gigya/raas/session'
   defaults:
     _form: 'Drupal\gigya_raas\Form\GigyaSessionForm'
-    _title: 'Gigya RaaS Session Settings'
+    _title: 'Gigya RaaS session settings'
   requirements:
     _permission: 'gigya major admin'

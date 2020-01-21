@@ -114,7 +114,7 @@ class GigyaSessionForm extends ConfigFormBase {
 		$session_time = $form_state->getValue('session_time');
 		$remember_me_session_time = $form_state->getValue('remember_me_session_time');
 
-		if (intval($session_time) < 60 or intval($remember_me_session_time)) {
+		if (intval($session_time) < 60 or intval($remember_me_session_time) < 60) {
 			$form_state->setErrorByName('gigya-raas-sessions', $this->t('Session durations should be at least 60 seconds.'));
 		}
 	}

@@ -5,7 +5,7 @@ package: Gigya
 # core: 8.x
 configure: gigya.admin.form
 
-version: '8.x-2.8'
+version: '8.x-2.8.1'
 core: '8.x'
 project: 'gigya'
 datestamp: 1494803025

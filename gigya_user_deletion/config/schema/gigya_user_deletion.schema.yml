@@ -1,0 +1,38 @@
+gigya_user_deletion.job:
+  type: config_object
+  label: 'Gigya user deletion job settings'
+  mapping:
+    gigya_user_deletion:
+      type: mapping
+      mapping:
+        enableJob:
+          type: boolean
+          label: Enable
+        deletionType:
+          type: string
+          label: Deletion type
+        jobFrequency:
+          type: integer
+          label: Job frequency (minutes)
+        emailOnSuccess:
+          type: string
+          label: Email on success
+        emailOnFailure:
+          type: string
+          label: Email on failure
+        storageDetails:
+          type: mapping
+          label: Amazon S3 settings
+          mapping:
+            bucketName:
+              type: string
+              label: Bucket name
+            accessKey:
+              type: string
+              label: Access key
+            secretKey:
+              type: string
+              label: Secret key
+            objectKeyPrefix:
+              type: string
+              label: Object key prefix

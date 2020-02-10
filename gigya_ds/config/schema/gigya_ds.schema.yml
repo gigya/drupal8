@@ -1,0 +1,13 @@
+gigya_ds.settings:
+  type: config_object
+  label: 'Gigya DS settings'
+  mapping:
+    gigya_ds:
+      type: mapping
+      mapping:
+        gigya_ds_mapping:
+          type: string
+          label: Gigya DS mapping
+        gigya_ds_use_search:
+          type: boolean
+          label: Use search

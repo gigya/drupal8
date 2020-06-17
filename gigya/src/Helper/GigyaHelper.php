@@ -21,6 +21,7 @@ use Drupal\gigya\CmsStarterKit\user\GigyaProfile;
 use Drupal\gigya\CmsStarterKit\user\GigyaUser;
 use Drupal\gigya\CmsStarterKit\user\GigyaUserFactory;
 use Drupal\gigya\CmsStarterKit\ds\DsQueryObject;
+use InvalidArgumentException;
 
 class GigyaHelper implements GigyaHelperInterface {
 
@@ -67,7 +68,7 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
   public function checkEncryptKey() {
-    $keypath = \Drupal::config('gigya.global')->get('gigya.keyPath');
+    $keypath = Drupal::config('gigya.global')->get('gigya.keyPath');
     $key = $this->getEncKeyFile($keypath);
     if (!empty(file_get_contents($key))) {
       return TRUE;
@@ -78,7 +79,7 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
   public function getEncryptKey() {
-  	$path = \Drupal::config('gigya.global')->get('gigya.keyPath');
+  	$path = Drupal::config('gigya.global')->get('gigya.keyPath');
     $keypath = $this->getEncKeyFile($path);
     try
 	{
@@ -90,7 +91,7 @@ class GigyaHelper implements GigyaHelperInterface {
 	}
 	catch (Exception $e)
 	{
-		\Drupal::logger('gigya')->error('Key file not found. Configure the correct path in your gigya.global TML file.');
+		Drupal::logger('gigya')->error('Key file not found. Configure the correct path in your gigya.global TML file.');
 		return false;
 	}
   }
@@ -265,13 +266,13 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
   public function getUidByMail($mail) {
-    return \Drupal::entityQuery('user')
+    return Drupal::entityQuery('user')
       ->condition('mail',  $mail)
       ->execute();
   }
 
   public function getUidByMails($mails) {
-    return \Drupal::entityQuery('user')
+    return Drupal::entityQuery('user')
       ->condition('mail',  $mails)
       ->execute();
   }
@@ -282,7 +283,7 @@ class GigyaHelper implements GigyaHelperInterface {
    * @return User
    */
   public function getUidByUUID($uuid) {
-    return \Drupal::service('entity.repository')->loadEntityByUuid('user', $uuid);
+    return Drupal::service('entity.repository')->loadEntityByUuid('user', $uuid);
   }
 
   /**
@@ -319,7 +320,7 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
   public function getUidByName($name) {
-    return \Drupal::entityQuery('user')
+    return Drupal::entityQuery('user')
       ->condition('name',  Database::getConnection()->escapeLike($name), 'LIKE')
       ->execute();
   }
@@ -328,10 +329,10 @@ class GigyaHelper implements GigyaHelperInterface {
 	 * @return array|object|null
 	 */
 	public function getFieldMappingConfig() {
-		$config = json_decode(\Drupal::config('gigya_raas.fieldmapping')
+		$config = json_decode(Drupal::config('gigya_raas.fieldmapping')
 			->get('gigya.fieldmapping_config'));
 		if (empty($config)) {
-			$config = \Drupal::config('gigya.global')->get('gigya.fieldMapping');
+			$config = Drupal::config('gigya.global')->get('gigya.fieldMapping');
 		}
 
 		return $config;
@@ -348,7 +349,7 @@ class GigyaHelper implements GigyaHelperInterface {
 			$field_map = $this->getFieldMappingConfig();
 
       try {
-	      \Drupal::moduleHandler()
+	      Drupal::moduleHandler()
 	        ->alter('gigya_raas_map_data', $gigya_data, $drupal_user, $field_map);
       }
       catch (Exception $e) {
@@ -383,14 +384,14 @@ class GigyaHelper implements GigyaHelperInterface {
               $val = intval($val);
             }
             else {
-              \Drupal::logger('gigya')->error('Failed to map ' . $drupal_field . ' from Gigya - Drupal type is boolean but Gigya type isn\'t');
+              Drupal::logger('gigya')->error('Failed to map ' . $drupal_field . ' from Gigya - Drupal type is boolean but Gigya type isn\'t');
             }
           }
 
           /* Perform the mapping from Gigya to Drupal */
 					try {
 						$drupal_user->set($drupal_field, $val);
-					} catch (\InvalidArgumentException $e) {
+					} catch (InvalidArgumentException $e) {
 						Drupal::logger('gigya')
 							->debug('Error inserting mapped field: @message',
 								['@message' => $e->getMessage()]);
@@ -475,10 +476,10 @@ class GigyaHelper implements GigyaHelperInterface {
 	 *  the environment string to add to the API call.
 	 */
 	public function getEnvString() {
-		$info = \Drupal::service('extension.list.module')->getExtensionInfo('gigya');
-		\Drupal::logger('gigya')->info(var_export($info, true));
+		$info = Drupal::service('extension.list.module')->getExtensionInfo('gigya');
+		Drupal::logger('gigya')->info(var_export($info, true));
 
-		return '{"cms_name":"Drupal","cms_version":"Drupal_' . \Drupal::VERSION . '","gigya_version":"Gigya_module_' . $info['version'] . '","php_version":"' . phpversion() . '"}';
+		return '{"cms_name":"Drupal","cms_version":"Drupal_' . Drupal::VERSION . '","gigya_version":"Gigya_module_' . $info['version'] . '","php_version":"' . phpversion() . '"}';
 	}
 
 	public function sendCronEmail($job_type, $job_status, $to, $processed_items = NULL, $failed_items = NULL, $custom_email_body = '') {
@@ -493,7 +494,7 @@ class GigyaHelper implements GigyaHelperInterface {
 			$email_body = 'Job failed. No items were processed. Please consult the Drupal log (Administration > Reports > Recent log messages) for more info.';
 		}
 
-		return $this->sendEmail('Gigya cron job of type ' . $job_type . ' ' . $job_status . ' on website ' . \Drupal::request()
+		return $this->sendEmail('Gigya cron job of type ' . $job_type . ' ' . $job_status . ' on website ' . Drupal::request()
 				->getHost(),
 			$email_body,
 			$to);

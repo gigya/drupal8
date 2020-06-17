@@ -470,14 +470,16 @@ class GigyaHelper implements GigyaHelperInterface {
                 "es-mx" => "Spanish (Lat-Am)","Swedish" => "es-mx");
   }
 
-  /**
-   * @return string
-   *  the environment string to add to the API call.
-   */
-  public function getEnvString() {
-    $info = system_get_info('module', 'gigya');
-    return '{"cms_name":"Drupal","cms_version":"Drupal_' . \Drupal::VERSION . '","gigya_version":"Gigya_module_' .$info['version'] . '"}';
-  }
+	/**
+	 * @return string
+	 *  the environment string to add to the API call.
+	 */
+	public function getEnvString() {
+		$info = \Drupal::service('extension.list.module')->getExtensionInfo('gigya');
+		\Drupal::logger('gigya')->info(var_export($info, true));
+
+		return '{"cms_name":"Drupal","cms_version":"Drupal_' . \Drupal::VERSION . '","gigya_version":"Gigya_module_' . $info['version'] . '","php_version":"' . phpversion() . '"}';
+	}
 
 	public function sendCronEmail($job_type, $job_status, $to, $processed_items = NULL, $failed_items = NULL, $custom_email_body = '') {
 		$email_body = $custom_email_body;

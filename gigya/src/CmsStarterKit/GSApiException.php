@@ -1,8 +1,10 @@
 <?php
 
-namespace Drupal\gigya\CmsStarterKit\sdk;
+namespace Drupal\gigya\CmsStarterKit;
 
-class GSApiException extends \Exception {
+use Exception;
+
+class GSApiException extends Exception {
 
   private $longMessage;
 

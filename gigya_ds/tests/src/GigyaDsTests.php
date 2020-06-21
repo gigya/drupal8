@@ -14,15 +14,12 @@ namespace Drupal\modules\gigya\gigya_ds\tests;
 
 use Drupal;
 use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\AlertCommand;
 use Drupal\Core\Ajax\RedirectCommand;
-use Drupal\gigya\Helper;
 use Drupal\gigya_raas\GigyaController;
-use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\gigya\CmsStarterKit\sdk\GSApiException;
-use Drupal\gigya\CmsStarterKit\sdk\GSResponse;
+use Drupal\gigya\CmsStarterKit\GSApiException;
 use Drupal\gigya\CmsStarterKit\user\GigyaUserFactory;
+use Gigya\PHP\GSResponse;
 
 /**
  * Tests Gigya module functionality.
@@ -37,8 +34,6 @@ class GigyaTest extends BrowserTestBase
     private $requestMock = "";
 
     private $successResponse = "";
-
-
 
     /**
      * Modules to enable.
@@ -71,24 +66,17 @@ class GigyaTest extends BrowserTestBase
      * {@inheritdoc}
      */
     public function setUp(){
-
         parent::setUp();
 
         $this->successResponse = new AjaxResponse();
         $this->successResponse->addCommand(new RedirectCommand("/"));
 
-
-
         $this->requestMock = $this->getMockBuilder('Symfony\Component\HttpFoundation\Request')->getMock();
-
-
 
         $this->gigyaAdmin = $this->drupalCreateUser(['gigya major admin', 'bypass gigya raas']);
         $this->helperMock = $this->getMockBuilder('\Drupal\gigya\Helper\GigyaHelper')
             ->setMethods(array('getEncryptKey', 'checkEncryptKey', 'sendApiCall', 'validateUid'))
             ->getMock();
-
-
 
         $method = "accounts.getAccountInfo";
         $json = '{

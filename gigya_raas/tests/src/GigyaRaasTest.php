@@ -14,11 +14,11 @@
 	use Drupal\Core\Form\FormState;
 	use Drupal\gigya_raas\GigyaController;
 	use Drupal\Tests\BrowserTestBase;
-	use Drupal\gigya\CmsStarterKit\sdk\GSApiException;
-	use Drupal\gigya\CmsStarterKit\sdk\GSResponse;
+	use Drupal\gigya\CmsStarterKit\GSApiException;
 	use Drupal\gigya\CmsStarterKit\user\GigyaUser;
 	use Drupal\gigya\CmsStarterKit\user\GigyaUserFactory;
 	use Drupal\user\Entity\User;
+	use Gigya\PHP\GSResponse;
 
 	/**
 	 * Tests Gigya module functionality.

@@ -13,7 +13,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\gigya\Helper\GigyaHelperInterface;
-use Drupal\gigya\CmsStarterKit\sdk\GSObject;
+use Gigya\PHP\GSObject;
 
 class GigyaKeysForm extends ConfigFormBase {
 
@@ -74,6 +74,33 @@ class GigyaKeysForm extends ConfigFormBase {
 			'#required'      => TRUE,
 		];
 
+		$form['gigya_auth_mode'] = [
+			'#type'          => 'radios',
+			'#title'         => $this->t('Gigya Authentication Mode'),
+			'#description'   => $this->t('Gigya allows to authenticate with a user or application and secret key pair, or an RSA key pair'),
+			'#options'       => [
+				'user_secret' => $this->t('User / Secret key pair'),
+				'user_rsa'    => $this->t('RSA key pair'),
+			],
+			'#default_value' => $config->get('gigya.gigya_auth_mode') ?? 'user_secret',
+		];
+
+		$form['gigya_rsa_private_key'] = [
+			'#type'        => 'textarea',
+			'#title'       => $this->t('Gigya RSA Private Key'),
+			'#description' => $this->t('Specify the Gigya RSA private key Key for this domain'),
+			'#rows'        => 16,
+			'#cols'        => 64,
+			'#attributes'  => [
+				'style' => 'width: auto',
+			],
+			'#states'      => [
+				'visible' => [
+					':input[name="gigya_auth_mode"]' => ['value' => 'user_rsa'],
+				],
+			],
+		];
+
 		$key = $config->get('gigya.gigya_application_secret_key');
 		$access_key = "";
 		if (!empty($key)) {
@@ -85,6 +112,11 @@ class GigyaKeysForm extends ConfigFormBase {
 			'#description' => $this->t('Specify the Gigya Application Secret Key for this domain'),
 			'#attributes'  => [
 				'autocomplete' => 'off',
+			],
+			'#states'      => [
+				'visible' => [
+					':input[name="gigya_auth_mode"]' => ['value' => 'user_secret'],
+				],
 			],
 		];
 
@@ -142,6 +174,7 @@ class GigyaKeysForm extends ConfigFormBase {
 	 */
 	public function validateForm(array &$form, FormStateInterface $form_state) {
 		parent::validateForm($form, $form_state);
+
 		//Encrypt key error.
 		if (!$this->helper->checkEncryptKey()) {
 			$form_state->setErrorByName('gigya_api_key', "");
@@ -149,7 +182,6 @@ class GigyaKeysForm extends ConfigFormBase {
 		}
 		//Check if the form has errors, if true we do not need to validate the user input because it has errors already.
 		if ($form_state->getErrors()) {
-
 			return;
 		}
 
@@ -172,21 +204,24 @@ class GigyaKeysForm extends ConfigFormBase {
 		}
 
 		// APP secret key was changed ?
-		$temp_access_key = $this->getValue($form_state, 'gigya_application_secret_key');
-		if (!empty($temp_access_key) && $temp_access_key !== "*********") {
-			$_gigya_application_secret_key = $temp_access_key;
+		$_gigya_auth_mode = $this->getValue($form_state, 'gigya_auth_mode');
+		$temp_access_key = ($_gigya_auth_mode === 'user_rsa')
+			? $this->getValue($form_state, 'gigya_rsa_private_key')
+			: $this->getValue($form_state, 'gigya_application_secret_key');
+		if (!empty($temp_access_key) && $temp_access_key !== "*********") { /* Auth key just entered */
+			$_gigya_auth_key = $temp_access_key;
 		}
-		else {
+		else { /* Auth key not yet entered or is already found in the system */
 			$key = $config->get('gigya.gigya_application_secret_key');
 			if (!empty($key)) {
-				$_gigya_application_secret_key = $this->helper->decrypt($key);
+				$_gigya_auth_key = $this->helper->decrypt($key);
 			}
 			else {
-				$_gigya_application_secret_key = "";
+				$_gigya_auth_key = '';
 			}
 		}
 
-		// Data Center was changed ?
+		/* Data Center was changed ? */
 		if ($this->getValue($form_state, 'gigya_data_center') != $config->get('gigya.gigya_data_center') || $this->getValue($form_state, 'gigya_other_data_center') != $config->get('gigya.gigya_other_data_center')) {
 			if ($this->getValue($form_state, 'gigya_data_center') == 'other') {
 				$_gigya_data_center = $this->getValue($form_state, 'gigya_other_data_center');
@@ -198,9 +233,11 @@ class GigyaKeysForm extends ConfigFormBase {
 		else {
 			$_gigya_data_center = $config->get('gigya.gigya_data_center');
 		}
+
 		$access_params = [];
 		$access_params['api_key'] = $_gigya_api_key;
-		$access_params['app_secret'] = $_gigya_application_secret_key;
+		$access_params['auth_mode'] = $_gigya_auth_mode;
+		$access_params['auth_key'] = $_gigya_auth_key;
 		$access_params['app_key'] = $_gigya_application_key;
 		$access_params['data_center'] = $_gigya_data_center;
 		$params = new GSObject();
@@ -237,17 +274,22 @@ class GigyaKeysForm extends ConfigFormBase {
 	}
 
 	/**
-	 * @param array                                $form
-	 * @param \Drupal\Core\Form\FormStateInterface $form_state
+	 * @param array              $form
+	 * @param FormStateInterface $form_state
 	 */
 	public function submitForm(array &$form, FormStateInterface $form_state) {
 		$config = $this->config('gigya.settings');
 		$config->set('gigya.gigya_application_key', $this->getValue($form_state, 'gigya_application_key'));
 		$config->set('gigya.gigya_api_key', $this->getValue($form_state, 'gigya_api_key'));
+		$config->set('gigya.gigya_auth_mode', $this->getValue($form_state, 'gigya_auth_mode'));
 		$temp_access_key = $this->getValue($form_state, 'gigya_application_secret_key');
 		if (!empty($temp_access_key) && $temp_access_key !== "*********") {
 			$enc = $this->helper->enc($temp_access_key);
 			$config->set('gigya.gigya_application_secret_key', $enc);
+		}
+		$private_key = $this->getValue($form_state, 'gigya_rsa_private_key');
+		if (!empty($private_key)) {
+			$config->set('gigya_rsa_private_key', $private_key);
 		}
 
 		if ($this->getValue($form_state, 'gigya_data_center') == 'other') {

@@ -2,7 +2,7 @@
 
 namespace Drupal\gigya\CmsStarterKit\fieldMapping;
 
-use Drupal\gigya\CmsStarterKit\sdk\GigyaJsonObject;
+use Drupal\gigya\CmsStarterKit\GigyaJsonObject;
 
 class ConfItem {
 

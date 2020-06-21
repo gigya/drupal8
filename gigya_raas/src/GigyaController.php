@@ -16,6 +16,7 @@
 	use Drupal\user\Entity\User;
 	use Drupal\user\UserInterface;
 	use Exception;
+	use Firebase\JWT\JWT;
 	use Symfony\Component\HttpFoundation\Request;
 	use Drupal\gigya\Helper\GigyaHelper;
 
@@ -374,25 +375,32 @@
 		public function gigyaRaasExtCookieAjax(Request $request, $login = FALSE) {
 			if ($this->shouldAddExtCookie($request, $login))
 			{
+				/* Retrieve config from Drupal */
+				$helper = new GigyaHelper();
 				$gigya_conf = Drupal::config('gigya.settings');
 				$session_time = Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
 				$api_key = $gigya_conf->get('gigya.gigya_api_key');
+				$app_key = $gigya_conf->get('gigya.gigya_application_key');
+				$auth_mode = $gigya_conf->get('gigya.gigya_auth_mode');
+				$auth_key = $helper->decrypt(($auth_mode === 'user_rsa') ? $gigya_conf->get('gigya_rsa_private_key') : $gigya_conf->get('gigya_application_secret_key')); ////
+
 				$glt_cookie = $request->cookies->get('glt_' . $api_key);
 				$token = (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL;
 				$now = $_SERVER['REQUEST_TIME'];
 				$session_expiration = strval($now + $session_time);
 
-				$helper = new GigyaHelper();
 				$gltexp_cookie = $request->cookies->get('gltexp_' . $api_key);
 				$gltexp_cookie_timestamp = explode('_', $gltexp_cookie)[0];
 				if (empty($gltexp_cookie_timestamp) or (time() < $gltexp_cookie_timestamp))
 				{
 					if (!empty($token))
 					{
-						$session_sig = $this->calcDynamicSessionSig(
-							$token, $session_expiration, $gigya_conf->get('gigya.gigya_application_key'),
-							$helper->decrypt($gigya_conf->get('gigya.gigya_application_secret_key'))
-						);
+						if ($auth_mode === 'user_rsa') {
+							$session_sig = $this->calculateDynamicSessionSignatureJwtSigned($token, $session_expiration, $app_key, $auth_key);
+						}
+						else {
+							$session_sig = $this->getDynamicSessionSignatureUserSigned($token, $session_expiration, $app_key, $auth_key);
+						}
 						setrawcookie('gltexp_' . $api_key, rawurlencode($session_sig), time() + (10 * 365 * 24 * 60 * 60), '/', $request->getHost());
 					}
 				}
@@ -421,10 +429,21 @@
 			return TRUE;
 		}
 
-		private function calcDynamicSessionSig($token, $expiration, $userKey, $secret) {
+		private function getDynamicSessionSignatureUserSigned($token, $expiration, $userKey, $secret) {
 			$unsignedExpString = utf8_encode($token . "_" . $expiration . "_" . $userKey);
 			$rawHmac = hash_hmac("sha1", utf8_encode($unsignedExpString), base64_decode($secret), TRUE);
 			$sig = base64_encode($rawHmac);
+
 			return $expiration . '_' . $userKey . '_' . $sig;
+		}
+
+		protected function calculateDynamicSessionSignatureJwtSigned(string $loginToken, int $expiration, string $applicationKey, string $privateKey) {
+			$payload = [
+				'sub' => $loginToken,
+				'iat' => time(),
+				'exp' => intval($expiration),
+			];
+
+			return JWT::encode($payload, $privateKey, 'RS256', $applicationKey);
 		}
 	}

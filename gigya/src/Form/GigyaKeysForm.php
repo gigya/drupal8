@@ -13,6 +13,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\gigya\Helper\GigyaHelperInterface;
+use Exception;
 use Gigya\PHP\GSObject;
 
 class GigyaKeysForm extends ConfigFormBase {
@@ -52,7 +53,7 @@ class GigyaKeysForm extends ConfigFormBase {
 			$this->helper = $helper;
 		}
 		if (!$this->helper->checkEncryptKey()) {
-			$messenger = \Drupal::service('messenger');
+			$messenger = Drupal::service('messenger');
 			$messenger->addError($this->t('Cannot read encryption key. Either the file path is incorrect or the file is empty.'));
 		}
 		$form = parent::buildForm($form, $form_state);
@@ -88,7 +89,9 @@ class GigyaKeysForm extends ConfigFormBase {
 		$form['gigya_rsa_private_key'] = [
 			'#type'        => 'textarea',
 			'#title'       => $this->t('Gigya RSA Private Key'),
-			'#description' => $this->t('Specify the Gigya RSA private key Key for this domain'),
+			'#description' => ((!empty($config->get('gigya.gigya_rsa_private_key')))
+				? '<span class="gigya-msg-success">' . $this->t('RSA private key entered') . '</span>'
+				: $this->t('Specify the Gigya RSA private key Key for this domain')),
 			'#rows'        => 16,
 			'#cols'        => 64,
 			'#attributes'  => [
@@ -170,7 +173,7 @@ class GigyaKeysForm extends ConfigFormBase {
 	 * @param array                                $form
 	 * @param \Drupal\Core\Form\FormStateInterface $form_state
 	 *
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	public function validateForm(array &$form, FormStateInterface $form_state) {
 		parent::validateForm($form, $form_state);
@@ -212,7 +215,9 @@ class GigyaKeysForm extends ConfigFormBase {
 			$_gigya_auth_key = $temp_access_key;
 		}
 		else { /* Auth key not yet entered or is already found in the system */
-			$key = $config->get('gigya.gigya_application_secret_key');
+			$key = ($_gigya_auth_mode === 'user_rsa')
+				? $config->get('gigya.gigya_rsa_private_key')
+				: $config->get('gigya.gigya_application_secret_key');
 			if (!empty($key)) {
 				$_gigya_auth_key = $this->helper->decrypt($key);
 			}
@@ -243,13 +248,19 @@ class GigyaKeysForm extends ConfigFormBase {
 		$params = new GSObject();
 		$params->put('filter', 'full');
 
-		$res = $this->helper->sendApiCall('accounts.getSchema', $params, $access_params);
 		$valid = FALSE;
-		if ($res->getErrorCode() == 0) {
-			$valid = TRUE;
+		try {
+			$res = $this->helper->sendApiCall('accounts.getSchema', $params, $access_params);
+			if ($res->getErrorCode() == 0) {
+				$valid = TRUE;
+			}
+		} catch (Exception $e) {
+			/* Optional error message that's not used because it could reveal inner workings of module. */
+			$error_message = new TranslatableMarkup('Gigya error: @code – @msg', ['@code' => $e->getCode(), '@message' => $e->getMessage()]);
 		}
+
 		if ($valid !== TRUE) {
-			if (is_object($res)) {
+			if (!empty($res) and is_object($res)) {
 				$code = $res->getErrorCode();
 				$msg = $res->getMessage();
 
@@ -264,11 +275,11 @@ class GigyaKeysForm extends ConfigFormBase {
 					]);
 			}
 			else {
-				$form_state->setErrorByName('gigya_api_key', $this->t("Your API key or Secret key could not be validated. Please try again"));
+				$form_state->setErrorByName('gigya_api_key', $this->t('Your Gigya authentication details could not be validated. Please try again.'));
 			}
 		}
 		else {
-			$messenger = \Drupal::service('messenger');
+			$messenger = Drupal::service('messenger');
 			$messenger->addMessage($this->t('Gigya validated properly. This site is authorized to use Gigya services'));
 		}
 	}
@@ -289,7 +300,8 @@ class GigyaKeysForm extends ConfigFormBase {
 		}
 		$private_key = $this->getValue($form_state, 'gigya_rsa_private_key');
 		if (!empty($private_key)) {
-			$config->set('gigya_rsa_private_key', $private_key);
+			$private_key = $this->helper->enc($private_key);
+			$config->set('gigya.gigya_rsa_private_key', $private_key);
 		}
 
 		if ($this->getValue($form_state, 'gigya_data_center') == 'other') {

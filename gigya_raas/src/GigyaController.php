@@ -382,7 +382,7 @@
 				$api_key = $gigya_conf->get('gigya.gigya_api_key');
 				$app_key = $gigya_conf->get('gigya.gigya_application_key');
 				$auth_mode = $gigya_conf->get('gigya.gigya_auth_mode');
-				$auth_key = $helper->decrypt(($auth_mode === 'user_rsa') ? $gigya_conf->get('gigya_rsa_private_key') : $gigya_conf->get('gigya_application_secret_key')); ////
+				$auth_key = $helper->decrypt(($auth_mode === 'user_rsa') ? $gigya_conf->get('gigya.gigya_rsa_private_key') : $gigya_conf->get('gigya.gigya_application_secret_key'));
 
 				$glt_cookie = $request->cookies->get('glt_' . $api_key);
 				$token = (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL;

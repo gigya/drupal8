@@ -60,7 +60,7 @@ class DsFactoryTests extends PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $apiHelper = new GigyaApiHelper("apiKey", "appKey", "appSecret", "us1.gigya.com");
+        $apiHelper = new GigyaApiHelper("apiKey", "appKey", "appSecret", "us1.gigya.com", "user_secret");
         $this->factory = new DsFactory($apiHelper);
     }
 

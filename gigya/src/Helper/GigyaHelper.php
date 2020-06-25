@@ -105,9 +105,13 @@ class GigyaHelper implements GigyaHelperInterface {
     $key = $this->getEncryptKey();
 
     $access_params['api_key'] = Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
-    $access_params['app_secret'] = GigyaApiHelper::decrypt(Drupal::config('gigya.settings')->get('gigya.gigya_application_secret_key'), $key);
-    $access_params['app_key'] = Drupal::config('gigya.settings')->get('gigya.gigya_application_key');
+    $access_params['auth_mode'] = Drupal::config('gigya.settings')->get('gigya.gigya_auth_mode') ?? 'user_secret';
+		$access_params['auth_key'] = ($access_params['auth_mode'] === 'user_rsa')
+			? GigyaApiHelper::decrypt(Drupal::config('gigya.settings')->get('gigya.gigya_rsa_private_key'), $key)
+			: GigyaApiHelper::decrypt(Drupal::config('gigya.settings')->get('gigya.gigya_application_secret_key'), $key);
+		$access_params['app_key'] = Drupal::config('gigya.settings')->get('gigya.gigya_application_key');
     $access_params['data_center'] = Drupal::config('gigya.settings')->get('gigya.gigya_data_center');
+
     return $access_params;
   }
 
@@ -176,12 +180,12 @@ class GigyaHelper implements GigyaHelperInterface {
 	 *
 	 * @return bool | GigyaUser
 	 */
-  public function validateAndFetchRaasUser($uid, $signature, $sig_timestamp) {
-    try {
-    	$params = array('environment' => $this->getEnvString());
+	public function validateAndFetchRaasUser($uid, $signature, $sig_timestamp) {
+		$params = ['environment' => $this->getEnvString()];
 
-			$auth_mode = Drupal::config('gigya.settings')->get('gigya.gigya_auth_mode') ?? 'user_secret';
+		$auth_mode = Drupal::config('gigya.settings')->get('gigya.gigya_auth_mode') ?? 'user_secret';
 
+		try {
       return ($auth_mode == 'user_rsa')
 				? $this->getGigyaApiHelper()->validateJwtAuth($uid, $signature, NULL, NULL, $params)
 				: $this->getGigyaApiHelper()->validateUid($uid, $signature, $sig_timestamp, NULL, NULL, $params);
@@ -197,7 +201,7 @@ class GigyaHelper implements GigyaHelperInterface {
 
   public function getGigyaApiHelper() {
     $access_params = $this->getAccessParams();
-    return new GigyaApiHelper($access_params['api_key'], $access_params['app_key'], $access_params['app_secret'], $access_params['data_center']);
+    return new GigyaApiHelper($access_params['api_key'], $access_params['app_key'], $access_params['auth_key'], $access_params['data_center'], $access_params['auth_mode']);
   }
 
   public function getGigyaDsQuery() {
@@ -253,6 +257,7 @@ class GigyaHelper implements GigyaHelperInterface {
 	 * @return array
 	 * @throws DsQueryException
 	 * @throws GSApiException
+	 * @throws GSException
 	 */
   public function doSingleDsSearch($type, $oid, $fields, $uid) {
     $dsQueryObj = $this->getGigyaDsQuery();

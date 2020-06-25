@@ -44,9 +44,9 @@ class GigyaApiHelper
 		$this->userKey  = !empty($userKey) ? $userKey : $confArray['appKey'];
 		$this->authMode = $authMode;
 		if ($authMode === 'user_secret') {
-			$this->authKey = !empty($authKey) ? self::decrypt($authKey) : self::decrypt($confArray['appSecret']);
+			$this->authKey = !empty($authKey) ? $authKey : self::decrypt($confArray['appSecret']);
 		} else {
-			$this->authKey = self::decrypt($authKey);
+			$this->authKey = $authKey;
 		}
 
 		$this->apiKey     = !empty($apiKey) ? $apiKey : $confArray['apiKey'];
@@ -63,13 +63,14 @@ class GigyaApiHelper
 	 * @throws GSException
 	 * @throws Exception
 	 */
-	public function sendApiCall( $method, $params ) {
+	public function sendApiCall($method, $params) {
 		if ($this->authMode === 'user_rsa') {
-			$req = GSFactory::createGSRequestPrivateKey( $this->apiKey, $this->userKey, $this->authKey, $method,
-				GSFactory::createGSObjectFromArray( $params ), $this->dataCenter );
-		} else {
-			$req = GSFactory::createGSRequestAppKey( $this->apiKey, $this->userKey, $this->authKey, $method,
-				GSFactory::createGSObjectFromArray( $params ), $this->dataCenter );
+			$req = GSFactory::createGSRequestPrivateKey($this->apiKey, $this->userKey, $this->authKey, $method,
+				GSFactory::createGSObjectFromArray($params), $this->dataCenter);
+		}
+		else {
+			$req = GSFactory::createGSRequestAppKey($this->apiKey, $this->userKey, $this->authKey, $method,
+				GSFactory::createGSObjectFromArray($params), $this->dataCenter);
 		}
 
 		return $req->send();

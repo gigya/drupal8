@@ -86,16 +86,25 @@ class GigyaKeysForm extends ConfigFormBase {
 			'#default_value' => $config->get('gigya.gigya_auth_mode') ?? 'user_secret',
 		];
 
+		$rsa_private_key = $this->helper->decrypt($config->get('gigya.gigya_rsa_private_key'));
+		$rsa_private_key = substr(trim(str_replace([
+			'-----BEGIN RSA PRIVATE KEY-----',
+			'-----END RSA PRIVATE KEY-----',
+		], '', $rsa_private_key)), 0, -2);
+		$is_private_key_entered = (!empty($rsa_private_key));
 		$form['gigya_rsa_private_key'] = [
 			'#type'        => 'textarea',
 			'#title'       => $this->t('Gigya RSA Private Key'),
-			'#description' => ((!empty($config->get('gigya.gigya_rsa_private_key')))
+			'#description' => $is_private_key_entered
 				? '<span class="gigya-msg-success">' . $this->t('RSA private key entered') . '</span>'
-				: $this->t('Specify the Gigya RSA private key Key for this domain')),
+				: $this->t('Specify the Gigya RSA private key Key for this domain'),
 			'#rows'        => 16,
 			'#cols'        => 64,
 			'#attributes'  => [
-				'style' => 'width: auto',
+				'placeholder' => ($is_private_key_entered)
+					? $this->t('Gigya RSA private key has been entered. Entered key is: ') . substr($rsa_private_key, 0, 4) . '****' . substr($rsa_private_key, -4)
+					: $this->t('Enter your RSA private key, as provided by Gigya'),
+				'style'       => 'width: auto',
 			],
 			'#states'      => [
 				'visible' => [
@@ -121,14 +130,11 @@ class GigyaKeysForm extends ConfigFormBase {
 					':input[name="gigya_auth_mode"]' => ['value' => 'user_secret'],
 				],
 			],
+			'#required'    => FALSE,
 		];
 
-		if (empty($access_key)) {
-			$form['gigya_application_secret_key']['#required'] = TRUE;
-		}
-		else {
+		if (!empty($access_key)) {
 			$form['gigya_application_secret_key']['#default_value'] = "*********";
-			$form['gigya_application_secret_key']['#required'] = FALSE;
 			$form['gigya_application_secret_key']['#description'] .= $this->t(". Current key first and last letters are @accessKey", [
 				'@accessKey' => substr($access_key, 0, 2) . "****" .
 					substr($access_key, strlen($access_key) - 2, 2),

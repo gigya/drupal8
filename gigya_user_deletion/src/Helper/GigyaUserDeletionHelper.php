@@ -40,7 +40,7 @@
 				{
 					$secretKey = $helper->decrypt($secretKeyEnc);
 				}
-				$objectKeyPrefix = isset($storageDetails['objectKeyPrefix']) ? $storageDetails['objectKeyPrefix'] . "/" : "";
+				$objectKeyPrefix = !empty($storageDetails['objectKeyPrefix']) ? $storageDetails['objectKeyPrefix'] . "/" : "";
 				$region = $this->getRegion();
 				$s3Client = S3Client::factory(array(
 												  'key' => $accessKey,

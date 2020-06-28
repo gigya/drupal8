@@ -256,7 +256,7 @@ class GigyaKeysForm extends ConfigFormBase {
 
 		$valid = FALSE;
 		try {
-			$res = $this->helper->sendApiCall('accounts.getSchema', $params, $access_params);
+			$res = $this->helper->sendApiCall('socialize.getProvidersConfig', $params, $access_params);
 			if ($res->getErrorCode() == 0) {
 				$valid = TRUE;
 			}
@@ -303,11 +303,13 @@ class GigyaKeysForm extends ConfigFormBase {
 		if (!empty($temp_access_key) && $temp_access_key !== "*********") {
 			$enc = $this->helper->enc($temp_access_key);
 			$config->set('gigya.gigya_application_secret_key', $enc);
+			$config->set('gigya.gigya_rsa_private_key', '');
 		}
 		$private_key = $this->getValue($form_state, 'gigya_rsa_private_key');
 		if (!empty($private_key)) {
 			$private_key = $this->helper->enc($private_key);
 			$config->set('gigya.gigya_rsa_private_key', $private_key);
+			$config->set('gigya.gigya_application_secret_key', '');
 		}
 
 		if ($this->getValue($form_state, 'gigya_data_center') == 'other') {

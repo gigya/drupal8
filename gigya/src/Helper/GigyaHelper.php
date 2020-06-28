@@ -359,8 +359,8 @@ class GigyaHelper implements GigyaHelperInterface {
 	/**
 	 * This function enriches the Drupal user with Gigya data, but it does not permanently save the user data!
 	 *
-	 * @param GigyaUser $gigya_data
-	 * @param \Drupal\user\UserInterface $drupal_user
+	 * @param GigyaUser     $gigya_data
+	 * @param UserInterface $drupal_user
 	 */
   public function processFieldMapping($gigya_data, UserInterface $drupal_user) {
     try {
@@ -380,6 +380,11 @@ class GigyaHelper implements GigyaHelperInterface {
         if ($drupal_field == 'mail' or $drupal_field == 'name') {
           continue;
         }
+
+				/* Field names must be strings. This protects against basic incorrect formatting, though care should be taken */
+				if (gettype($drupal_field) !== 'string' or gettype($raas_field) !== 'string') {
+					continue;
+				}
 
         $raas_field_parts = explode('.', $raas_field);
         $val = $this->getNestedValue($gigya_data, $raas_field_parts);

@@ -1,16 +1,51 @@
+gigya.global:
+  type: config_object
+  label: Gigya global settings
+  mapping:
+    gigya:
+      type: mapping
+      mapping:
+        language:
+          type: string
+        languageFallback:
+          type: string
+        keyPath:
+          type: string
+        gigyaDebugMode:
+          type: boolean
+        globalParameters:
+          type: mapping
+          mapping:
+            bypassCookiePolicy:
+              type: string
+            enabledProviders:
+              type: string
+            sessionExpiration:
+              type: integer
+        enableRaaS:
+          type: boolean
+        fieldMapping:
+          type: mapping
+          mapping:
+            uuid:
+              type: string
+
 gigya.settings:
-  type: mapping
+  type: config_object
   label: 'Gigya credentials settings'
   mapping:
-    gigya_api_key:
-      type: text
-      label: 'Gigya Api Key'
-    gigya_application_key:
-      type: text
-      label: 'Gigya Application Key'
-    gigya_application_secret_key:
-      type: text
-      label: 'Gigya Application Secret Key'
-    data_center:
-      type: text
-      label: 'Data Center'
+    gigya:
+      type: mapping
+      mapping:
+        gigya_api_key:
+          type: text
+          label: 'Gigya Api Key'
+        gigya_application_key:
+          type: text
+          label: 'Gigya Application Key'
+        gigya_application_secret_key:
+          type: text
+          label: 'Gigya Application Secret Key'
+        gigya_data_center:
+          type: text
+          label: 'Data Center'

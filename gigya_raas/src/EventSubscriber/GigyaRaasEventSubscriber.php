@@ -30,7 +30,7 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 		$cached_session_expiration = $gigya_raas_session->get('session_expiration');
 		if (($gigya_raas_session->get('session_registered') === FALSE) and $cached_session_expiration) {
 			Database::getConnection()
-				->query('UPDATE {sessions} s SET expiration = :expiration, is_remember_me = :is_remember_me WHERE s.uid = :uid AND s.sid = :sid',
+				->query('UPDATE {sessions} SET expiration = :expiration, is_remember_me = :is_remember_me WHERE uid = :uid AND sid = :sid',
 					[':expiration' => $cached_session_expiration, ':is_remember_me' => $is_remember_me, ':uid' => $uid, ':sid' => Crypt::hashBase64($drupal_session->getId())]);
 
 			try {

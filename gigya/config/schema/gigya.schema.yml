@@ -43,9 +43,15 @@ gigya.settings:
         gigya_application_key:
           type: text
           label: 'Gigya Application Key'
+        gigya_auth_mode:
+          type: string
+          label: 'Gigya authentication mode'
         gigya_application_secret_key:
           type: text
           label: 'Gigya Application Secret Key'
+        gigya_rsa_private_key:
+          type: text
+          label: 'Gigya RSA private key'
         gigya_data_center:
           type: text
           label: 'Data Center'

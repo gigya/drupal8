@@ -2,4 +2,6 @@ gigya:
   gigya_api_key: ''
   gigya_application_key: ''
   gigya_application_secret_key: ''
+  gigya_auth_mode: 'user_secret'
+  gigya_rsa_private_key: ''
   gigya_data_center: 'us1.gigya.com'

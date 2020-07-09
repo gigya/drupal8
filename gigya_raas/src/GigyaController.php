@@ -120,7 +120,10 @@
 				$id_token = $request->get('id_token');
 				$session_type = ($request->get('remember') == 'true') ? 'remember_me' : 'regular';
 
-				$login_redirect = Drupal::config('gigya_raas.settings')->get('gigya_raas.login_redirect');
+				$login_redirect = \Drupal::config('gigya_raas.settings')->get('gigya_raas.login_redirect') ?: '/';
+				if ($destination = \Drupal::request()->query->get('destination')) {
+				  $login_redirect = urldecode($destination);
+				}
 				$logout_redirect = Drupal::config('gigya_raas.settings')->get('gigya_raas.logout_redirect');
 
 				$base_path = base_path();

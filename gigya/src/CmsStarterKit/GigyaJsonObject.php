@@ -1,12 +1,14 @@
 <?php
 
-namespace Drupal\gigya\CmsStarterKit\sdk;
+namespace Drupal\gigya\CmsStarterKit;
 
 abstract class GigyaJsonObject {
 
-  /**
-   * GigyaJsonObject constructor.
-   */
+	/**
+	 * GigyaJsonObject constructor.
+	 *
+	 * @param $json
+	 */
   public function __construct($json) {
     if (NULL != $json) {
       $jsonArray = json_decode($json, TRUE);

@@ -8,8 +8,8 @@
 namespace Drupal\gigya\Helper;
 
 use Drupal\user\UserInterface;
-use Drupal\gigya\CmsStarterKit\sdk\GSApiException;
-use Drupal\gigya\CmsStarterKit\sdk\GSResponse;
+use Drupal\gigya\CmsStarterKit\GSApiException;
+use Gigya\PHP\GSResponse;
 
 interface GigyaHelperInterface {
   public function getNestedValue($obj, $keys);
@@ -32,7 +32,7 @@ interface GigyaHelperInterface {
 	 */
   public function sendApiCall($method, $params = null, $access_params = FALSE);
 
-  public function validateUid($uid, $uid_sig, $sig_timestamp);
+  public function validateAndFetchRaasUser($uid, $signature, $sig_timestamp);
 
   public function getGigyaApiHelper();
 

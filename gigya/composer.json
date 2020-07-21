@@ -12,5 +12,16 @@
       "email": "yan.na@gigya-inc.com"
     }
   ],
-  "minimum-stability": "dev"
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/sap/gigya-php-sdk"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "ext-json": "*",
+    "ext-openssl": "*",
+    "gigya/php-sdk": "^3.0"
+  }
 }

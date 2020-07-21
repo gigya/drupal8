@@ -10,17 +10,22 @@ namespace Drupal\gigya\Helper;
 use Drupal;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Database\Database;
+use Drupal\gigya\CmsStarterKit\ds\DsQueryException;
+use Drupal\gigya\CmsStarterKit\GigyaApiRequest;
+use Drupal\gigya\CmsStarterKit\GigyaAuthRequest;
+use Drupal\gigya\CmsStarterKit\GSApiException;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Exception;
 use Drupal\gigya\CmsStarterKit\GigyaApiHelper;
-use Drupal\gigya\CmsStarterKit\sdk\GigyaApiRequest;
-use Drupal\gigya\CmsStarterKit\sdk\GSApiException;
-use Drupal\gigya\CmsStarterKit\sdk\GSObject;
 use Drupal\gigya\CmsStarterKit\user\GigyaProfile;
 use Drupal\gigya\CmsStarterKit\user\GigyaUser;
 use Drupal\gigya\CmsStarterKit\user\GigyaUserFactory;
 use Drupal\gigya\CmsStarterKit\ds\DsQueryObject;
+use Gigya\PHP\GSException;
+use Gigya\PHP\GSObject;
+use Gigya\PHP\GSResponse;
+use InvalidArgumentException;
 
 class GigyaHelper implements GigyaHelperInterface {
 
@@ -67,7 +72,7 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
   public function checkEncryptKey() {
-    $keypath = \Drupal::config('gigya.global')->get('gigya.keyPath');
+    $keypath = Drupal::config('gigya.global')->get('gigya.keyPath');
     $key = $this->getEncKeyFile($keypath);
     if (!empty(file_get_contents($key))) {
       return TRUE;
@@ -78,7 +83,7 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
   public function getEncryptKey() {
-  	$path = \Drupal::config('gigya.global')->get('gigya.keyPath');
+  	$path = Drupal::config('gigya.global')->get('gigya.keyPath');
     $keypath = $this->getEncKeyFile($path);
     try
 	{
@@ -90,7 +95,7 @@ class GigyaHelper implements GigyaHelperInterface {
 	}
 	catch (Exception $e)
 	{
-		\Drupal::logger('gigya')->error('Key file not found. Configure the correct path in your gigya.global TML file.');
+		Drupal::logger('gigya')->error('Key file not found. Configure the correct path in your gigya.global TML file.');
 		return false;
 	}
   }
@@ -100,9 +105,13 @@ class GigyaHelper implements GigyaHelperInterface {
     $key = $this->getEncryptKey();
 
     $access_params['api_key'] = Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
-    $access_params['app_secret'] = GigyaApiHelper::decrypt(Drupal::config('gigya.settings')->get('gigya.gigya_application_secret_key'), $key);
-    $access_params['app_key'] = Drupal::config('gigya.settings')->get('gigya.gigya_application_key');
+    $access_params['auth_mode'] = Drupal::config('gigya.settings')->get('gigya.gigya_auth_mode') ?? 'user_secret';
+		$access_params['auth_key'] = ($access_params['auth_mode'] === 'user_rsa')
+			? GigyaApiHelper::decrypt(Drupal::config('gigya.settings')->get('gigya.gigya_rsa_private_key'), $key)
+			: GigyaApiHelper::decrypt(Drupal::config('gigya.settings')->get('gigya.gigya_application_secret_key'), $key);
+		$access_params['app_key'] = Drupal::config('gigya.settings')->get('gigya.gigya_application_key');
     $access_params['data_center'] = Drupal::config('gigya.settings')->get('gigya.gigya_data_center');
+
     return $access_params;
   }
 
@@ -111,7 +120,7 @@ class GigyaHelper implements GigyaHelperInterface {
 	 * @param GSObject $params
 	 * @param bool $access_params
 	 *
-	 * @return Exception|GSApiException|\Drupal\gigya\CmsStarterKit\sdk\GSResponse
+	 * @return Exception|GSApiException|GSResponse
 	 *
 	 * @throws \Exception
 	 */
@@ -126,7 +135,12 @@ class GigyaHelper implements GigyaHelperInterface {
 
       $params->put('environment', $this->getEnvString());
 
-			$request = new GigyaApiRequest($access_params['api_key'], $access_params['app_secret'], $method, $params, $access_params['data_center'], TRUE, $access_params['app_key']);
+			if (!empty($access_params['auth_mode']) && $access_params['auth_mode'] === 'user_rsa') {
+				$request = new GigyaAuthRequest($access_params['api_key'], $access_params['auth_key'], $method, $params, $access_params['data_center'], TRUE, $access_params['app_key']);
+			}
+			else {
+				$request = new GigyaApiRequest($access_params['api_key'], $access_params['auth_key'], $method, $params, $access_params['data_center'], TRUE, $access_params['app_key']);
+			}
 
 			$result = $request->send();
 			if (Drupal::config('gigya.global')->get('gigya.gigyaDebugMode') == TRUE) {
@@ -161,15 +175,20 @@ class GigyaHelper implements GigyaHelperInterface {
 	 * Validates and gets Gigya user
 	 *
 	 * @param $uid
-	 * @param $uid_sig
+	 * @param $signature
 	 * @param $sig_timestamp
+	 *
 	 * @return bool | GigyaUser
 	 */
-  public function validateUid($uid, $uid_sig, $sig_timestamp) {
-    try {
-      $params = array('environment' => $this->getEnvString());
+	public function validateAndFetchRaasUser($uid, $signature, $sig_timestamp) {
+		$params = ['environment' => $this->getEnvString()];
 
-      return $this->getGigyaApiHelper()->validateUid($uid, $uid_sig, $sig_timestamp, NULL, NULL, $params);
+		$auth_mode = Drupal::config('gigya.settings')->get('gigya.gigya_auth_mode') ?? 'user_secret';
+
+		try {
+      return ($auth_mode == 'user_rsa')
+				? $this->getGigyaApiHelper()->validateJwtAuth($uid, $signature, NULL, NULL, $params)
+				: $this->getGigyaApiHelper()->validateUid($uid, $signature, $sig_timestamp, NULL, NULL, $params);
     } catch (GSApiException $e) {
       Drupal::logger('gigya')->error("Gigya API call error: @error, Call ID: @callId", array('@callId' => $e->getCallId(), '@error' => $e->getMessage()));
       return false;
@@ -182,7 +201,7 @@ class GigyaHelper implements GigyaHelperInterface {
 
   public function getGigyaApiHelper() {
     $access_params = $this->getAccessParams();
-    return new GigyaApiHelper($access_params['api_key'], $access_params['app_key'], $access_params['app_secret'], $access_params['data_center']);
+    return new GigyaApiHelper($access_params['api_key'], $access_params['app_key'], $access_params['auth_key'], $access_params['data_center'], $access_params['auth_mode']);
   }
 
   public function getGigyaDsQuery() {
@@ -195,9 +214,9 @@ class GigyaHelper implements GigyaHelperInterface {
    * @param string $oid
    * @param array|object $data
    *
-   * @return \Drupal\gigya\CmsStarterKit\sdk\GSResponse
+   * @return GSResponse
    * @throws GSApiException
-   * @throws \Drupal\gigya\CmsStarterKit\sdk\GSException
+   * @throws GSException
    */
   public function setDsData($uid, $type, $oid, $data) {
     $params = [];
@@ -216,8 +235,7 @@ class GigyaHelper implements GigyaHelperInterface {
 	 * @param $uid
 	 *
 	 * @return mixed
-	 * @throws \Drupal\gigya\CmsStarterKit\sdk\GSApiException
-	 * @throws \Drupal\gigya\CmsStarterKit\sdk\GSException
+	 * @throws GSApiException
 	 */
   public function doSingleDsGet($type, $oid, $fields, $uid) {
     $dsQueryObj = $this->getGigyaDsQuery();
@@ -226,6 +244,7 @@ class GigyaHelper implements GigyaHelperInterface {
     $dsQueryObj->setUid($uid);
     $dsQueryObj->setFields($fields);
     $res = $dsQueryObj->dsGet();
+
     return $res->serialize()['data'];
   }
 
@@ -236,9 +255,9 @@ class GigyaHelper implements GigyaHelperInterface {
 	 * @param $uid
 	 *
 	 * @return array
-	 * @throws \Drupal\gigya\CmsStarterKit\ds\DsQueryException
-	 * @throws \Drupal\gigya\CmsStarterKit\sdk\GSApiException
-	 * @throws \Drupal\gigya\CmsStarterKit\sdk\GSException
+	 * @throws DsQueryException
+	 * @throws GSApiException
+	 * @throws GSException
 	 */
   public function doSingleDsSearch($type, $oid, $fields, $uid) {
     $dsQueryObj = $this->getGigyaDsQuery();
@@ -265,13 +284,13 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
   public function getUidByMail($mail) {
-    return \Drupal::entityQuery('user')
+    return Drupal::entityQuery('user')
       ->condition('mail',  $mail)
       ->execute();
   }
 
   public function getUidByMails($mails) {
-    return \Drupal::entityQuery('user')
+    return Drupal::entityQuery('user')
       ->condition('mail',  $mails)
       ->execute();
   }
@@ -282,7 +301,7 @@ class GigyaHelper implements GigyaHelperInterface {
    * @return User
    */
   public function getUidByUUID($uuid) {
-    return \Drupal::service('entity.repository')->loadEntityByUuid('user', $uuid);
+    return Drupal::service('entity.repository')->loadEntityByUuid('user', $uuid);
   }
 
   /**
@@ -319,7 +338,7 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
   public function getUidByName($name) {
-    return \Drupal::entityQuery('user')
+    return Drupal::entityQuery('user')
       ->condition('name',  Database::getConnection()->escapeLike($name), 'LIKE')
       ->execute();
   }
@@ -328,10 +347,10 @@ class GigyaHelper implements GigyaHelperInterface {
 	 * @return array|object|null
 	 */
 	public function getFieldMappingConfig() {
-		$config = json_decode(\Drupal::config('gigya_raas.fieldmapping')
+		$config = json_decode(Drupal::config('gigya_raas.fieldmapping')
 			->get('gigya.fieldmapping_config'));
 		if (empty($config)) {
-			$config = \Drupal::config('gigya.global')->get('gigya.fieldMapping');
+			$config = Drupal::config('gigya.global')->get('gigya.fieldMapping');
 		}
 
 		return $config;
@@ -340,15 +359,15 @@ class GigyaHelper implements GigyaHelperInterface {
 	/**
 	 * This function enriches the Drupal user with Gigya data, but it does not permanently save the user data!
 	 *
-	 * @param GigyaUser $gigya_data
-	 * @param \Drupal\user\UserInterface $drupal_user
+	 * @param GigyaUser     $gigya_data
+	 * @param UserInterface $drupal_user
 	 */
   public function processFieldMapping($gigya_data, UserInterface $drupal_user) {
     try {
 			$field_map = $this->getFieldMappingConfig();
 
       try {
-	      \Drupal::moduleHandler()
+	      Drupal::moduleHandler()
 	        ->alter('gigya_raas_map_data', $gigya_data, $drupal_user, $field_map);
       }
       catch (Exception $e) {
@@ -361,6 +380,11 @@ class GigyaHelper implements GigyaHelperInterface {
         if ($drupal_field == 'mail' or $drupal_field == 'name') {
           continue;
         }
+
+				/* Field names must be strings. This protects against basic incorrect formatting, though care should be taken */
+				if (gettype($drupal_field) !== 'string' or gettype($raas_field) !== 'string') {
+					continue;
+				}
 
         $raas_field_parts = explode('.', $raas_field);
         $val = $this->getNestedValue($gigya_data, $raas_field_parts);
@@ -383,14 +407,14 @@ class GigyaHelper implements GigyaHelperInterface {
               $val = intval($val);
             }
             else {
-              \Drupal::logger('gigya')->error('Failed to map ' . $drupal_field . ' from Gigya - Drupal type is boolean but Gigya type isn\'t');
+              Drupal::logger('gigya')->error('Failed to map ' . $drupal_field . ' from Gigya - Drupal type is boolean but Gigya type isn\'t');
             }
           }
 
           /* Perform the mapping from Gigya to Drupal */
 					try {
 						$drupal_user->set($drupal_field, $val);
-					} catch (\InvalidArgumentException $e) {
+					} catch (InvalidArgumentException $e) {
 						Drupal::logger('gigya')
 							->debug('Error inserting mapped field: @message',
 								['@message' => $e->getMessage()]);
@@ -412,8 +436,8 @@ class GigyaHelper implements GigyaHelperInterface {
 	 *
 	 * @return GigyaUser[]
 	 *
-	 * @throws \Drupal\gigya\CmsStarterKit\sdk\GSApiException
-	 * @throws \Drupal\gigya\CmsStarterKit\sdk\GSException
+	 * @throws GSApiException
+	 * @throws GSException
 	 */
 	public function searchGigyaUsers($query, $use_cursor = FALSE) {
 		$gigya_users = [];
@@ -470,14 +494,15 @@ class GigyaHelper implements GigyaHelperInterface {
                 "es-mx" => "Spanish (Lat-Am)","Swedish" => "es-mx");
   }
 
-  /**
-   * @return string
-   *  the environment string to add to the API call.
-   */
-  public function getEnvString() {
-    $info = system_get_info('module', 'gigya');
-    return '{"cms_name":"Drupal","cms_version":"Drupal_' . \Drupal::VERSION . '","gigya_version":"Gigya_module_' .$info['version'] . '"}';
-  }
+	/**
+	 * @return string
+	 *  the environment string to add to the API call.
+	 */
+	public function getEnvString() {
+		$info = Drupal::service('extension.list.module')->getExtensionInfo('gigya');
+
+		return '{"cms_name":"Drupal","cms_version":"Drupal_' . Drupal::VERSION . '","gigya_version":"Gigya_module_' . $info['version'] . '","php_version":"' . phpversion() . '"}';
+	}
 
 	public function sendCronEmail($job_type, $job_status, $to, $processed_items = NULL, $failed_items = NULL, $custom_email_body = '') {
 		$email_body = $custom_email_body;
@@ -491,7 +516,7 @@ class GigyaHelper implements GigyaHelperInterface {
 			$email_body = 'Job failed. No items were processed. Please consult the Drupal log (Administration > Reports > Recent log messages) for more info.';
 		}
 
-		return $this->sendEmail('Gigya cron job of type ' . $job_type . ' ' . $job_status . ' on website ' . \Drupal::request()
+		return $this->sendEmail('Gigya cron job of type ' . $job_type . ' ' . $job_status . ' on website ' . Drupal::request()
 				->getHost(),
 			$email_body,
 			$to);
@@ -518,12 +543,12 @@ class GigyaHelper implements GigyaHelperInterface {
 			foreach (array_filter(explode(',', $to)) as $email) {
 				$result = $mail_manager->mail($module, $key, trim($email), $langcode, $params, NULL, $send = TRUE);
 				if (!$result) {
-					\Drupal::logger('gigya_raas')
+					Drupal::logger('gigya_raas')
 						->error('Failed to send email to ' . $email);
 				}
 			}
 		} catch (\Exception $e) {
-			\Drupal::logger('gigya_raas')
+			Drupal::logger('gigya_raas')
 				->error('Failed to send emails - ' . $e->getMessage());
 
 			return FALSE;
@@ -540,7 +565,7 @@ class GigyaHelper implements GigyaHelperInterface {
 	 */
   protected function getEncKeyFile($uri) {
     /** @var Drupal\Core\StreamWrapper\StreamWrapperInterface $stream */
-    $stream = \Drupal::service('stream_wrapper_manager')->getViaUri($uri);
+    $stream = Drupal::service('stream_wrapper_manager')->getViaUri($uri);
     if ($stream == FALSE) {
       return realpath($uri);
     }

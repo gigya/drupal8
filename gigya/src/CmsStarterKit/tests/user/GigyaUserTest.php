@@ -1,20 +1,12 @@
 <?php
-	include_once 'sdk/GigyaJsonObject.php';
-	include_once 'sdk/GSArray.php';
-	include_once 'sdk/GSObject.php';
+	include_once 'GigyaJsonObject.php';
 	include_once 'user/GigyaProfile.php';
 	include_once 'user/GigyaUser.php';
 	include_once 'user/GigyaUserFactory.php';
 
-	use Drupal\gigya\CmsStarterKit\sdk\GSObject;
 	use Drupal\gigya\CmsStarterKit\user\GigyaUserFactory;
+	use Gigya\PHP\GSObject;
 
-	/**
-	 * Created by PhpStorm.
-	 * User: Yaniv Aran-Shamir
-	 * Date: 4/6/16
-	 * Time: 4:38 PM
-	 */
 	class GigyaUserTest extends PHPUnit_Framework_TestCase
 	{
 		public function testCreateGigyaUserFromJson() {
@@ -29,6 +21,9 @@
 			$this->assertTrue($gigyaUser->getIsActive(), "Checking active");
 		}
 
+		/**
+		 * @throws \Gigya\PHP\GSException
+		 */
 		public function testCreateGigyaUserFromArray() {
 			$json = file_get_contents(
 				__DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR

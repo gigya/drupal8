@@ -10,7 +10,7 @@ namespace Drupal\gigya\CmsStarterKit\ds;
 
 
 use Drupal\gigya\CmsStarterKit\GigyaApiHelper;
-use Drupal\gigya\CmsStarterKit\sdk\GSResponse;
+use Gigya\PHP\GSResponse;
 
 class TestDsQueryObject extends \PHPUnit_Framework_TestCase
 {

@@ -105,6 +105,7 @@
             "uid": res.UID,
             "uid_sig": res.UIDSignature,
             "sig_timestamp": res.signatureTimestamp,
+			"id_token": res.id_token,
 			"remember": remember
         };
 
@@ -122,7 +123,7 @@
             var gigyaData = {
                 UID: data.response.UID,
                 UIDSignature: data.response.UIDSignature,
-                signatureTimestamp: data.response.signatureTimestamp
+                signatureTimestamp: data.response.signatureTimestamp,
             };
 
             var ajaxSettings = {

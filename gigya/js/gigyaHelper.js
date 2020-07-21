@@ -12,6 +12,7 @@ var gigyaHelper = {
     var func = {function: method, parameters: params};
     window.gigyaCmsInit.push(func);
   },
+
   onLoginHandler: function (res) {
     /* This is an example for an onLogin event handler. It uses jQuery. If jQuery is not available at your system, replace with your own AJAX call
      *  NOTE: this example should be a edited to work.

@@ -15,10 +15,10 @@
 	use Drupal\gigya_raas\GigyaController;
 	use Drupal\Tests\BrowserTestBase;
 	use Drupal\User\Entity\User;
-	use Drupal\gigya\CmsStarterKit\sdk\GSApiException;
-	use Drupal\gigya\CmsStarterKit\sdk\GSResponse;
+	use Drupal\gigya\CmsStarterKit\GSApiException;
 	use Drupal\gigya\CmsStarterKit\user\GigyaUser;
 	use Drupal\gigya\CmsStarterKit\user\GigyaUserFactory;
+	use Gigya\PHP\GSResponse;
 
 	/**
 	 * Tests Gigya module functionality.

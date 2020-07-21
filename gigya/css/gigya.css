@@ -14,5 +14,7 @@
   display: none;
 }
 
-
-
+.gigya-msg-success {
+  color: green;
+  font-weight: bold;
+}

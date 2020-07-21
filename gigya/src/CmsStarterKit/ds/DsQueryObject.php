@@ -3,6 +3,9 @@
 namespace Drupal\gigya\CmsStarterKit\ds;
 
 use Drupal\gigya\CmsStarterKit\GigyaApiHelper;
+use Drupal\gigya\CmsStarterKit\GSApiException;
+use Gigya\PHP\GSObject;
+use InvalidArgumentException;
 
 class DsQueryObject {
 
@@ -162,7 +165,7 @@ class DsQueryObject {
    */
   private function sanitizeAndBuild($field, $op, $value, $valueType = "string") {
     if (preg_match(self::VALUE_REG_EXP, $value)) {
-      throw new \InvalidArgumentException("bad value string");
+      throw new InvalidArgumentException("bad value string");
     }
     if ("string" == $valueType) {
       $value = '"' . trim($value, '"') . '"';
@@ -171,7 +174,7 @@ class DsQueryObject {
       $value = ($value) ? 'true' : 'false';
     }
     if (empty($field) || empty($op) || strlen(trim($value)) === 0) {
-      throw new \InvalidArgumentException(
+      throw new InvalidArgumentException(
         "parameters can not be empty or a bad value string"
       );
     }
@@ -242,7 +245,7 @@ class DsQueryObject {
       $this->ors[] = $this->prefixField(trim($field)) . " is null";
     }
     else {
-      throw new \InvalidArgumentException(
+      throw new InvalidArgumentException(
         'andOr parameter should "and" or "or"'
       );
     }
@@ -265,7 +268,7 @@ class DsQueryObject {
       $this->ors[] = $this->prefixField(trim($field)) . " is not null";
     }
     else {
-      throw new \InvalidArgumentException(
+      throw new InvalidArgumentException(
         'andOr parameter should "and" or "or"'
       );
     }
@@ -364,9 +367,8 @@ class DsQueryObject {
   }
 
   /**
-   * @return \Drupal\gigya\CmsStarterKit\sdk\GSObject
-   * @throws \Drupal\gigya\CmsStarterKit\sdk\GSApiException
-   * @throws \Drupal\gigya\CmsStarterKit\sdk\GSException
+   * @return GSObject
+   * @throws GSApiException
    */
   public function dsGet() {
     $paramsArray = ["oid" => $this->oid, "type" => $this->table];
@@ -399,12 +401,12 @@ class DsQueryObject {
     return 'data.' . $field;
   }
 
-  /**
-   * @return \Drupal\gigya\CmsStarterKit\sdk\GSObject
-   * @throws \Drupal\gigya\CmsStarterKit\ds\DsQueryException
-   * @throws \Drupal\gigya\CmsStarterKit\sdk\GSApiException
-   * @throws \Drupal\gigya\CmsStarterKit\sdk\GSException
-   */
+	/**
+	 * @return GSObject
+	 * @throws \Drupal\gigya\CmsStarterKit\ds\DsQueryException
+	 * @throws \Drupal\gigya\CmsStarterKit\GSApiException
+	 * @throws \Gigya\PHP\GSException
+	 */
   public function dsSearch() {
     if (empty($this->query)) {
       $this->buildQuery();
@@ -466,10 +468,10 @@ class DsQueryObject {
     return !(empty($this->fields) && empty($this->table));
   }
 
-  /**
-   * @throws \Drupal\gigya\CmsStarterKit\sdk\GSApiException
-   * @throws \Drupal\gigya\CmsStarterKit\sdk\GSException
-   */
+	/**
+	 * @throws \Drupal\gigya\CmsStarterKit\GSApiException
+	 * @throws \Gigya\PHP\GSException
+	 */
   public function dsDelete() {
     $paramsArray = ["oid" => $this->oid, "type" => $this->table];
     if (!empty($this->uid)) {

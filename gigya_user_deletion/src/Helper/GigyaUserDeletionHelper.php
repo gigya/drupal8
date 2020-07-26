@@ -40,7 +40,7 @@
 				{
 					$secretKey = $helper->decrypt($secretKeyEnc);
 				}
-				$objectKeyPrefix = $storageDetails['objectKeyPrefix'] . "/";
+				$objectKeyPrefix = (!empty($storageDetails['objectKeyPrefix'])) ? $storageDetails['objectKeyPrefix'] . '/' : '';
 				$region = $this->getRegion();
 				$s3Client = S3Client::factory(array(
 												  'key' => $accessKey,
@@ -55,8 +55,8 @@
 													   'MaxKeys' => 15,
 													   'Prefix' => $objectKeyPrefix)
 				);
-				$files = $response->getPath('Contents');
-				return $files;
+
+				return $response->getPath('Contents');
 			}
 			catch (S3Exception $e)
 			{

@@ -5,8 +5,4 @@ package: Gigya
 dependencies:
   - gigya
   - gigya_raas
-# Information added by Drupal.org packaging script on 2017-05-14
-version: '9.x-1.1.1'
 core_version_requirement: ^8 || ^9
-project: 'gigya'
-datestamp: 1494803025

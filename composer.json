@@ -14,8 +14,16 @@
   ],
   "repositories": [
     {
-      "type": "vcs",
-      "url": "https://github.com/sap/gigya-php-sdk"
+      "type": "package",
+      "package": {
+        "name": "gigya/php-sdk",
+        "version": "3.0.1",
+        "type": "library",
+        "dist": {
+          "url": "https://github.com/SAP/gigya-php-sdk/archive/3.0.1.zip",
+          "type": "zip"
+        }
+      }
     }
   ],
   "minimum-stability": "dev",

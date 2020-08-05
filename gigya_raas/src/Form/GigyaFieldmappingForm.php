@@ -54,6 +54,14 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 			'#default_value' => $fieldmapping_config,
 		];
 
+		$form['uid_mapping'] = [
+			'#type' => 'textfield',
+			'#title' => $this->t('UID mapping (advanced)'),
+			'#default_value' => $config->get('gigya.uid_mapping'),
+			'#description' => $this->t('Change this to map Gigya\'s UID to a different user field in Drupal (not recommended).'),
+			'#required' => TRUE,
+		];
+
 		$form['gigya_offline_sync'] = [
 			'#type' => 'label',
 			'#title' => $this->t('Offline Sync Settings'),
@@ -150,6 +158,7 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 		$config = $this->config('gigya_raas.fieldmapping');
 
 		$config->set('gigya.fieldmapping_config', $form_state->getValue('gigya_fieldmapping_config'));
+		$config->set('gigya.uid_mapping', $form_state->getValue('uid_mapping'));
 
 		$config->set('gigya.offline_sync.enable_job', $form_state->getValue('enable_job'));
 		$config->set('gigya.offline_sync.email_on_success', $form_state->getValue('email_on_success'));

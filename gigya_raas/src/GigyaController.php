@@ -59,7 +59,7 @@
 			$gigya_data = $request->get('gigyaData');
 			$gigyaUser = $this->helper->validateAndFetchRaasUser($gigya_data['UID'], $gigya_data['UIDSignature'], $gigya_data['signatureTimestamp']);
 			if ($gigyaUser) {
-				if ($user = $this->helper->getUidByUUID($gigyaUser->getUID())) {
+				if ($user = $this->helper->getDrupalUidByGigyaUid($gigyaUser->getUID())) {
 					if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, $user->id())) {
 						if ($user->mail !== $unique_email) {
 							$user->setEmail($unique_email);
@@ -138,7 +138,7 @@
 					else
 					{
 						/** @var UserInterface $user */
-						$user = $this->helper->getUidByUUID($gigyaUser->getUID());
+						$user = $this->helper->getDrupalUidByGigyaUid($gigyaUser->getUID());
 						if ($user)
 						{
 							/* if a user has the a permission of bypass gigya raas (admin user)

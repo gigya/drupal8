@@ -31,6 +31,9 @@ gigya_raas.fieldmapping:
     gigya:
       type: mapping
       mapping:
+        uid_mapping:
+          type: string
+          label: UID mapping
         fieldmapping_config:
           type: string
           label: Field Mapping Configuration

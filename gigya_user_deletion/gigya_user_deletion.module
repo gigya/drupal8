@@ -149,7 +149,7 @@
 					$item_array = (array) $item_user;
 
 					$uid = $item_array['data']['gigya_uid'];
-					if ($user = $gigyaHelper->getUidByUUID($uid)) { /* Gigya user found in Drupal */
+					if ($user = $gigyaHelper->getDrupalUidByGigyaUid($uid)) { /* Gigya user found in Drupal */
 						try {
 							$drupal_uid = $user->get('uid')->value;
 							if ($deletion_type === 'hard') {

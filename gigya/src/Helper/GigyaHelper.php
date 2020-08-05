@@ -298,11 +298,30 @@ class GigyaHelper implements GigyaHelperInterface {
   /**
    * @param $uuid
    *
-   * @return User
+   * @return User|false
    */
-  public function getUidByUUID($uuid) {
-    return Drupal::service('entity.repository')->loadEntityByUuid('user', $uuid);
-  }
+	public function getDrupalUidByGigyaUid($uuid) {
+		$uuid_field = Drupal::config('gigya_raas.fieldmapping')->get('gigya.uid_mapping');
+		if (empty($uuid_field)) {
+			$uuid_field = 'uuid';
+		}
+
+		if ($uuid_field === 'uuid') {
+			return Drupal::service('entity.repository')->loadEntityByUuid('user', $uuid);
+		}
+		else {
+			$ids = Drupal::entityQuery('user')
+				->condition($uuid_field, $uuid)
+				->execute();
+			$users = User::loadMultiple($ids);
+
+			if ($users[0] instanceof User) {
+				return $users[0];
+			}
+		}
+
+		return false;
+	}
 
   /**
    * @param GigyaUser $gigyaUser
@@ -374,6 +393,13 @@ class GigyaHelper implements GigyaHelperInterface {
 	      Drupal::logger('gigya')->debug('Error altering field map data: @message',
 	                                     array('@message' => $e->getMessage()));
       }
+
+      $field_map->uuid = 'UID';
+      if (!empty($uid_mapping = Drupal::config('gigya_raas.fieldmapping')->get('gigya_uid_mapping'))) {
+      	if ($drupal_user->hasField($uid_mapping)) {
+					$field_map['uuid'] = $uid_mapping;
+				}
+			}
 
       foreach ($field_map as $drupal_field => $raas_field) {
       	/* Drupal fields to exclude even if configured in field mapping schema */

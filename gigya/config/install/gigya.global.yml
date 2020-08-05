@@ -5,4 +5,4 @@ gigya:
   gigyaDebugMode: false
   globalParameters: { bypassCookiePolicy : 'never' , enabledProviders : '*', sessionExpiration : -1 }
   enableRaaS: true
-  fieldMapping  : { uuid : 'UID' }
+  fieldMapping  : {}

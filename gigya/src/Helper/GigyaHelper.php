@@ -291,7 +291,7 @@ class GigyaHelper implements GigyaHelperInterface {
 
   public function getUidByMails($mails) {
     return Drupal::entityQuery('user')
-      ->condition('mail',  $mails)
+      ->condition('mail',  $mails, 'IN')
       ->execute();
   }
 

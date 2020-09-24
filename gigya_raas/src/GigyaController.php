@@ -348,7 +348,7 @@
 			 * This means that the session in Drupal isn't yet registered when this code is run, and therefore it isn't possible to update it in the DB.
 			 * This $_SESSION var is therefore set in order to manipulate the session on the next request, which should be run after AuthenticationSubscriber.
 			 * */
-			Drupal::service('user.private_tempstore')->get('gigya_raas')->set('session_registered', FALSE);
+			Drupal::service('tempstore.private')->get('gigya_raas')->set('session_registered', FALSE);
 		}
 
 		/**
@@ -358,8 +358,8 @@
 		 * @param bool $is_remember_me
 		 */
 		public function gigyaRaasSetSession(int $session_expiration, bool $is_remember_me) { /* PHP 7.0+ */
-			Drupal::service('user.private_tempstore')->get('gigya_raas')->set('session_expiration', $session_expiration);
-			Drupal::service('user.private_tempstore')->get('gigya_raas')->set('session_is_remember_me', $is_remember_me);
+			Drupal::service('tempstore.private')->get('gigya_raas')->set('session_expiration', $session_expiration);
+			Drupal::service('tempstore.private')->get('gigya_raas')->set('session_is_remember_me', $is_remember_me);
 		}
 
 		/**

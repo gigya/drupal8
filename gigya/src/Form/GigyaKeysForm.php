@@ -89,7 +89,9 @@ class GigyaKeysForm extends ConfigFormBase {
 		$rsa_private_key = $this->helper->decrypt($config->get('gigya.gigya_rsa_private_key'));
 		$rsa_private_key = substr(trim(str_replace([
 			'-----BEGIN RSA PRIVATE KEY-----',
+			'-----BEGIN PRIVATE KEY-----',
 			'-----END RSA PRIVATE KEY-----',
+			'-----END PRIVATE KEY-----',
 		], '', $rsa_private_key)), 0, -2);
 		$is_private_key_entered = (!empty($rsa_private_key));
 		$form['gigya_rsa_private_key'] = [

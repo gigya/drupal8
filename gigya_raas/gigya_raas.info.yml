@@ -3,12 +3,11 @@ type: module
 description: 'Gigya RaaS module'
 package: Gigya
 configure: gigya.raas.config
-# core: 8.x
 dependencies:
   - gigya
 
 # Information added by Drupal.org packaging script on 2017-05-14
-version: '8.x-3.1.1'
-core: '8.x'
+version: '9.x-1.0'
+core_version_requirement: ^8 || ^9
 project: 'gigya'
 datestamp: 1494803025

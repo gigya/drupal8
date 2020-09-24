@@ -8,19 +8,19 @@ use Drupal\Core\TempStore\TempStoreException;
 use Drupal\Core\TempStore\PrivateTempStore;
 use Drupal\gigya_raas\Helper\GigyaRaasHelper;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 
 	/**
-	 * @param GetResponseEvent $event
+	 * @param RequestEvent $event
 	 */
-	public function onLoad(GetResponseEvent $event) {
+	public function onLoad(RequestEvent $event) {
 		/* Get necessary parameters from outside the class */
 		/** @var PrivateTempStore $gigya_raas_session */
-		$gigya_raas_session = \Drupal::service('user.private_tempstore')->get('gigya_raas');
+		$gigya_raas_session = \Drupal::service('tempstore.private')->get('gigya_raas');
 		$drupal_session = \Drupal::service('session');
 		$current_user = \Drupal::currentUser();
 		$uid = $current_user->id();

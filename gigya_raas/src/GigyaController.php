@@ -28,6 +28,8 @@
 		/** @var GigyaHelper */
 		protected $helper;
 
+		protected $auth_mode;
+
 		/**
 		 * Construct method.
 		 *
@@ -42,6 +44,9 @@
 			{
 				$this->helper = $helper;
 			}
+
+			$gigya_conf = Drupal::config('gigya.settings');
+			$this->auth_mode = $gigya_conf->get('gigya.gigya_auth_mode');
 		}
 
 		/**
@@ -57,7 +62,13 @@
 		 */
 		public function gigyaRaasProfileAjax(Request $request) {
 			$gigya_data = $request->get('gigyaData');
-			$gigyaUser = $this->helper->validateAndFetchRaasUser($gigya_data['UID'], $gigya_data['UIDSignature'], $gigya_data['signatureTimestamp']);
+
+			if (!empty($gigya_data['id_token']) && $this->auth_mode === 'user_rsa') {
+				$signature = $gigya_data['id_token'];
+			} else {
+				$signature = $gigya_data['UIDSignature'];
+			}
+			$gigyaUser = $this->helper->validateAndFetchRaasUser($gigya_data['UID'], $signature, $gigya_data['signatureTimestamp']);
 			if ($gigyaUser) {
 				if ($user = $this->helper->getUidByUUID($gigyaUser->getUID())) {
 					if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, $user->id())) {

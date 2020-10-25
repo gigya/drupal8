@@ -264,16 +264,16 @@
 		myAjaxObject.execute();
 	};
 
-    var init = function () {
-        if (drupalSettings.gigya.enableRaaS) {
-            gigyaHelper.addGigyaFunctionCall('accounts.addEventHandlers', {
-                onLogin: onLoginHandler,
-                onLogout: onLogoutHandler
-            });
-        }
+	var init = function() {
+		if (drupalSettings.gigya.enableRaaS) {
+			gigyaHelper.addGigyaFunctionCall('accounts.addEventHandlers', {
+				onLogin: onLoginHandler,
+				onLogout: onLogoutHandler
+			});
+		}
 
-        drupalSettings.gigya.isRaasInit = true;
-    };
+		drupalSettings.gigya.isRaasInit = true;
+	};
 
 	/**
 	 * @type {{attach: Drupal.behaviors.gigyaRaasInit.attach}}
@@ -284,21 +284,21 @@
 	 * @property Drupal.behaviors
 	 */
 	Drupal.behaviors.gigyaRaasInit = {
-        attach: function (context, settings) {
-            if (!('isRaasInit' in drupalSettings.gigya)) {
+		attach: function(context, settings) {
+			if (!('isRaasInit' in drupalSettings.gigya)) {
 				/**
 				 * @param serviceName
 				 */
-				window.onGigyaServiceReady = function (serviceName) {
-                    checkLogout();
-                    gigyaHelper.runGigyaCmsInit();
-                    initLoginUI();
-                    initRaaS();
+				window.onGigyaServiceReady = function(serviceName) {
+					checkLogout();
+					gigyaHelper.runGigyaCmsInit();
+					initLoginUI();
+					initRaaS();
 					initCustomScreenSet();
-                };
-                init();
-            }
-        }
-    };
+				};
+				init();
+			}
+		}
+	};
 
 })(jQuery, Drupal, drupalSettings);

@@ -198,8 +198,19 @@
 
 							/* Set user session */
 							$this->gigyaRaasSetLoginSession($session_type);
+
+							/* Verify that an RSA public key is available or fetch it, if relevant */
+							if ($auth_mode === 'user_rsa') {
+								try {
+									$this->helper->verifyPublicKeyStore($signature);
+								} catch (GSException $e) {
+									Drupal::logger('gigya')
+										->error('Unable to retrieve Gigya RSA public key. This may cause incorrect session behavior. The error returned is: '
+											. $e->getMessage());
+								}
+							}
 						}
-						else
+						else /* User does not exist - register */
 						{
 							$uids = $this->helper->getUidByMails($gigyaUser->getLoginIds()['emails']);
 							if (!empty($uids))
@@ -285,7 +296,7 @@
 						}
 					}
 				}
-				else {
+				else { /* No valid Gigya user found */
 					$this->helper->saveUserLogoutCookie();
 					Drupal::logger('gigya_raas')->notice('Invalid user. Guid: ' . $guid);
 					$err_msg = $this->t(
@@ -401,7 +412,19 @@
 				$session_expiration = strval($now + $session_time);
 
 				$gltexp_cookie = $request->cookies->get('gltexp_' . $api_key);
-				$gltexp_cookie_timestamp = explode('_', $gltexp_cookie)[0];
+
+				if (!empty($gltexp_cookie)) {
+					if ($auth_mode === 'user_rsa') {
+						$claims = json_decode(JWT::urlsafeB64Decode(explode('.', $gltexp_cookie)[1]), true, 512, JSON_BIGINT_AS_STRING);
+						if (!empty($claims) && !empty($claims['exp'])) {
+							$gltexp_cookie_timestamp = $claims['exp'];
+						}
+					}
+					else {
+						$gltexp_cookie_timestamp = explode('_', $gltexp_cookie)[0];
+					}
+				}
+
 				if (empty($gltexp_cookie_timestamp) or (time() < $gltexp_cookie_timestamp))
 				{
 					if (!empty($token))

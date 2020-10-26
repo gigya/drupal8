@@ -198,17 +198,6 @@
 
 							/* Set user session */
 							$this->gigyaRaasSetLoginSession($session_type);
-
-							/* Verify that an RSA public key is available or fetch it, if relevant */
-							if ($auth_mode === 'user_rsa') {
-								try {
-									$this->helper->verifyPublicKeyStore($signature);
-								} catch (GSException $e) {
-									Drupal::logger('gigya')
-										->error('Unable to retrieve Gigya RSA public key. This may cause incorrect session behavior. The error returned is: '
-											. $e->getMessage());
-								}
-							}
 						}
 						else /* User does not exist - register */
 						{

@@ -116,15 +116,15 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
 	/**
-	 * @param string $method
-	 * @param GSObject $params
-	 * @param bool $access_params
+	 * @param string        $method
+	 * @param GSObject|null $params
+	 * @param bool          $access_params
 	 *
-	 * @return Exception|GSApiException|GSResponse
+	 * @return GSResponse
 	 *
 	 * @throws \Exception
 	 */
-  public function sendApiCall($method, $params = null, $access_params = FALSE) {
+  public function sendApiCall(string $method, $params = null, $access_params = FALSE) {
     try {
       if (!$access_params) {
         $access_params = $this->getAccessParams();
@@ -304,6 +304,12 @@ class GigyaHelper implements GigyaHelperInterface {
     return Drupal::service('entity.repository')->loadEntityByUuid('user', $uuid);
   }
 
+	public function getUidByName($name) {
+		return Drupal::entityQuery('user')
+			->condition('name',  Database::getConnection()->escapeLike($name), 'LIKE')
+			->execute();
+	}
+
   /**
    * @param GigyaUser $gigyaUser
    * @param integer   $uid
@@ -337,13 +343,7 @@ class GigyaHelper implements GigyaHelperInterface {
     return $exists;
   }
 
-  public function getUidByName($name) {
-    return Drupal::entityQuery('user')
-      ->condition('name',  Database::getConnection()->escapeLike($name), 'LIKE')
-      ->execute();
-  }
-
-	/**
+  /**
 	 * @return array|object|null
 	 */
 	public function getFieldMappingConfig() {

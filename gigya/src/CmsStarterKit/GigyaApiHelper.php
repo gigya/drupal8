@@ -2,7 +2,9 @@
 
 namespace Drupal\gigya\CmsStarterKit;
 
+use Drupal;
 use Exception;
+use Firebase\JWT\JWK;
 use Gigya\PHP\GSException;
 use Gigya\PHP\GSObject;
 use Gigya\PHP\GSResponse;
@@ -299,6 +301,50 @@ class GigyaApiHelper
 		$res = $this->sendApiCall("accounts.getSchema", $params);
 
 		return $res;
+	}
+
+	/**
+	 * @param $kid
+	 *
+	 * @return array|false
+	 *
+	 * @throws \Gigya\PHP\GSException
+	 */
+	public function fetchPublicKey($kid) {
+		$params = [
+			'V2' => TRUE,
+		];
+		try {
+			$response = $this->sendApiCall('accounts.getJWTPublicKey', $params)->getData()->serialize();
+		} catch (GSApiException $e) {
+			Drupal::logger('gigya')->error('Error fetching public keys from Gigya. Call ID: ' . $e->getCallId() . ', error: '
+				. $e->getErrorCode() . ': ' . $e->getMessage());
+			return FALSE;
+		}
+
+		if (!empty($response)) {
+			try {
+				$keys = JWK::parseKeySet($response);
+			} catch (Exception $e) {
+				throw new GSException('Unable to retrieve public key: ' . $e->getMessage());
+			}
+
+			if (!empty($keys[$kid])) {
+				if (!empty($pem = openssl_pkey_get_details($keys[$kid])['key'])) {
+					$rsa_public_key = $pem;
+				}
+				else {
+					return FALSE;
+				}
+
+				return $rsa_public_key;
+			}
+			else {
+				return FALSE;
+			}
+		}
+
+		return FALSE;
 	}
 
 	/**

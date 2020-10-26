@@ -199,6 +199,27 @@ class GigyaHelper implements GigyaHelperInterface {
     }
   }
 
+	/**
+	 * @param $jwt
+	 *
+	 * @throws \Gigya\PHP\GSException
+	 */
+	public function verifyPublicKeyStore($jwt) {
+		$gigya_conf = Drupal::config('gigya.settings');
+		if (empty($public_key = $gigya_conf->get('gigya.gigya_rsa_public_key'))) {
+			$jwtHeader = explode('.', $jwt)[0];
+			$jwtArray  = json_decode(base64_decode($jwtHeader), TRUE);
+
+			$api_helper = $this->getGigyaApiHelper();
+			$public_key = $api_helper->fetchPublicKey($jwtArray['kid']);
+
+			Drupal::configFactory()
+				->getEditable('gigya.settings')
+				->set('gigya.gigya_rsa_public_key', $public_key)
+				->save();
+		}
+	}
+
   public function getGigyaApiHelper() {
     $access_params = $this->getAccessParams();
     return new GigyaApiHelper($access_params['api_key'], $access_params['app_key'], $access_params['auth_key'], $access_params['data_center'], $access_params['auth_mode']);

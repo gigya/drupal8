@@ -52,10 +52,16 @@ class GigyaKeysForm extends ConfigFormBase {
 		else {
 			$this->helper = $helper;
 		}
+
+		/* Verify requirements */
+		$messenger = Drupal::service('messenger');
 		if (!$this->helper->checkEncryptKey()) {
-			$messenger = Drupal::service('messenger');
 			$messenger->addError($this->t('Cannot read encryption key. Either the file path is incorrect or the file is empty.'));
 		}
+		if (!class_exists('Gigya\\PHP\\GSObject')) {
+			$messenger->addError($this->t('The required library Gigya PHP SDK cannot be found. Please install it via Composer.'));
+		}
+
 		$form = parent::buildForm($form, $form_state);
 		$config = $this->config('gigya.settings');
 
@@ -270,7 +276,7 @@ class GigyaKeysForm extends ConfigFormBase {
 		if ($valid !== TRUE) {
 			if (!empty($res) and is_object($res)) {
 				$code = $res->getErrorCode();
-				$msg = $res->getMessage();
+				$msg = $res->getErrorMessage();
 
 				$error_message = new TranslatableMarkup('Gigya API error: @code – @msg. For more information, please refer to Gigya\'s documentation page on
 																<a href="https://developers.gigya.com/display/GD/Response+Codes+and+Errors" target="_blank">Response Codes and Errors</a>.',
@@ -331,7 +337,7 @@ class GigyaKeysForm extends ConfigFormBase {
 	 *
 	 * @return string
 	 */
-	private function getValue($form_state, $prop_name) {
+	private function getValue(FormStateInterface $form_state, $prop_name) {
 		return trim($form_state->getValue($prop_name));
 	}
 }

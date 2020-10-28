@@ -1,0 +1,4 @@
+gigya.cron.form:
+  title: 'User Deletion'
+  route_name: gigya.cron.form
+  base_route: gigya.admin.form

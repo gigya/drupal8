@@ -112,24 +112,20 @@ class GigyaApiHelper
 	}
 
 	/**
-	 * @param string $uid
-	 * @param string $idToken
+	 * @param string      $uid
+	 * @param string      $idToken
 	 *
-	 * @param string $include
-	 * @param        $extraProfileFields
-	 * @param        $orgParams
+	 * @param string|null $include
+	 * @param             $extraProfileFields
+	 * @param             $orgParams
 	 *
 	 * @return GigyaUser|false
 	 *
-	 * @throws GSApiException
+	 * @throws Exception|GSApiException
 	 */
 	public function validateJwtAuth($uid, $idToken, $include = null, $extraProfileFields = null, $orgParams = null)
 	{
-		try {
-			$jwt = JWTUtils::validateSignature($idToken, $this->apiKey, $this->dataCenter);
-		} catch (Exception $e) {
-			return false;
-		}
+		$jwt = JWTUtils::validateSignature($idToken, $this->apiKey, $this->dataCenter);
 
 		if ($jwt) {
 			return $this->fetchGigyaAccount($uid, $include, $extraProfileFields, $orgParams);

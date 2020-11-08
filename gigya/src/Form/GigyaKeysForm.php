@@ -39,7 +39,7 @@ class GigyaKeysForm extends ConfigFormBase {
 	/**
 	 * @param array                                $form
 	 * @param \Drupal\Core\Form\FormStateInterface $form_state
-	 * @param GigyaHelperInterface                 $helper
+	 * @param GigyaHelperInterface | NULL          $helper
 	 *
 	 * @return array
 	 */

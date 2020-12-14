@@ -280,7 +280,7 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
   public function saveUserLogoutCookie() {
-    user_cookie_save(array('gigya' => 'gigyaLogOut'));
+		setrawcookie('Drupal.visitor.gigya', 'gigyaLogOut', 0, '/', NULL, TRUE);
   }
 
   public function getUidByMail($mail) {

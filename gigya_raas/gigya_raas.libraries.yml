@@ -9,3 +9,4 @@ gigyaRaas:
     - core/drupal
     - core/drupalSettings
     - core/drupal.ajax
+    - gigya/drupalGigya

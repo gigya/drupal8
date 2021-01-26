@@ -21,7 +21,10 @@ class GigyaRaasLogin extends BlockBase {
   public function build() {
     $build['block'] = array(
       '#theme' => 'gigya_raas_login_block',
-      '#showDiv' => \Drupal::currentUser()->isAnonymous()
+      '#showDiv' => \Drupal::currentUser()->isAnonymous(),
+      '#attached' => [
+        'library' => 'gigya_raas/gigyaRaas'
+      ],
     );
     $this->setConfigurationValue('label_display', 'hidden');
 

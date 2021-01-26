@@ -21,7 +21,10 @@ class GigyaRaasProfile extends BlockBase {
   public function build() {
     $build['block'] = array(
       '#theme' => 'gigya_raas_profile_block',
-      '#showDiv' => \Drupal::currentUser()->isAuthenticated()
+      '#showDiv' => \Drupal::currentUser()->isAuthenticated(),
+      '#attached' => [
+        'library' => 'gigya_raas/gigyaRaas'
+      ],
     );
     return $build;
   }

@@ -36,8 +36,5 @@ function gigya_page_attachments(array &$attachments) {
 
     \Drupal::moduleHandler()->alter('gigya_lang', $lang);
     $attachments['#attached']['drupalSettings']['gigya']['lang'] = $lang;
-
-    // Add Library.
-    $attachments['#attached']['library'][] = 'gigya/drupalGigya';
   }
 }

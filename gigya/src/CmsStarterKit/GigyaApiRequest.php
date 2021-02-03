@@ -3,6 +3,7 @@
 namespace Drupal\gigya\CmsStarterKit;
 
 use Gigya\PHP\GSException;
+use Gigya\PHP\GSKeyNotFoundException;
 use Gigya\PHP\GSObject;
 use Gigya\PHP\GSRequest;
 use Gigya\PHP\GSResponse;
@@ -42,7 +43,7 @@ class GigyaApiRequest extends GSRequest
 	 * @param boolean  $useHTTPS
 	 * @param null     $userKey
 	 *
-	 * @throws \Exception
+	 * @throws GSKeyNotFoundException
 	 */
 	public function __construct($apiKey, $secret, $apiMethod, $params, $dataCenter, $useHTTPS = true, $userKey = null) {
 		parent::__construct($apiKey, $secret, $apiMethod, $params, $useHTTPS, $userKey);

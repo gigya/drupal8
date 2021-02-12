@@ -156,7 +156,7 @@ class GigyaHelper implements GigyaHelperInterface {
 
 			return $result;
 		} catch (GSException $e) {
-			throw new GSException($e->errorMessage);
+			throw $e;
 		} catch (GSApiException $e) {
 			/* Always write error to log */
 			Drupal::logger('gigya')
@@ -168,7 +168,7 @@ class GigyaHelper implements GigyaHelperInterface {
 						'@message' => $e->getMessage(),
 					]);
 
-			throw new GSApiException($e->getMessage(), $e->getCode(), $e->getLongMessage(), $e->getCallId());
+			throw $e;
 		}
 	}
 

@@ -122,7 +122,8 @@ class GigyaHelper implements GigyaHelperInterface {
 	 *
 	 * @return GSResponse
 	 *
-	 * @throws \Exception
+	 * @throws \Drupal\gigya\CmsStarterKit\GSApiException
+	 * @throws \Gigya\PHP\GSException
 	 */
   public function sendApiCall(string $method, $params = null, $access_params = FALSE) {
     try {
@@ -146,7 +147,7 @@ class GigyaHelper implements GigyaHelperInterface {
 			if (Drupal::config('gigya.global')->get('gigya.gigyaDebugMode') == TRUE) {
 				/* On first module load, API & secret are empty, so no values in response */
 				Drupal::logger('gigya')
-					->debug('Response from gigya <br /><pre>callId: @callId, apicall: @method</pre>',
+					->debug('Response from Gigya:<br /><pre>Call ID: @callId, API call: @method</pre>',
 						[
 							'@callId' => $result->getData()->getString('callId'),
 							'@method' => $method,
@@ -154,20 +155,20 @@ class GigyaHelper implements GigyaHelperInterface {
 			}
 
 			return $result;
+		} catch (GSException $e) {
+			throw $e;
 		} catch (GSApiException $e) {
 			/* Always write error to log */
-			Drupal::logger('gigya')->error('<pre>Gigya API error. Error code :' . $e->getErrorCode() . '</pre>');
-			if ($e->getCallId()) {
-				Drupal::logger('gigya')->error('Response from Gigya <br /><pre>Call ID: @callId, apicall:@method,
-											 																		Error:@error</pre>',
+			Drupal::logger('gigya')
+				->error('Gigya API error. Error code: @code<br />Response from Gigya:<br /><pre>Call ID: @callId, API call: @method, Error: @message</pre>',
 					[
-						'@callId' => $e->getCallId(),
-						'@method' => $method,
-						'@error' => $e->getErrorCode(),
+						'@callId'  => $e->getCallId(),
+						'@method'  => $method,
+						'@code'    => $e->getErrorCode(),
+						'@message' => $e->getMessage(),
 					]);
-			}
 
-			return $e;
+			throw $e;
 		}
 	}
 

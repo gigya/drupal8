@@ -269,24 +269,23 @@ class GigyaKeysForm extends ConfigFormBase {
 				$valid = TRUE;
 			}
 		} catch (Exception $e) {
-			/* Optional error message that's not used because it could reveal inner workings of module. */
-			$error_message = new TranslatableMarkup('Gigya error: @code – @msg', ['@code' => $e->getCode(), '@message' => $e->getMessage()]);
+			$code = $e->getCode();
+			$msg = $e->getMessage();
+			$error_message = new TranslatableMarkup('Gigya error: @code – @msg', ['@code' => $code, '@message' => $msg]);
 		}
 
 		if ($valid !== TRUE) {
 			if (!empty($res) and is_object($res)) {
-				$code = $res->getErrorCode();
-				$msg = $res->getErrorMessage();
+				if (!isset($error_message)) {
+					$code          = $res->getErrorCode();
+					$msg           = $res->getErrorMessage();
+					$error_message = new TranslatableMarkup('Gigya API error: @code – @msg. For more information, please refer to Gigya\'s documentation page on
+																	<a href="https://developers.gigya.com/display/GD/Response+Codes+and+Errors" target="_blank">Response Codes and Errors</a>.',
+						['@code' => $code, '@msg' => $msg]);
+				}
 
-				$error_message = new TranslatableMarkup('Gigya API error: @code – @msg. For more information, please refer to Gigya\'s documentation page on
-																<a href="https://developers.gigya.com/display/GD/Response+Codes+and+Errors" target="_blank">Response Codes and Errors</a>.',
-					['@code' => $code, '@msg' => $msg]);
 				$form_state->setErrorByName('gigya_api_key', $error_message);
-				Drupal::logger('gigya')
-					->error('Error setting API key, error code: @code - @msg', [
-						'@code' => $code,
-						'@msg'  => $msg,
-					]);
+				Drupal::logger('gigya')->error($error_message);
 			}
 			else {
 				$form_state->setErrorByName('gigya_api_key', $this->t('Your Gigya authentication details could not be validated. Please try again.'));

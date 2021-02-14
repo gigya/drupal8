@@ -15,8 +15,8 @@ class GSApiException extends Exception {
    *
    * @param string $message
    * @param int $errorCode
-   * @param string $longMessage
-   * @param string $callId
+   * @param string|NULL $longMessage
+   * @param string|NULL $callId
    */
   public function __construct($message, $errorCode, $longMessage = NULL, $callId = NULL) {
     parent::__construct($message, $errorCode);

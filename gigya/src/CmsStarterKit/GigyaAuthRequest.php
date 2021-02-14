@@ -13,13 +13,13 @@ class GigyaAuthRequest extends GSRequest
 	/**
 	 * GSApiRequest constructor.
 	 *
-	 * @param string $apiKey
-	 * @param string $privateKey
-	 * @param string $apiMethod
-	 * @param GSObject $params
-	 * @param string $dataCenter
-	 * @param bool $useHTTPS
-	 * @param string $userKey
+	 * @param string      $apiKey
+	 * @param string      $privateKey
+	 * @param string      $apiMethod
+	 * @param GSObject    $params
+	 * @param string      $dataCenter
+	 * @param bool        $useHTTPS
+	 * @param string|null $userKey
 	 *
 	 * @throws GSKeyNotFoundException
 	 */

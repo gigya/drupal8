@@ -153,7 +153,7 @@
 						try {
 							$drupal_uid = $user->get('uid')->value;
 							if ($deletion_type === 'hard') {
-								user_delete($drupal_uid);
+								\Drupal::entityTypeManager()->getStorage('user')->load($drupal_uid)->delete();
 								$counter_succeeded++;
 								\Drupal::state()
 								  ->set('gigya_deletion_job.counter_succeeded', $counter_succeeded);

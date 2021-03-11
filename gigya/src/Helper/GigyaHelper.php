@@ -85,19 +85,20 @@ class GigyaHelper implements GigyaHelperInterface {
   public function getEncryptKey() {
   	$path = Drupal::config('gigya.global')->get('gigya.keyPath');
     $keypath = $this->getEncKeyFile($path);
+
     try
-	{
-		if ($key = trim(file_get_contents($keypath))) {
-			if (!empty($key))
-				return $key;
-		}
-		return false;
-	}
-	catch (Exception $e)
-	{
-		Drupal::logger('gigya')->error('Key file not found. Configure the correct path in your gigya.global TML file.');
-		return false;
-	}
+    {
+      if ($keypath !== FALSE && $key = trim(file_get_contents($keypath))) {
+        if (!empty($key))
+          return $key;
+      }
+      return false;
+    }
+    catch (Exception $e)
+    {
+      Drupal::logger('gigya')->error('Key file not found. Configure the correct path in your gigya.global YML file.');
+      return false;
+    }
   }
 
   public function getAccessParams() {
@@ -564,12 +565,14 @@ class GigyaHelper implements GigyaHelperInterface {
 	 * @param string	$uri	URI for the key, recommended to use full path
 	 * @return string
 	 */
-  protected function getEncKeyFile($uri) {
+  protected function getEncKeyFile(string $uri) {
     /** @var Drupal\Core\StreamWrapper\StreamWrapperInterface $stream */
     $stream = Drupal::service('stream_wrapper_manager')->getViaUri($uri);
+
     if ($stream == FALSE) {
       return realpath($uri);
     }
+
     return $stream->realpath();
   }
 }

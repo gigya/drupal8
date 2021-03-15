@@ -40,7 +40,7 @@
 				{
 					$secretKey = $helper->decrypt($secretKeyEnc);
 				}
-				$objectKeyPrefix = (!empty($storageDetails['objectKeyPrefix'])) ? $storageDetails['objectKeyPrefix'] . '/' : '';
+				$objectKeyPrefix = (!empty($storageDetails['objectKeyPrefix'])) ? rtrim($storageDetails['objectKeyPrefix'], '/') . '/' : '';
 				$region = $this->getRegion();
 				$s3Client = S3Client::factory(array(
 												  'key' => $accessKey,
@@ -65,7 +65,7 @@
 			}
 			catch (\Exception $e)
 			{
-				\Drupal::logger('gigya_user_deletion')->error("Missing required parameter. Error code: " . $e->getCode() . ". Message: " . $e->getMessage());
+				\Drupal::logger('gigya_user_deletion')->error("General error connecting to S3. A possible reason is a missing required parameter. Error code: " . $e->getCode() . ". Message: " . $e->getMessage());
 				return false;
 			}
 		}

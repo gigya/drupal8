@@ -133,6 +133,54 @@
 				),
 			);
 
+			/* Region */
+			$aws_regions = [
+				'us-east-2' => 'US East (Ohio)',
+				'us-east-1' => 'US East (N. Virginia)',
+				'us-west-1' => 'US West (N. California)',
+				'us-west-2' => 'US West (Oregon)',
+				'af-south-1' => 'Africa (Cape Town)',
+				'ap-east-1' => 'Asia Pacific (Hong Kong)',
+				'ap-south-1' => 'Asia Pacific (Mumbai)',
+				'ap-northeast-3' => 'Asia Pacific (Osaka)',
+				'ap-northeast-2' => 'Asia Pacific (Seoul)',
+				'ap-southeast-1' => 'Asia Pacific (Singapore)',
+				'ap-southeast-2' => 'Asia Pacific (Sydney)',
+				'ap-northeast-1' => 'Asia Pacific (Tokyo)',
+				'ca-central-1' => 'Canada (Central)',
+				'cn-north-1' => 'China (Beijing)',
+				'cn-northwest-1' => 'China (Ningxia)',
+				'eu-central-1' => 'Europe (Frankfurt)',
+				'eu-west-1' => 'Europe (Ireland)',
+				'eu-west-2' => 'Europe (London)',
+				'eu-south-1' => 'Europe (Milan)',
+				'eu-west-3' => 'Europe (Paris)',
+				'eu-north-1' => 'Europe (Stockholm)',
+				'me-south-1' => 'Middle East (Bahrain)',
+				'sa-east-1' => 'South America (São Paulo)',
+				'other' => 'Other',
+			];
+			$aws_region = $config->get('gigya_user_deletion.storageDetails.region');
+			$form['storageDetails']['region'] = [
+				'#type'          => 'select',
+				'#title'         => $this->t('Region'),
+				'#description'   => $this->t('Please select an AWS region relevant for your files.'),
+				'#options'       => $aws_regions,
+				'#default_value' => array_key_exists($aws_region, $aws_regions)
+					? $aws_region : (!empty($aws_region) ? 'other' : 'us-east-1'),
+			];
+
+			$form['storageDetails']['other_region'] = [
+				'#type'          => "textfield",
+				'#default_value' => $config->get('gigya_user_deletion.storageDetails.region'),
+				"#attributes"    => ["id" => "gigya-user-deletion-other-region"],
+				'#states'        => [
+					'visible' => [
+						':input[name="region"]' => ['value' => 'other'],
+					],
+				],
+			];
+
 			/* Bucket name */
 			$form['storageDetails']['bucketName'] = array(
 				'#type'          => 'textfield',
@@ -193,8 +241,9 @@
 		public function validateForm(array &$form, FormStateInterface $form_state) {
 			/* Check if the form has errors, if true we do not need to validate the user input because it has errors already. */
 			parent::validateForm($form, $form_state);
-			if ($form_state->getErrors())
+			if ($form_state->getErrors()) {
 				return;
+			}
 
 			$jobRequiredFields = [
 				'jobFrequency',
@@ -235,6 +284,14 @@
 					}
 				}
 
+				/* AWS region logic */
+				if ($this->getValue($form_state, 'region') == 'other') {
+					$region = $this->getValue($form_state, 'other_region');
+				}
+				else {
+					$region = $this->getValue($form_state, 'region');
+				}
+
 				$bucketName = $this->getValue($form_state, 'bucketName');
 				$accessKey = $this->getValue($form_state, 'accessKey');
 				$secretKey = $this->getValue($form_state, 'secretKey');
@@ -248,30 +305,35 @@
 
 				if (class_exists('Aws\\S3\\S3Client'))
 				{
-					$s3Client = S3Client::factory(array(
-						                              'key'    => $accessKey,
-						                              'secret' => $secretKey,
-					                              ));
-
 					try {
+						$s3Client = S3Client::factory([
+							'key'     => $accessKey,
+							'secret'  => $secretKey,
+							'region'  => $region,
+							'version' => 'latest',
+						]);
+
 						$s3Client->GetBucketLocation(['Bucket' => $bucketName,]);
 					} catch (S3Exception $e) {
-						Drupal::logger('gigya_user_deletion')->error("Failed to connect to S3 server (form) - " . $e->getMessage());
+						Drupal::logger('gigya_user_deletion')->error('Failed to connect to S3 server on form validation - ' . $e->getMessage());
 						$form_state->setErrorByName('storageDetails.secretKey',
-							$this->t("Failed connecting to S3 server with error: " . $e->getMessage()));
+							$this->t('Failed connecting to S3 server with error: ' . $e->getMessage()));
 					} catch (InvalidArgumentException $e) {
-						Drupal::logger('gigya_user_deletion')->error("Failed to validate S3 details with an internal error. This could be an issue with third party components. If the problem persists, please contact support. Error message: " . $e->getMessage());
+						Drupal::logger('gigya_user_deletion')
+							->error('Failed to validate S3 details with an internal error. This could be an issue with third party components. If the problem persists, please contact support. Error message: '
+								. $e->getMessage());
 						$form_state->setErrorByName('storageDetails.secretKey',
-							$this->t("Failed to validate S3 details with an internal error: " . $e->getMessage()));
+							$this->t('Failed to validate S3 details with an internal error: ' . $e->getMessage()));
 					} catch (Exception $e) {
-						Drupal::logger('gigya_user_deletion')->error("Failed to validate S3 details with an unknown error - " . $e->getMessage());
+						Drupal::logger('gigya_user_deletion')->error('Failed to validate S3 details with an unknown error - '
+							. $e->getMessage() . '<br />Exception type: ' . get_class($e));
 						$form_state->setErrorByName('storageDetails.secretKey',
-							$this->t("Failed to validate S3 details with an unknown error: " . $e->getMessage()));
+							$this->t('Failed to validate S3 details with an unknown error: ' . $e->getMessage()));
 					}
 				}
 				else
 				{
-					$msg = 'This module requires the Amazon SDK for PHP. Please install the SDK before enabling the module.';
+					$msg = 'This module requires the Amazon Web Services SDK for PHP. Please install the SDK before enabling the module.';
 					Drupal::logger('gigya_user_deletion')->error($msg);
 					$messenger->addMessage($this->t($msg), 'error');
 				}
@@ -285,15 +347,25 @@
 
 			$jobFrequency = $this->getValue($form_state, 'jobFrequency') * 60;
 
-			if ($jobFrequency == 0)
+			if ($jobFrequency == 0) {
 				$config->set('gigya_user_deletion.jobFrequency', '');
-			else
+			}
+			else {
 				$config->set('gigya_user_deletion.jobFrequency', $jobFrequency);
+			}
 
 			$config->set('gigya_user_deletion.emailOnSuccess', $this->getValue($form_state, 'emailOnSuccess'));
 			$config->set('gigya_user_deletion.emailOnFailure', $this->getValue($form_state, 'emailOnFailure'));
 			$config->set('gigya_user_deletion.storageDetails.bucketName', $this->getValue($form_state, 'bucketName'));
 			$config->set('gigya_user_deletion.storageDetails.accessKey', $this->getValue($form_state, 'accessKey'));
+
+			/* Region logic */
+			if ($this->getValue($form_state, 'gigya_user_deletion_storageDetails_region') == 'other') {
+				$config->set('gigya_user_deletion.storageDetails.region', $this->getValue($form_state, 'region'));
+			}
+			else {
+				$config->set('gigya_user_deletion.storageDetails.region', $this->getValue($form_state, 'other_region'));
+			}
 
 			/* Encrypt storageDetails.secret */
 			$temp_access_key = $this->getValue($form_state, 'secretKey');

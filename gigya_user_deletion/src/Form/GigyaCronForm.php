@@ -6,12 +6,15 @@
 
 	namespace Drupal\gigya_user_deletion\Form;
 
+	use Drupal;
 	use Drupal\Core\Form\ConfigFormBase;
 	use Drupal\Core\Form\FormStateInterface;
 	use Drupal\gigya\Helper\GigyaHelper;
 	use Drupal\gigya\Helper\GigyaHelperInterface;
 	use Aws\S3\S3Client;
 	use Aws\S3\Exception\S3Exception;
+	use Exception;
+	use InvalidArgumentException;
 
 	class GigyaCronForm extends ConfigFormBase {
 		/**
@@ -25,7 +28,7 @@
 		 *
 		 * @return string
 		 */
-		private function getValue($form_state, $prop_name) {
+		private function getValue(FormStateInterface $form_state, string $prop_name) {
 			return trim($form_state->getValue($prop_name));
 		}
 
@@ -45,26 +48,26 @@
 		/**
 		 * @param array                                $form
 		 * @param \Drupal\Core\Form\FormStateInterface $form_state
-		 * @param GigyaHelperInterface                 $helper
+		 * @param GigyaHelperInterface|NULL            $helper
 		 *
 		 * @return array
 		 */
-		public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = null) {
-			if ($helper == null)
-			{
+		public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL) {
+			if ($helper == NULL) {
 				$this->helper = new GigyaHelper();
 			}
-			else
-			{
+			else {
 				$this->helper = $helper;
 			}
 
 			/* Show error on missing dependencies */
-			$messenger = \Drupal::messenger();
-			if (!$this->helper->checkEncryptKey())
-				$messenger->addMessage($this->t('Cannot read encrypt key'), 'error');
-			if (!class_exists('Aws\\S3\\S3Client'))
+			$messenger = Drupal::messenger();
+			if (!$this->helper->checkEncryptKey()) {
+				$messenger->addMessage($this->t('Cannot read encryption key'), 'error');
+			}
+			if (!class_exists('Aws\\S3\\S3Client')) {
 				$messenger->addMessage($this->t('This module requires Amazon\'s PHP SDK'), 'error');
+			}
 
 			$form = parent::buildForm($form, $form_state);
 			$config = $this->config('gigya_user_deletion.job');
@@ -205,11 +208,12 @@
 
 			if ($_enableJob)
 			{
-				$messenger = \Drupal::messenger();
+				$messenger = Drupal::messenger();
 
 				$helper = new GigyaHelper();
-				if (!$helper->checkEncryptKey())
-					$messenger->addMessage($this->t('Cannot read encrypt key'), 'error');
+				if (!$helper->checkEncryptKey()) {
+					$messenger->addMessage($this->t('Cannot read encryption key'), 'error');
+				}
 
 				foreach ($jobRequiredFields as $field)
 				{
@@ -238,7 +242,7 @@
 				/* If secret encrypt -> decrypt it */
 				if (empty($secretKey) or $secretKey === "*********")
 				{
-					$secretKeyEnc = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails.secretKey');
+					$secretKeyEnc = Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails.secretKey');
 					$secretKey = $helper->decrypt($secretKeyEnc);
 				}
 
@@ -249,20 +253,26 @@
 						                              'secret' => $secretKey,
 					                              ));
 
-					try
-					{
-						$s3Client->GetBucketLocation(array('Bucket' => $bucketName,));
-					}
-					catch (S3Exception $e)
-					{
-						\Drupal::logger('gigya_user_deletion')->error("Failed to connect to S3 server (form) - " . $e->getMessage());
-						$form_state->setErrorByName('storageDetails.secretKey', $this->t("Failed connecting to S3 server with error: " . $e->getMessage()));
+					try {
+						$s3Client->GetBucketLocation(['Bucket' => $bucketName,]);
+					} catch (S3Exception $e) {
+						Drupal::logger('gigya_user_deletion')->error("Failed to connect to S3 server (form) - " . $e->getMessage());
+						$form_state->setErrorByName('storageDetails.secretKey',
+							$this->t("Failed connecting to S3 server with error: " . $e->getMessage()));
+					} catch (InvalidArgumentException $e) {
+						Drupal::logger('gigya_user_deletion')->error("Failed to validate S3 details with an internal error. This could be an issue with third party components. If the problem persists, please contact support. Error message: " . $e->getMessage());
+						$form_state->setErrorByName('storageDetails.secretKey',
+							$this->t("Failed to validate S3 details with an internal error: " . $e->getMessage()));
+					} catch (Exception $e) {
+						Drupal::logger('gigya_user_deletion')->error("Failed to validate S3 details with an unknown error - " . $e->getMessage());
+						$form_state->setErrorByName('storageDetails.secretKey',
+							$this->t("Failed to validate S3 details with an unknown error: " . $e->getMessage()));
 					}
 				}
 				else
 				{
 					$msg = 'This module requires the Amazon SDK for PHP. Please install the SDK before enabling the module.';
-					\Drupal::logger('gigya_user_deletion')->error($msg);
+					Drupal::logger('gigya_user_deletion')->error($msg);
 					$messenger->addMessage($this->t($msg), 'error');
 				}
 			}

@@ -22,6 +22,33 @@
 		 */
 		public $helper = false;
 
+		protected array $aws_regions = [
+			'us-east-2' => 'US East (Ohio)',
+			'us-east-1' => 'US East (N. Virginia)',
+			'us-west-1' => 'US West (N. California)',
+			'us-west-2' => 'US West (Oregon)',
+			'af-south-1' => 'Africa (Cape Town)',
+			'ap-east-1' => 'Asia Pacific (Hong Kong)',
+			'ap-south-1' => 'Asia Pacific (Mumbai)',
+			'ap-northeast-3' => 'Asia Pacific (Osaka)',
+			'ap-northeast-2' => 'Asia Pacific (Seoul)',
+			'ap-southeast-1' => 'Asia Pacific (Singapore)',
+			'ap-southeast-2' => 'Asia Pacific (Sydney)',
+			'ap-northeast-1' => 'Asia Pacific (Tokyo)',
+			'ca-central-1' => 'Canada (Central)',
+			'cn-north-1' => 'China (Beijing)',
+			'cn-northwest-1' => 'China (Ningxia)',
+			'eu-central-1' => 'Europe (Frankfurt)',
+			'eu-west-1' => 'Europe (Ireland)',
+			'eu-west-2' => 'Europe (London)',
+			'eu-south-1' => 'Europe (Milan)',
+			'eu-west-3' => 'Europe (Paris)',
+			'eu-north-1' => 'Europe (Stockholm)',
+			'me-south-1' => 'Middle East (Bahrain)',
+			'sa-east-1' => 'South America (São Paulo)',
+			'other' => 'Other',
+		];
+
 		/**
 		 * @param FormStateInterface $form_state
 		 * @param string             $prop_name
@@ -134,40 +161,14 @@
 			);
 
 			/* Region */
-			$aws_regions = [
-				'us-east-2' => 'US East (Ohio)',
-				'us-east-1' => 'US East (N. Virginia)',
-				'us-west-1' => 'US West (N. California)',
-				'us-west-2' => 'US West (Oregon)',
-				'af-south-1' => 'Africa (Cape Town)',
-				'ap-east-1' => 'Asia Pacific (Hong Kong)',
-				'ap-south-1' => 'Asia Pacific (Mumbai)',
-				'ap-northeast-3' => 'Asia Pacific (Osaka)',
-				'ap-northeast-2' => 'Asia Pacific (Seoul)',
-				'ap-southeast-1' => 'Asia Pacific (Singapore)',
-				'ap-southeast-2' => 'Asia Pacific (Sydney)',
-				'ap-northeast-1' => 'Asia Pacific (Tokyo)',
-				'ca-central-1' => 'Canada (Central)',
-				'cn-north-1' => 'China (Beijing)',
-				'cn-northwest-1' => 'China (Ningxia)',
-				'eu-central-1' => 'Europe (Frankfurt)',
-				'eu-west-1' => 'Europe (Ireland)',
-				'eu-west-2' => 'Europe (London)',
-				'eu-south-1' => 'Europe (Milan)',
-				'eu-west-3' => 'Europe (Paris)',
-				'eu-north-1' => 'Europe (Stockholm)',
-				'me-south-1' => 'Middle East (Bahrain)',
-				'sa-east-1' => 'South America (São Paulo)',
-				'other' => 'Other',
-			];
-			$aws_region = $config->get('gigya_user_deletion.storageDetails.region');
+			$region = $config->get('gigya_user_deletion.storageDetails.region');
 			$form['storageDetails']['region'] = [
 				'#type'          => 'select',
 				'#title'         => $this->t('Region'),
 				'#description'   => $this->t('Please select an AWS region relevant for your files.'),
-				'#options'       => $aws_regions,
-				'#default_value' => array_key_exists($aws_region, $aws_regions)
-					? $aws_region : (!empty($aws_region) ? 'other' : 'us-east-1'),
+				'#options'       => $this->aws_regions,
+				'#default_value' => array_key_exists($region, $this->aws_regions)
+					? $region : (!empty($region) ? 'other' : 'us-east-1'),
 			];
 
 			$form['storageDetails']['other_region'] = [
@@ -315,9 +316,17 @@
 
 						$s3Client->GetBucketLocation(['Bucket' => $bucketName,]);
 					} catch (S3Exception $e) {
-						Drupal::logger('gigya_user_deletion')->error('Failed to connect to S3 server on form validation - ' . $e->getMessage());
+						$error = nl2br($e->getMessage());
+						if (preg_match('/the region \'([a-zA-Z0-9-]+)\' is wrong; expecting \'([a-z0-9-]+)\'/', $error, $matches)) {
+							$error = 'The region ' . $matches[1] . ' is incorrect. It is likely that you meant: ' .
+								((array_key_exists($matches[2], $this->aws_regions))
+									? ($this->aws_regions[$matches[2]] . ' (' . $matches[2] . ')')
+									: $matches[2]);
+						}
+
+						Drupal::logger('gigya_user_deletion')->error('Failed to connect to S3 server on form validation - ' . $error);
 						$form_state->setErrorByName('storageDetails.secretKey',
-							$this->t('Failed connecting to S3 server with error: ' . $e->getMessage()));
+							$this->t('Failed connecting to S3 server with error: ' . $error));
 					} catch (InvalidArgumentException $e) {
 						Drupal::logger('gigya_user_deletion')
 							->error('Failed to validate S3 details with an internal error. This could be an issue with third party components. If the problem persists, please contact support. Error message: '

@@ -10,7 +10,9 @@
 
 	use Aws\S3\S3Client;
 	use Aws\S3\Exception\S3Exception;
+	use Drupal;
 	use Drupal\gigya\Helper\GigyaHelper;
+	use Exception;
 
 	class GigyaUserDeletionHelper implements GigyaUserDeletionHelperInterface
 	{
@@ -28,7 +30,7 @@
 			try
 			{
 				$secretKey = '';
-				$storageDetails = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
+				$storageDetails = Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
 				if ($this->helper)
 					$helper = $this->helper;
 				else
@@ -42,6 +44,7 @@
 				}
 				$objectKeyPrefix = (!empty($storageDetails['objectKeyPrefix'])) ? rtrim($storageDetails['objectKeyPrefix'], '/') . '/' : '';
 				$region = $this->getRegion();
+				Drupal::logger('gigya_user_deletion')->info('region ' . $region); ////
 				$s3Client = S3Client::factory(array(
 												  'key' => $accessKey,
 												  'secret' => $secretKey,
@@ -60,12 +63,12 @@
 			}
 			catch (S3Exception $e)
 			{
-				\Drupal::logger('gigya_user_deletion')->error("Failed to get files list from S3 server. Error: " . $e->getMessage());
+				Drupal::logger('gigya_user_deletion')->error("Failed to get files list from S3 server. Error: " . $e->getMessage());
 				return false;
 			}
-			catch (\Exception $e)
+			catch (Exception $e)
 			{
-				\Drupal::logger('gigya_user_deletion')->error("General error connecting to S3. A possible reason is a missing required parameter. Error code: " . $e->getCode() . ". Message: " . $e->getMessage());
+				Drupal::logger('gigya_user_deletion')->error("General error connecting to S3. A possible reason is a missing required parameter. Error code: " . $e->getCode() . ". Message: " . $e->getMessage());
 				return false;
 			}
 		}
@@ -80,11 +83,13 @@
 		public function loadFileFromServer($file_name) {
 			/* Get S3 connection details from DB */
 			$secretKey = '';
-			$storageDetails = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
-			if ($this->helper)
+			$storageDetails = Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
+			if ($this->helper) {
 				$helper = $this->helper;
-			else
+			}
+			else {
 				$helper = new GigyaHelper();
+			}
 			$bucketName = $storageDetails['bucketName'];
 			$accessKey = $storageDetails['accessKey'];
 			$secretKeyEnc = $storageDetails['secretKey'];
@@ -92,11 +97,13 @@
 			{
 				$secretKey = $helper->decrypt($secretKeyEnc);
 			}
-			$region = $this->getRegion();
+
+			$region = ($storageDetails['region']) ?? $this->getRegion();
 			$s3Client = S3Client::factory(array(
 											  'key' => $accessKey,
 											  'secret' => $secretKey,
 											  'region' => $region,
+											  'version' => 'latest',
 											  'signature' => 'v4',
 										  ));
 
@@ -114,7 +121,7 @@
 			}
 			catch (S3Exception $e)
 			{
-				\Drupal::logger('gigya_user_deletion')->error("Failed to get file from S3 server - " . $e->getMessage());
+				Drupal::logger('gigya_user_deletion')->error('Failed to get file from S3 server - ' . $e->getMessage());
 				return false;
 			}
 		}
@@ -164,7 +171,7 @@
 		 */
 		public function sendEmail($subject, $body, $to) {
 			if (!empty($to)) {
-				$mailManager = \Drupal::service('plugin.manager.mail');
+				$mailManager = Drupal::service('plugin.manager.mail');
 				$module = 'gigya_user_deletion';
 				$params['from'] = 'Gigya IdentitySync';
 				$params['subject'] = $subject;
@@ -172,8 +179,8 @@
 				$key = 'job_email';
 
 				try /* For testability */ {
-					$langcode = \Drupal::currentUser()->getPreferredLangcode();
-				} catch (\Exception $e) {
+					$langcode = Drupal::currentUser()->getPreferredLangcode();
+				} catch (Exception $e) {
 					$langcode = 'en';
 				}
 				if (!isset($langcode)) {
@@ -184,19 +191,19 @@
 					foreach (explode(',', $to) as $email) {
 						$result = $mailManager->mail($module, $key, trim($email), $langcode, $params, NULL, $send = TRUE);
 						if (!$result) {
-							\Drupal::logger('gigya_user_deletion')
+							Drupal::logger('gigya_user_deletion')
 								->error('Failed to send email to ' . $email);
 						}
 					}
-				} catch (\Exception $e) {
-					\Drupal::logger('gigya_user_deletion')
+				} catch (Exception $e) {
+					Drupal::logger('gigya_user_deletion')
 						->error('Failed to send emails - ' . $e->getMessage());
 					return FALSE;
 				}
 				return TRUE;
 			}
 			else {
-				\Drupal::logger('gigya_user_deletion')
+				Drupal::logger('gigya_user_deletion')
 					->warning('Unable to send email with subject: ' . $subject . '. No destination address specified.');
 				return FALSE;
 			}
@@ -208,34 +215,63 @@
 		 * @return string | false
 		 */
 		public function getRegion() {
-			//Get S3 connection details from DB
-			$secretKey = "";
-			$storageDetails = \Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
-			if ($this->helper)
+			/* Get S3 connection details from DB */
+			$storedAwsParams = Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
+			if ($this->helper) {
 				$helper = $this->helper;
-			else
+			}
+			else {
 				$helper = new GigyaHelper();
-			$bucketName = $storageDetails['bucketName'];
-			$accessKey = $storageDetails['accessKey'];
-			$secretKeyEnc = $storageDetails['secretKey'];
-			//decrypt S3 secret
+			}
+
+			/* Build AWS params */
+			$bucketName = $storedAwsParams['bucketName'];
+			$awsParams = [
+				'key'     => $storedAwsParams['accessKey'],
+				'secret'  => $storedAwsParams['secretKey'],
+				'region'  => 'us-east-1',
+				'version' => 'latest',
+			];
+
+			/* Decrypt S3 secret */
 			if (!empty($secretKeyEnc))
 			{
-				$secretKey = $helper->decrypt($secretKeyEnc);
+				$awsParams['secret'] = $helper->decrypt($secretKeyEnc);
 			}
-			$s3Client = S3Client::factory(array(
-											  'key' => $accessKey,
-											  'secret' => $secretKey,
-										  ));
-			try
-			{
-				$response = $s3Client->GetBucketLocation(array('Bucket' => $bucketName,));
+
+			try {
+				$s3Client = S3Client::factory($awsParams);
+				$response = $s3Client->GetBucketLocation(['Bucket' => $bucketName,]);
+
 				return $response->get('Location');
+			} catch (S3Exception $e) {
+				try {
+					$awsParams['region'] = $this->getRegionFromAwsError($e->getMessage());
+					if (!$awsParams['region']) {
+						throw $e;
+					}
+
+					$s3Client = S3Client::factory($awsParams);
+					$response = $s3Client->GetBucketLocation(['Bucket' => $bucketName,]);
+
+					return $response->get('Location');
+				} catch (Exception $e) {
+					Drupal::logger('gigya_user_deletion')->error('Failed to get region from S3 server - ' . $e->getMessage());
+					return FALSE;
+				}
 			}
-			catch (S3Exception $e)
-			{
-				\Drupal::logger('gigya_user_deletion')->error("Failed to get region from S3 server - " . $e->getMessage());
-				return false;
+		}
+
+		/**
+		 * @param string $error
+		 *
+		 * @return false|mixed
+		 */
+		public function getRegionFromAwsError(string $error) {
+			if (preg_match('/the region \'([a-zA-Z0-9-]+)\' is wrong; expecting \'([a-z0-9-]+)\'/', $error, $matches)) {
+				return $matches[2];
 			}
+
+			return FALSE;
 		}
 	}

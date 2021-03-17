@@ -252,7 +252,7 @@
 							}
 
 							$user = User::create(
-								array('name' => $username, 'pass' => user_password(), 'status' => 1, 'mail' => $email)
+								array('name' => $username, 'pass' => \Drupal::service('password_generator')->generate(32), 'status' => 1, 'mail' => $email)
 							);
 							$user->save();
 							$this->helper->processFieldMapping($gigyaUser, $user);

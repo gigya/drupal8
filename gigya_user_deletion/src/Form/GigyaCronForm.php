@@ -307,11 +307,13 @@
 				if (class_exists('Aws\\S3\\S3Client'))
 				{
 					try {
-						$s3Client = S3Client::factory([
-							'key'     => $accessKey,
-							'secret'  => $secretKey,
-							'region'  => $region,
-							'version' => 'latest',
+						$s3Client = new S3Client([
+							'credentials' => [
+								'key'    => $accessKey,
+								'secret' => $secretKey,
+							],
+							'region'      => $region,
+							'version'     => 'latest',
 						]);
 
 						$s3Client->GetBucketLocation(['Bucket' => $bucketName,]);

@@ -44,13 +44,14 @@
 				}
 				$objectKeyPrefix = (!empty($storageDetails['objectKeyPrefix'])) ? rtrim($storageDetails['objectKeyPrefix'], '/') . '/' : '';
 				$region = $this->getRegion();
-				Drupal::logger('gigya_user_deletion')->info('region ' . $region); ////
-				$s3Client = S3Client::factory(array(
-												  'key' => $accessKey,
-												  'secret' => $secretKey,
-												  'signature' => 'v4',
-												  'region' => $region,
-											  ));
+				$s3Client = new S3Client([
+					'credentials' => [
+						'key'    => $accessKey,
+						'secret' => $secretKey,
+					],
+					'version'   => 'latest',
+					'region'      => $region,
+				]);
 
 				/* Max of 15 files */
 				$response = $s3Client->listObjects(array(
@@ -99,30 +100,34 @@
 			}
 
 			$region = ($storageDetails['region']) ?? $this->getRegion();
-			$s3Client = S3Client::factory(array(
-											  'key' => $accessKey,
-											  'secret' => $secretKey,
-											  'region' => $region,
-											  'version' => 'latest',
-											  'signature' => 'v4',
-										  ));
 
 			/* Read file from S3 */
-			try
-			{
-				$result = $s3Client->getObject(array(
-												   'Bucket' => $bucketName,
-												   'Key' => $file_name,
-											   ));
-				$body = $result->get('Body');
+			try {
+				$s3Client = new S3Client([
+					'credentials' => [
+						'key'    => $accessKey,
+						'secret' => $secretKey,
+					],
+					'region'      => $region,
+					'version'     => 'latest',
+				]);
+
+				$result = $s3Client->getObject([
+					'Bucket' => $bucketName,
+					'Key'    => $file_name,
+				]);
+				$body   = $result->get('Body');
 				$body->rewind();
-				$content = $body->read($result['ContentLength']);
-				return $content;
-			}
-			catch (S3Exception $e)
-			{
+
+				return $body->read($result['ContentLength']);
+			} catch (S3Exception $e) {
 				Drupal::logger('gigya_user_deletion')->error('Failed to get file from S3 server - ' . $e->getMessage());
-				return false;
+				return FALSE;
+			} catch (Exception $e) {
+				Drupal::logger('gigya_user_deletion')
+					->error('Unknown error when trying to get a file from S3. A possible reason is a missing required parameter. Error code: '
+						. $e->getCode() . '. Message: ' . $e->getMessage());
+				return FALSE;
 			}
 		}
 
@@ -217,6 +222,7 @@
 		public function getRegion() {
 			/* Get S3 connection details from DB */
 			$storedAwsParams = Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
+			$secretKeyEnc = Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails.secretKey');
 			if ($this->helper) {
 				$helper = $this->helper;
 			}
@@ -227,23 +233,25 @@
 			/* Build AWS params */
 			$bucketName = $storedAwsParams['bucketName'];
 			$awsParams = [
-				'key'     => $storedAwsParams['accessKey'],
-				'secret'  => $storedAwsParams['secretKey'],
-				'region'  => 'us-east-1',
-				'version' => 'latest',
+				'credentials' => [
+					'key'    => $storedAwsParams['accessKey'],
+					'secret' => $storedAwsParams['secretKey'],
+				],
+				'region'      => 'us-east-1',
+				'version'     => 'latest',
 			];
 
 			/* Decrypt S3 secret */
 			if (!empty($secretKeyEnc))
 			{
-				$awsParams['secret'] = $helper->decrypt($secretKeyEnc);
+				$awsParams['credentials']['secret'] = $helper->decrypt($secretKeyEnc);
 			}
 
 			try {
-				$s3Client = S3Client::factory($awsParams);
+				$s3Client = new S3Client($awsParams);
 				$response = $s3Client->GetBucketLocation(['Bucket' => $bucketName,]);
 
-				return $response->get('Location');
+				return $response->get('Location') ?? $response->get('LocationConstraint');
 			} catch (S3Exception $e) {
 				try {
 					$awsParams['region'] = $this->getRegionFromAwsError($e->getMessage());
@@ -251,12 +259,15 @@
 						throw $e;
 					}
 
-					$s3Client = S3Client::factory($awsParams);
+					$s3Client = new S3Client($awsParams);
 					$response = $s3Client->GetBucketLocation(['Bucket' => $bucketName,]);
 
-					return $response->get('Location');
+					Drupal::logger('gigya_user_deletion')
+						->warning('AWS S3 region incorrectly set in the cron configuration. We were able to retrieve the region based on your bucket name, but this may stop working in the future. Please configure the AWS region in the Gigya user deletion configuration.');
+
+					return $response->get('Location') ?? $response->get('LocationConstraint');
 				} catch (Exception $e) {
-					Drupal::logger('gigya_user_deletion')->error('Failed to get region from S3 server - ' . $e->getMessage());
+					Drupal::logger('gigya_user_deletion')->error('Failed to get region from S3 server - ' . nl2br($e->getMessage()));
 					return FALSE;
 				}
 			}

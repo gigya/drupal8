@@ -84,19 +84,19 @@
 								try {
 									/* Insert processed files into DB */
 									Drupal::database()
-									  ->merge('gigya_user_deletion')
-									  ->key('filename', $file_name)
-									  ->insertFields([
-										'filename' => $file_name,
-										'time_processed' => time(),
-									  ])
-									  ->updateFields([
-										'time_processed' => time(),
-									  ])
-									  ->execute();
+										->merge('gigya_user_deletion')
+										->key('filename', $file_name)
+										->insertFields([
+											'filename'       => $file_name,
+											'time_processed' => time(),
+										])
+										->updateFields([
+											'time_processed' => time(),
+										])
+										->execute();
 								} catch (\Exception $e) {
 									Drupal::logger('gigya_user_deletion')
-									  ->error('Unable to insert file name: ' . $file_name . ' to database.');
+										->error('Unable to insert file name: ' . $file_name . ' to database.');
 								}
 							}
 						}
@@ -113,23 +113,18 @@
 			}
 
 			/* If queue_file is not empty take item (file) and add all users to queue_users */
-			while ($queue_file->numberOfItems() > 0)
-			{
+			while ($queue_file->numberOfItems() > 0) {
 				$item_file = $queue_file->claimItem();
 
-				if ($item_file !== false)
-				{
+				if ($item_file !== FALSE) {
 					$item_array = (array) $item_file;
-					$file = $item_array['data']['Key'];
-					if ($file !== null)
-					{
+					$file       = $item_array['data']['Key'];
+					if ($file !== NULL) {
 						$accounts = $userDeletionHelper->getUsers($file);
-						foreach ($accounts as $account)
-						{
-							foreach ($account as $gigya_uid)
-							{
+						foreach ($accounts as $account) {
+							foreach ($account as $gigya_uid) {
 								/* Add item - account to queue_users */
-								$item_user = array('gigya_uid' => $gigya_uid);
+								$item_user = ['gigya_uid' => $gigya_uid];
 								$queue_users->createItem($item_user);
 							}
 						}

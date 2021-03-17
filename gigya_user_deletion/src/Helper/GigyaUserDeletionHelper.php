@@ -83,13 +83,13 @@
 		/**
 		 * Function return file content
 		 *
-		 * @param    string $file_name File name
+		 * @param string $fileName File name
 		 *
-		 * @return    bool                File content
+		 * @return bool File content
 		 */
-		public function loadFileFromServer($file_name) {
+		public function loadFileFromServer(string $fileName) {
 			/* Get S3 connection details from DB */
-			$secretKey = '';
+			$secretKey      = '';
 			$storageDetails = Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
 			if (isset($this->helper)) {
 				$helper = $this->helper;
@@ -120,7 +120,7 @@
 
 				$result = $s3Client->getObject([
 					'Bucket' => $bucketName,
-					'Key'    => $file_name,
+					'Key'    => $fileName,
 				]);
 				$body   = $result->get('Body');
 				$body->rewind();

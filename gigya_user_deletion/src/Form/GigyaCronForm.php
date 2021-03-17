@@ -320,7 +320,7 @@
 					} catch (S3Exception $e) {
 						$error = nl2br($e->getMessage());
 						if (preg_match('/the region \'([a-zA-Z0-9-]+)\' is wrong; expecting \'([a-z0-9-]+)\'/', $error, $matches)) {
-							$error = 'The region ' . $matches[1] . ' is incorrect. It is likely that you meant: ' .
+							$error = 'The region you entered is incorrect. It is likely that you meant: ' .
 								((array_key_exists($matches[2], $this->aws_regions))
 									? ($this->aws_regions[$matches[2]] . ' (' . $matches[2] . ')')
 									: $matches[2]);
@@ -371,11 +371,11 @@
 			$config->set('gigya_user_deletion.storageDetails.accessKey', $this->getValue($form_state, 'accessKey'));
 
 			/* Region logic */
-			if ($this->getValue($form_state, 'gigya_user_deletion_storageDetails_region') == 'other') {
-				$config->set('gigya_user_deletion.storageDetails.region', $this->getValue($form_state, 'region'));
+			if ($this->getValue($form_state, 'region') == 'other') {
+				$config->set('gigya_user_deletion.storageDetails.region', $this->getValue($form_state, 'other_region'));
 			}
 			else {
-				$config->set('gigya_user_deletion.storageDetails.region', $this->getValue($form_state, 'other_region'));
+				$config->set('gigya_user_deletion.storageDetails.region', $this->getValue($form_state, 'region'));
 			}
 
 			/* Encrypt storageDetails.secret */

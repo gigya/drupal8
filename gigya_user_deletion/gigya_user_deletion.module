@@ -113,7 +113,8 @@
 			}
 
 			/* If queue_file is not empty take item (file) and add all users to queue_users */
-			while ($queue_file->numberOfItems() > 0) {
+			$max_retry_attempts = $retry_attempts = 10;
+			while ($queue_file->numberOfItems() > 0 and $retry_attempts > 0) {
 				$item_file = $queue_file->claimItem();
 
 				if ($item_file !== FALSE) {
@@ -128,6 +129,15 @@
 								$queue_users->createItem($item_user);
 							}
 						}
+					}
+				}
+				else {
+					$retry_attempts--;
+
+					if ($retry_attempts === 0) {
+						Drupal::logger('gigya_user_deletion')->error('Error retrieving files or users to delete from the Drupal queue after '
+							. $max_retry_attempts
+							. ' retries. Please try manually emptying the queue and re-running the job. If this problem persists, please contact support.');
 					}
 				}
 

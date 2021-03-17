@@ -16,11 +16,14 @@
 
 	class GigyaUserDeletionHelper implements GigyaUserDeletionHelperInterface
 	{
-		private $helper;
+		private GigyaHelper $helper;
 
-		public function __construct($helper = null) {
-			if ($helper)
+		protected string $region;
+
+		public function __construct($helper = NULL) {
+			if ($helper) {
 				$this->helper = $helper;
+			}
 		}
 
 		/**
@@ -31,7 +34,7 @@
 			{
 				$secretKey = '';
 				$storageDetails = Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
-				if ($this->helper)
+				if (isset($this->helper))
 					$helper = $this->helper;
 				else
 					$helper = new GigyaHelper();
@@ -43,13 +46,17 @@
 					$secretKey = $helper->decrypt($secretKeyEnc);
 				}
 				$objectKeyPrefix = (!empty($storageDetails['objectKeyPrefix'])) ? rtrim($storageDetails['objectKeyPrefix'], '/') . '/' : '';
-				$region = $this->getRegion();
+				if (empty($this->region)) {
+					$region = $this->region = $this->getRegion();
+				} else {
+					$region = $this->region;
+				}
 				$s3Client = new S3Client([
 					'credentials' => [
 						'key'    => $accessKey,
 						'secret' => $secretKey,
 					],
-					'version'   => 'latest',
+					'version'     => 'latest',
 					'region'      => $region,
 				]);
 
@@ -60,17 +67,16 @@
 													   'Prefix' => $objectKeyPrefix)
 				);
 
-				return $response->getPath('Contents');
-			}
-			catch (S3Exception $e)
-			{
-				Drupal::logger('gigya_user_deletion')->error("Failed to get files list from S3 server. Error: " . $e->getMessage());
-				return false;
-			}
-			catch (Exception $e)
-			{
-				Drupal::logger('gigya_user_deletion')->error("General error connecting to S3. A possible reason is a missing required parameter. Error code: " . $e->getCode() . ". Message: " . $e->getMessage());
-				return false;
+				return $response->search('Contents');
+			} catch (S3Exception $e) {
+				Drupal::logger('gigya_user_deletion')->error('Failed to get the list of files from S3 server. Error: '
+					. $e->getMessage());
+				return FALSE;
+			} catch (Exception $e) {
+				Drupal::logger('gigya_user_deletion')
+					->error('General error connecting to S3. A possible reason is a missing required parameter. Error code: '
+						. $e->getCode() . '. Message: ' . $e->getMessage());
+				return FALSE;
 			}
 		}
 
@@ -85,7 +91,7 @@
 			/* Get S3 connection details from DB */
 			$secretKey = '';
 			$storageDetails = Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
-			if ($this->helper) {
+			if (isset($this->helper)) {
 				$helper = $this->helper;
 			}
 			else {
@@ -99,7 +105,7 @@
 				$secretKey = $helper->decrypt($secretKeyEnc);
 			}
 
-			$region = ($storageDetails['region']) ?? $this->getRegion();
+			$region = $this->region ?? (($storageDetails['region']) ?? $this->getRegion());
 
 			/* Read file from S3 */
 			try {
@@ -223,7 +229,7 @@
 			/* Get S3 connection details from DB */
 			$storedAwsParams = Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails');
 			$secretKeyEnc = Drupal::config('gigya_user_deletion.job')->get('gigya_user_deletion.storageDetails.secretKey');
-			if ($this->helper) {
+			if (isset($this->helper)) {
 				$helper = $this->helper;
 			}
 			else {

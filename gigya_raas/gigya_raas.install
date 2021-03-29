@@ -28,9 +28,10 @@ function gigya_raas_install() {
 
 	$schema = Database::getConnection()->schema();
 
-	$error_message_format = sprintf('Unable to create column `%s` in the `%s` table during Gigya RaaS module installation.
-														If the column already exists from a previous installation of the module, you may ignore this warning. If the column already exists from another module, please contact Gigya\'s support.
-														If the column does not exist, please try to reinstall the module.');
+	$error_message_format = 'Unable to create column `%s` in the `%s` table during Gigya RaaS module installation.
+													If the column already exists from a previous installation of the module, you may ignore this warning. If the column already exists from another module, please contact Gigya\'s support.
+													If the column does not exist, please try to reinstall the module.';
+
 	/* Create two new columns. The reason they are separated is that if one exists from a previous install, it should be able to create both, not fail */
 	try {
 		$schema->addField('sessions', 'expiration', $spec_expiration);

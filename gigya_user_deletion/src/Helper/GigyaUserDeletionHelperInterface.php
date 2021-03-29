@@ -15,7 +15,7 @@
 	{
 		public function getFileList();
 
-		public function loadFileFromServer($file_name);
+		public function loadFileFromServer(string $fileName);
 
 		public function getUsers($fileName);
 

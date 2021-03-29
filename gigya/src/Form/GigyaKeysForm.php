@@ -241,7 +241,9 @@ class GigyaKeysForm extends ConfigFormBase {
 		}
 
 		/* Data Center was changed ? */
-		if ($this->getValue($form_state, 'gigya_data_center') != $config->get('gigya.gigya_data_center') || $this->getValue($form_state, 'gigya_other_data_center') != $config->get('gigya.gigya_other_data_center')) {
+		if ($this->getValue($form_state, 'gigya_data_center') != $config->get('gigya.gigya_data_center')
+			|| $this->getValue($form_state, 'gigya_other_data_center') != $config->get('gigya.gigya_other_data_center')
+		) {
 			if ($this->getValue($form_state, 'gigya_data_center') == 'other') {
 				$_gigya_data_center = $this->getValue($form_state, 'gigya_other_data_center');
 			}

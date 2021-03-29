@@ -1,5 +1,6 @@
 {
   "name": "gigya/drupal",
+  "type": "drupal-module",
   "description": "Gigya Drupal module",
   "license": "MIT",
   "authors": [

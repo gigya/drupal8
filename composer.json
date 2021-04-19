@@ -15,6 +15,7 @@
   ],
   "minimum-stability": "dev",
   "require": {
+    "php":">=7.4",
     "ext-json": "*",
     "ext-openssl": "*",
     "gigya/php-sdk": "^3.0"

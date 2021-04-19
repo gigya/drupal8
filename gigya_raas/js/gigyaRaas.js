@@ -15,7 +15,7 @@
 	Drupal.behaviors.gigyaRassDynamicSession = {
 		attach: function (context, settings) {
             if ("dynamic" === drupalSettings.gigyaExtra.session_type) {
-				Drupal.ajax({url: drupalSettings.path.baseUrl + 'gigya/extcookie'}).execute();
+				Drupal.ajax({url: drupalSettings.path.baseUrl + drupalSettings.path.pathPrefix + 'gigya/extcookie'}).execute();
             }
         }
     };
@@ -46,7 +46,7 @@
 		 */
 
 		if (!redirectTarget.startsWith('http'))
-			redirectTarget = window.location.origin + drupalSettings.path.baseUrl + redirectTarget;
+			redirectTarget = window.location.origin + drupalSettings.path.baseUrl + drupalSettings.path.pathPrefix + redirectTarget;
 
 		if (typeof sendSetSSOToken === 'undefined' || sendSetSSOToken === false)
 			location.replace(redirectTarget);
@@ -56,7 +56,7 @@
 
 	jQuery.fn.logoutRedirect = function (redirectTarget) {
 		if (!redirectTarget.startsWith('http'))
-			redirectTarget = window.location.origin + drupalSettings.path.baseUrl + redirectTarget;
+			redirectTarget = window.location.origin + drupalSettings.path.baseUrl + drupalSettings.path.pathPrefix + redirectTarget;
 
 		document.location = redirectTarget;
 	};
@@ -113,7 +113,7 @@
 		};
 
 		var ajaxSettings = {
-			url: drupalSettings.path.baseUrl + 'gigya/raas-login',
+			url: drupalSettings.path.baseUrl + drupalSettings.path.pathPrefix + 'gigya/raas-login',
 			submit: data
 		};
 
@@ -131,7 +131,7 @@
 			};
 
 			var ajaxSettings = {
-				url: drupalSettings.path.baseUrl + 'gigya/raas-profile-update',
+				url: drupalSettings.path.baseUrl + drupalSettings.path.pathPrefix + 'gigya/raas-profile-update',
 				submit: {gigyaData: gigyaData}
 			};
 
@@ -156,7 +156,7 @@
 		var data = {};
 
 		var ajaxSettings = {
-			url: drupalSettings.path.baseUrl + 'gigya/raas-logout',
+			url: drupalSettings.path.baseUrl + drupalSettings.path.pathPrefix + 'gigya/raas-logout',
 			submit: data
 		};
 		var myAjaxObject = Drupal.ajax(ajaxSettings);
@@ -257,7 +257,7 @@
 			signatureTimestamp: data.response.signatureTimestamp
 		};
 		var ajaxSettings = {
-			url: drupalSettings.path.baseUrl + 'gigya/raas-process-fieldmapping',
+			url: drupalSettings.path.baseUrl + drupalSettings.path.pathPrefix + 'gigya/raas-process-fieldmapping',
 			submit: {gigyaData: gigyaData}
 		};
 		var myAjaxObject = Drupal.ajax(ajaxSettings);

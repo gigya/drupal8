@@ -6,8 +6,8 @@
 /**
  * For determining the full path to Drupal, useful for when Drupal is installed in a subdirectory of the main website.
  *
- * @property Drupal.settings.pathPrefix
- * @property Drupal.settings.basePath
+ * @property drupalSettings.path.pathPrefix
+ * @property drupalSettings.path.baseUrl
  */
 var getUrlPrefix = function () {
   return drupalSettings.path.pathPrefix ? drupalSettings.path.baseUrl  + drupalSettings.path.pathPrefix : drupalSettings.path.baseUrl;

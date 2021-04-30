@@ -56,7 +56,7 @@ var getUrlPrefix = function () {
 		 */
 
 		if (!redirectTarget.startsWith('http'))
-			redirectTarget = window.location.origin + getUrlPrefix() + redirectTarget;
+			redirectTarget = window.location.origin + drupalSettings.path.baseUrl + redirectTarget;
 
 		if (typeof sendSetSSOToken === 'undefined' || sendSetSSOToken === false)
 			location.replace(redirectTarget);
@@ -66,7 +66,7 @@ var getUrlPrefix = function () {
 
 	jQuery.fn.logoutRedirect = function (redirectTarget) {
 		if (!redirectTarget.startsWith('http'))
-			redirectTarget = window.location.origin + getUrlPrefix() + redirectTarget;
+			redirectTarget = window.location.origin + drupalSettings.path.baseUrl + redirectTarget;
 
 		document.location = redirectTarget;
 	};

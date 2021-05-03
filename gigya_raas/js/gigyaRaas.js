@@ -3,6 +3,16 @@
  * Handles AJAX login and register events.
  */
 
+/**
+ * For determining the full path to Drupal, useful for when Drupal is installed in a subdirectory of the main website.
+ *
+ * @property drupalSettings.path.pathPrefix
+ * @property drupalSettings.path.baseUrl
+ */
+var getUrlPrefix = function () {
+  return drupalSettings.path.pathPrefix ? (drupalSettings.path.baseUrl + drupalSettings.path.pathPrefix) : drupalSettings.path.baseUrl;
+};
+
 (function ($, Drupal, drupalSettings) {
 
     'use strict';
@@ -15,7 +25,7 @@
 	Drupal.behaviors.gigyaRassDynamicSession = {
 		attach: function (context, settings) {
             if ("dynamic" === drupalSettings.gigyaExtra.session_type) {
-				Drupal.ajax({url: drupalSettings.path.baseUrl + 'gigya/extcookie'}).execute();
+				Drupal.ajax({url: getUrlPrefix() + 'gigya/extcookie'}).execute();
             }
         }
     };
@@ -113,7 +123,7 @@
 		};
 
 		var ajaxSettings = {
-			url: drupalSettings.path.baseUrl + 'gigya/raas-login',
+			url: getUrlPrefix() + 'gigya/raas-login',
 			submit: data
 		};
 
@@ -131,7 +141,7 @@
 			};
 
 			var ajaxSettings = {
-				url: drupalSettings.path.baseUrl + 'gigya/raas-profile-update',
+				url: getUrlPrefix() + 'gigya/raas-profile-update',
 				submit: {gigyaData: gigyaData}
 			};
 
@@ -156,7 +166,7 @@
 		var data = {};
 
 		var ajaxSettings = {
-			url: drupalSettings.path.baseUrl + 'gigya/raas-logout',
+			url: getUrlPrefix() + 'gigya/raas-logout',
 			submit: data
 		};
 		var myAjaxObject = Drupal.ajax(ajaxSettings);
@@ -257,7 +267,7 @@
 			signatureTimestamp: data.response.signatureTimestamp
 		};
 		var ajaxSettings = {
-			url: drupalSettings.path.baseUrl + 'gigya/raas-process-fieldmapping',
+			url: getUrlPrefix() + 'gigya/raas-process-fieldmapping',
 			submit: {gigyaData: gigyaData}
 		};
 		var myAjaxObject = Drupal.ajax(ajaxSettings);

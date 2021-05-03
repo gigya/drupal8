@@ -10,7 +10,7 @@
  * @property drupalSettings.path.baseUrl
  */
 var getUrlPrefix = function () {
-  return drupalSettings.path.pathPrefix ? drupalSettings.path.baseUrl  + drupalSettings.path.pathPrefix : drupalSettings.path.baseUrl;
+  return drupalSettings.path.pathPrefix ? (drupalSettings.path.baseUrl + drupalSettings.path.pathPrefix) : drupalSettings.path.baseUrl;
 };
 
 (function ($, Drupal, drupalSettings) {

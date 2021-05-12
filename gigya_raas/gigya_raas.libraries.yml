@@ -10,3 +10,10 @@ gigyaRaas:
     - core/drupalSettings
     - core/drupal.ajax
     - gigya/drupalGigya
+
+customScreenSets:
+  version: VERSION
+  js:
+    js/customScreenSets.js: {}
+  dependencies:
+    - gigya_raas/gigyaRaas

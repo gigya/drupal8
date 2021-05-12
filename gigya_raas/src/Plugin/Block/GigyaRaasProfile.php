@@ -23,7 +23,7 @@ class GigyaRaasProfile extends BlockBase {
       '#theme' => 'gigya_raas_profile_block',
       '#showDiv' => \Drupal::currentUser()->isAuthenticated(),
       '#attached' => [
-        'library' => 'gigya_raas/gigyaRaas'
+        'library' => ['gigya_raas/gigyaRaas'],
       ],
     );
     return $build;

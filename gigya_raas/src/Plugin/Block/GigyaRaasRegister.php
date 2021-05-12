@@ -23,7 +23,7 @@ class GigyaRaasRegister extends BlockBase {
       '#theme' => 'gigya_raas_register_block',
       '#showDiv' => \Drupal::currentUser()->isAnonymous(),
       '#attached' => [
-        'library' => 'gigya_raas/gigyaRaas'
+        'library' => ['gigya_raas/gigyaRaas'],
       ],
     );
     return $build;

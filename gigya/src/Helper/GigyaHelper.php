@@ -484,7 +484,7 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
   public function getGigyaLanguages() {
-    return array("en" => "English (default)","ar" => "Arabic","br" => "Bulgarian","ca" => "Catalan","hr" => "Croatian",
+    return array("en" => "English (default)","ar" => "Arabic","bg" => "Bulgarian","ca" => "Catalan","hr" => "Croatian",
                 "cs" => "Czech","da" => "Danish","nl" => "Dutch","fi" => "Finnish","fr" => "French","de" => "German",
                 "el" => "Greek","he" => "Hebrew","hu" => "Hungarian","id" => "Indonesian (Bahasa)","it" => "Italian",
                 "ja" => "Japanese","ko" => "Korean","ms" => "Malay","no" => "Norwegian","fa" => "Persian (Farsi)",

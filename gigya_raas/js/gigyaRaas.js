@@ -3,6 +3,16 @@
  * Handles AJAX login and register events.
  */
 
+/**
+ * For determining the full path to Drupal, useful for when Drupal is installed in a subdirectory of the main website.
+ *
+ * @property drupalSettings.path.pathPrefix
+ * @property drupalSettings.path.baseUrl
+ */
+var getUrlPrefix = function () {
+  return drupalSettings.path.pathPrefix ? (drupalSettings.path.baseUrl + drupalSettings.path.pathPrefix) : drupalSettings.path.baseUrl;
+};
+
 (function ($, Drupal, drupalSettings) {
 
     'use strict';
@@ -15,7 +25,7 @@
 	Drupal.behaviors.gigyaRassDynamicSession = {
 		attach: function (context, settings) {
             if ("dynamic" === drupalSettings.gigyaExtra.session_type) {
-				Drupal.ajax({url: drupalSettings.path.baseUrl + 'gigya/extcookie'}).execute();
+				Drupal.ajax({url: getUrlPrefix() + 'gigya/extcookie'}).execute();
             }
         }
     };
@@ -37,9 +47,12 @@
 	 */
 	jQuery.fn.loginRedirect = function (redirectTarget) {
 		/**
-		 * @var bool sendSetSSOToken	Should be set in Gigya's global configuration.
-		 * 								Set this to True if you would like setSSOToken to be called
-		 * 								(a redirect to Gigya to set the site's cookies, for browsers that do not support 3rd party cookies)
+		 * @var bool sendSetSSOToken	Should be set in Gigya's global
+		 *   configuration.
+		 * 								Set this to True if you would like setSSOToken to be
+		 *   called
+		 * 								(a redirect to Gigya to set the site's cookies, for
+		 *   browsers that do not support 3rd party cookies)
 		 */
 
 		if (!redirectTarget.startsWith('http'))
@@ -102,47 +115,48 @@
 		});
 
 		var data = {
-            "uid": res.UID,
-            "uid_sig": res.UIDSignature,
-            "sig_timestamp": res.signatureTimestamp,
+			"uid": res.UID,
+			"uid_sig": res.UIDSignature,
+			"sig_timestamp": res.signatureTimestamp,
 			"id_token": res.id_token,
 			"remember": remember
-        };
+		};
 
-        var ajaxSettings = {
-            url: drupalSettings.path.baseUrl + 'gigya/raas-login',
-            submit: data
-        };
+		var ajaxSettings = {
+			url: getUrlPrefix() + 'gigya/raas-login',
+			submit: data
+		};
 
-        var myAjaxObject = Drupal.ajax(ajaxSettings);
-        myAjaxObject.execute();
-    };
+		var myAjaxObject = Drupal.ajax(ajaxSettings);
+		myAjaxObject.execute();
+	};
 
-    var profileUpdated = function (data) {
+	var profileUpdated = function(data) {
 		if (data.response.errorCode === 0) {
-            var gigyaData = {
-                UID: data.response.UID,
-                UIDSignature: data.response.UIDSignature,
-                signatureTimestamp: data.response.signatureTimestamp,
-            };
+			var gigyaData = {
+				UID: data.response.UID,
+				UIDSignature: data.response.UIDSignature,
+				signatureTimestamp: data.response.signatureTimestamp,
+				id_token: data.response.id_token
+			};
 
-            var ajaxSettings = {
-                url: drupalSettings.path.baseUrl + 'gigya/raas-profile-update',
+			var ajaxSettings = {
+				url: getUrlPrefix() + 'gigya/raas-profile-update',
 				submit: {gigyaData: gigyaData}
-            };
+			};
 
-            var myAjaxObject = Drupal.ajax(ajaxSettings);
-            myAjaxObject.execute();
-        }
-    };
+			var myAjaxObject = Drupal.ajax(ajaxSettings);
+			myAjaxObject.execute();
+		}
+	};
 
-    var checkLogout = function () {
-        var logoutCookie = gigya.utils.cookie.get('Drupal.visitor.gigya');
-		    if (logoutCookie === 'gigyaLogOut') {
-            gigya.accounts.logout();
-            gigya.utils.cookie.remove('Drupal.visitor.gigya');
-        }
-    };
+	var checkLogout = function() {
+		var logoutCookie = gigya.utils.cookie.get('Drupal.visitor.gigya');
+		if (logoutCookie === 'gigyaLogOut') {
+			gigya.accounts.logout();
+			gigya.utils.cookie.remove('Drupal.visitor.gigya');
+		}
+	};
 
 	/**
 	 * @property drupalSettings.path.baseUrl
@@ -152,7 +166,7 @@
 		var data = {};
 
 		var ajaxSettings = {
-			url: drupalSettings.path.baseUrl + 'gigya/raas-logout',
+			url: getUrlPrefix() + 'gigya/raas-logout',
 			submit: data
 		};
 		var myAjaxObject = Drupal.ajax(ajaxSettings);
@@ -253,23 +267,23 @@
 			signatureTimestamp: data.response.signatureTimestamp
 		};
 		var ajaxSettings = {
-			url: drupalSettings.path.baseUrl + 'gigya/raas-process-fieldmapping',
+			url: getUrlPrefix() + 'gigya/raas-process-fieldmapping',
 			submit: {gigyaData: gigyaData}
 		};
 		var myAjaxObject = Drupal.ajax(ajaxSettings);
 		myAjaxObject.execute();
 	};
 
-    var init = function () {
-        if (drupalSettings.gigya.enableRaaS) {
-            gigyaHelper.addGigyaFunctionCall('accounts.addEventHandlers', {
-                onLogin: onLoginHandler,
-                onLogout: onLogoutHandler
-            });
-        }
+	var init = function() {
+		if (drupalSettings.gigya.enableRaaS) {
+			gigyaHelper.addGigyaFunctionCall('accounts.addEventHandlers', {
+				onLogin: onLoginHandler,
+				onLogout: onLogoutHandler
+			});
+		}
 
-        drupalSettings.gigya.isRaasInit = true;
-    };
+		drupalSettings.gigya.isRaasInit = true;
+	};
 
 	/**
 	 * @type {{attach: Drupal.behaviors.gigyaRaasInit.attach}}
@@ -280,21 +294,21 @@
 	 * @property Drupal.behaviors
 	 */
 	Drupal.behaviors.gigyaRaasInit = {
-        attach: function (context, settings) {
-            if (!('isRaasInit' in drupalSettings.gigya)) {
+		attach: function(context, settings) {
+			if (!('isRaasInit' in drupalSettings.gigya)) {
 				/**
 				 * @param serviceName
 				 */
-				window.onGigyaServiceReady = function (serviceName) {
-                    checkLogout();
-                    gigyaHelper.runGigyaCmsInit();
-                    initLoginUI();
-                    initRaaS();
+				window.onGigyaServiceReady = function(serviceName) {
+					checkLogout();
+					gigyaHelper.runGigyaCmsInit();
+					initLoginUI();
+					initRaaS();
 					initCustomScreenSet();
-                };
-                init();
-            }
-        }
-    };
+				};
+				init();
+			}
+		}
+	};
 
 })(jQuery, Drupal, drupalSettings);

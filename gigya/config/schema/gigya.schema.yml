@@ -52,6 +52,9 @@ gigya.settings:
         gigya_rsa_private_key:
           type: text
           label: 'Gigya RSA private key'
+        gigya_rsa_public_key:
+          type: text
+          label: 'Gigya RSA public key'
         gigya_data_center:
           type: text
           label: 'Data Center'

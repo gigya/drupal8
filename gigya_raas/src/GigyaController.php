@@ -28,6 +28,8 @@
 		/** @var GigyaHelper */
 		protected $helper;
 
+		protected $auth_mode;
+
 		/**
 		 * Construct method.
 		 *
@@ -42,6 +44,9 @@
 			{
 				$this->helper = $helper;
 			}
+
+			$gigya_conf = Drupal::config('gigya.settings');
+			$this->auth_mode = $gigya_conf->get('gigya.gigya_auth_mode');
 		}
 
 		/**
@@ -57,7 +62,13 @@
 		 */
 		public function gigyaRaasProfileAjax(Request $request) {
 			$gigya_data = $request->get('gigyaData');
-			$gigyaUser = $this->helper->validateAndFetchRaasUser($gigya_data['UID'], $gigya_data['UIDSignature'], $gigya_data['signatureTimestamp']);
+
+			if (!empty($gigya_data['id_token']) && $this->auth_mode === 'user_rsa') {
+				$signature = $gigya_data['id_token'];
+			} else {
+				$signature = $gigya_data['UIDSignature'];
+			}
+			$gigyaUser = $this->helper->validateAndFetchRaasUser($gigya_data['UID'], $signature, $gigya_data['signatureTimestamp']);
 			if ($gigyaUser) {
 				if ($user = $this->helper->getDrupalUidByGigyaUid($gigyaUser->getUID())) {
 					if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, $user->id())) {
@@ -188,7 +199,7 @@
 							/* Set user session */
 							$this->gigyaRaasSetLoginSession($session_type);
 						}
-						else
+						else /* User does not exist - register */
 						{
 							$uids = $this->helper->getUidByMails($gigyaUser->getLoginIds()['emails']);
 							if (!empty($uids))
@@ -241,7 +252,7 @@
 							}
 
 							$user = User::create(
-								array('name' => $username, 'pass' => user_password(), 'status' => 1, 'mail' => $email)
+								array('name' => $username, 'pass' => \Drupal::service('password_generator')->generate(32), 'status' => 1, 'mail' => $email)
 							);
 							$user->save();
 							$this->helper->processFieldMapping($gigyaUser, $user);
@@ -274,7 +285,7 @@
 						}
 					}
 				}
-				else {
+				else { /* No valid Gigya user found */
 					$this->helper->saveUserLogoutCookie();
 					Drupal::logger('gigya_raas')->notice('Invalid user. Guid: ' . $guid);
 					$err_msg = $this->t(
@@ -348,7 +359,7 @@
 			 * This means that the session in Drupal isn't yet registered when this code is run, and therefore it isn't possible to update it in the DB.
 			 * This $_SESSION var is therefore set in order to manipulate the session on the next request, which should be run after AuthenticationSubscriber.
 			 * */
-			Drupal::service('user.private_tempstore')->get('gigya_raas')->set('session_registered', FALSE);
+			Drupal::service('tempstore.private')->get('gigya_raas')->set('session_registered', FALSE);
 		}
 
 		/**
@@ -358,8 +369,8 @@
 		 * @param bool $is_remember_me
 		 */
 		public function gigyaRaasSetSession(int $session_expiration, bool $is_remember_me) { /* PHP 7.0+ */
-			Drupal::service('user.private_tempstore')->get('gigya_raas')->set('session_expiration', $session_expiration);
-			Drupal::service('user.private_tempstore')->get('gigya_raas')->set('session_is_remember_me', $is_remember_me);
+			Drupal::service('tempstore.private')->get('gigya_raas')->set('session_expiration', $session_expiration);
+			Drupal::service('tempstore.private')->get('gigya_raas')->set('session_is_remember_me', $is_remember_me);
 		}
 
 		/**
@@ -390,7 +401,19 @@
 				$session_expiration = strval($now + $session_time);
 
 				$gltexp_cookie = $request->cookies->get('gltexp_' . $api_key);
-				$gltexp_cookie_timestamp = explode('_', $gltexp_cookie)[0];
+
+				if (!empty($gltexp_cookie)) {
+					if ($auth_mode === 'user_rsa') {
+						$claims = json_decode(JWT::urlsafeB64Decode(explode('.', $gltexp_cookie)[1]), true, 512, JSON_BIGINT_AS_STRING);
+						if (!empty($claims) && !empty($claims['exp'])) {
+							$gltexp_cookie_timestamp = $claims['exp'];
+						}
+					}
+					else {
+						$gltexp_cookie_timestamp = explode('_', $gltexp_cookie)[0];
+					}
+				}
+
 				if (empty($gltexp_cookie_timestamp) or (time() < $gltexp_cookie_timestamp))
 				{
 					if (!empty($token))
@@ -401,7 +424,7 @@
 						else {
 							$session_sig = $this->getDynamicSessionSignatureUserSigned($token, $session_expiration, $app_key, $auth_key);
 						}
-						setrawcookie('gltexp_' . $api_key, rawurlencode($session_sig), time() + (10 * 365 * 24 * 60 * 60), '/', $request->getHost());
+						setrawcookie('gltexp_' . $api_key, rawurlencode($session_sig), time() + (10 * 365 * 24 * 60 * 60), '/', $request->getHost(), $request->isSecure());
 					}
 				}
 			}

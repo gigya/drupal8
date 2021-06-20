@@ -39,7 +39,7 @@ class GigyaKeysForm extends ConfigFormBase {
 	/**
 	 * @param array                                $form
 	 * @param \Drupal\Core\Form\FormStateInterface $form_state
-	 * @param GigyaHelperInterface                 $helper
+	 * @param GigyaHelperInterface | NULL          $helper
 	 *
 	 * @return array
 	 */
@@ -52,10 +52,16 @@ class GigyaKeysForm extends ConfigFormBase {
 		else {
 			$this->helper = $helper;
 		}
+
+		/* Verify requirements */
+		$messenger = Drupal::service('messenger');
 		if (!$this->helper->checkEncryptKey()) {
-			$messenger = Drupal::service('messenger');
 			$messenger->addError($this->t('Cannot read encryption key. Either the file path is incorrect or the file is empty.'));
 		}
+		if (!class_exists('Gigya\\PHP\\GSObject')) {
+			$messenger->addError($this->t('The required library Gigya PHP SDK cannot be found. Please install it via Composer.'));
+		}
+
 		$form = parent::buildForm($form, $form_state);
 		$config = $this->config('gigya.settings');
 
@@ -89,7 +95,9 @@ class GigyaKeysForm extends ConfigFormBase {
 		$rsa_private_key = $this->helper->decrypt($config->get('gigya.gigya_rsa_private_key'));
 		$rsa_private_key = substr(trim(str_replace([
 			'-----BEGIN RSA PRIVATE KEY-----',
+			'-----BEGIN PRIVATE KEY-----',
 			'-----END RSA PRIVATE KEY-----',
+			'-----END PRIVATE KEY-----',
 		], '', $rsa_private_key)), 0, -2);
 		$is_private_key_entered = (!empty($rsa_private_key));
 		$form['gigya_rsa_private_key'] = [
@@ -233,7 +241,9 @@ class GigyaKeysForm extends ConfigFormBase {
 		}
 
 		/* Data Center was changed ? */
-		if ($this->getValue($form_state, 'gigya_data_center') != $config->get('gigya.gigya_data_center') || $this->getValue($form_state, 'gigya_other_data_center') != $config->get('gigya.gigya_other_data_center')) {
+		if ($this->getValue($form_state, 'gigya_data_center') != $config->get('gigya.gigya_data_center')
+			|| $this->getValue($form_state, 'gigya_other_data_center') != $config->get('gigya.gigya_other_data_center')
+		) {
 			if ($this->getValue($form_state, 'gigya_data_center') == 'other') {
 				$_gigya_data_center = $this->getValue($form_state, 'gigya_other_data_center');
 			}
@@ -261,24 +271,23 @@ class GigyaKeysForm extends ConfigFormBase {
 				$valid = TRUE;
 			}
 		} catch (Exception $e) {
-			/* Optional error message that's not used because it could reveal inner workings of module. */
-			$error_message = new TranslatableMarkup('Gigya error: @code – @msg', ['@code' => $e->getCode(), '@message' => $e->getMessage()]);
+			$code = $e->getCode();
+			$msg = $e->getMessage();
+			$error_message = new TranslatableMarkup('Gigya error: @code – @msg', ['@code' => $code, '@message' => $msg]);
 		}
 
 		if ($valid !== TRUE) {
 			if (!empty($res) and is_object($res)) {
-				$code = $res->getErrorCode();
-				$msg = $res->getMessage();
+				if (!isset($error_message)) {
+					$code          = $res->getErrorCode();
+					$msg           = $res->getErrorMessage();
+					$error_message = new TranslatableMarkup('Gigya API error: @code – @msg. For more information, please refer to Gigya\'s documentation page on
+																	<a href="https://developers.gigya.com/display/GD/Response+Codes+and+Errors" target="_blank">Response Codes and Errors</a>.',
+						['@code' => $code, '@msg' => $msg]);
+				}
 
-				$error_message = new TranslatableMarkup('Gigya API error: @code – @msg. For more information, please refer to Gigya\'s documentation page on
-																<a href="https://developers.gigya.com/display/GD/Response+Codes+and+Errors" target="_blank">Response Codes and Errors</a>.',
-					['@code' => $code, '@msg' => $msg]);
 				$form_state->setErrorByName('gigya_api_key', $error_message);
-				Drupal::logger('gigya')
-					->error('Error setting API key, error code: @code - @msg', [
-						'@code' => $code,
-						'@msg'  => $msg,
-					]);
+				Drupal::logger('gigya')->error($error_message);
 			}
 			else {
 				$form_state->setErrorByName('gigya_api_key', $this->t('Your Gigya authentication details could not be validated. Please try again.'));
@@ -329,7 +338,7 @@ class GigyaKeysForm extends ConfigFormBase {
 	 *
 	 * @return string
 	 */
-	private function getValue($form_state, $prop_name) {
+	private function getValue(FormStateInterface $form_state, $prop_name) {
 		return trim($form_state->getValue($prop_name));
 	}
 }

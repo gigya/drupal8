@@ -6,19 +6,19 @@ use Exception;
 
 class GSApiException extends Exception {
 
-  private $longMessage;
+  private string $longMessage;
 
-  private $callId;
+  private string $callId;
 
   /**
    * GSApiException constructor.
    *
    * @param string $message
    * @param int $errorCode
-   * @param string $longMessage
-   * @param string $callId
+   * @param string|NULL $longMessage
+   * @param string|NULL $callId
    */
-  public function __construct($message, $errorCode, $longMessage = NULL, $callId = NULL) {
+  public function __construct(string $message, $errorCode, string $longMessage = NULL, string $callId = NULL) {
     parent::__construct($message, $errorCode);
     $this->longMessage = $longMessage;
     $this->callId = $callId;

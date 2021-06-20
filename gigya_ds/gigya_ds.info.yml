@@ -2,12 +2,11 @@ name: Gigya DS
 type: module
 description: 'Allows sites to utilize the Gigya DS API'
 package: Gigya
-# core: 8.x
 dependencies:
   - gigya
   - gigya_raas
 # Information added by Drupal.org packaging script on 2017-05-14
-version: '8.x-3.1'
-core: '8.x'
+version: '9.x-1.1.1'
+core_version_requirement: ^8 || ^9
 project: 'gigya'
 datestamp: 1494803025

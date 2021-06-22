@@ -55,10 +55,10 @@
 		 * @param \Symfony\Component\HttpFoundation\Request $request
 		 *   The incoming request object.
 		 *
-		 * @return \Drupal\Core\Ajax\AjaxResponse
+		 * @return Drupal\Core\Ajax\AjaxResponse
 		 *   The Ajax response
 		 *
-		 * @throws \Drupal\Core\Entity\EntityStorageException
+		 * @throws Drupal\Core\Entity\EntityStorageException
 		 */
 		public function gigyaRaasProfileAjax(Request $request) {
 			$gigya_data = $request->get('gigyaData');
@@ -70,7 +70,7 @@
 			}
 			$gigyaUser = $this->helper->validateAndFetchRaasUser($gigya_data['UID'], $signature, $gigya_data['signatureTimestamp']);
 			if ($gigyaUser) {
-				if ($user = $this->helper->getUidByUUID($gigyaUser->getUID())) {
+				if ($user = $this->helper->getDrupalUidByGigyaUid($gigyaUser->getUID())) {
 					if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, $user->id())) {
 						if ($user->mail !== $unique_email) {
 							$user->setEmail($unique_email);
@@ -91,8 +91,8 @@
 		 *
 		 * @param \Symfony\Component\HttpFoundation\Request $request
 		 *
-		 * @return \Drupal\Core\Ajax\AjaxResponse
-		 * @throws \Drupal\Core\Entity\EntityStorageException
+		 * @return Drupal\Core\Ajax\AjaxResponse
+		 * @throws Drupal\Core\Entity\EntityStorageException
 		 */
 		public function gigyaRaasProcessFieldMapping(Request $request) {
 			return $this->gigyaRaasProfileAjax($request);
@@ -103,7 +103,7 @@
 		 *
 		 * @return bool|AjaxResponse    The Ajax response
 		 *
-		 * @throws \Drupal\Core\Entity\EntityStorageException
+		 * @throws Drupal\Core\Entity\EntityStorageException
 		 */
 		public function gigyaRaasLoginAjax(Request $request) {
 			if (Drupal::currentUser()->isAnonymous())
@@ -149,7 +149,7 @@
 					else
 					{
 						/** @var UserInterface $user */
-						$user = $this->helper->getUidByUUID($gigyaUser->getUID());
+						$user = $this->helper->getDrupalUidByGigyaUid($gigyaUser->getUID());
 						if ($user)
 						{
 							/* if a user has the a permission of bypass gigya raas (admin user)
@@ -252,7 +252,7 @@
 							}
 
 							$user = User::create(
-								array('name' => $username, 'pass' => \Drupal::service('password_generator')->generate(32), 'status' => 1, 'mail' => $email)
+								array('name' => $username, 'pass' => Drupal::service('password_generator')->generate(32), 'status' => 1, 'mail' => $email)
 							);
 							$user->save();
 							$this->helper->processFieldMapping($gigyaUser, $user);
@@ -380,7 +380,7 @@
 		 *   The incoming request object.
 		 * @param    boolean                                $login
 		 *
-		 * @return \Drupal\Core\Ajax\AjaxResponse
+		 * @return Drupal\Core\Ajax\AjaxResponse
 		 *   The Ajax response
 		 */
 		public function gigyaRaasExtCookieAjax(Request $request, $login = FALSE) {

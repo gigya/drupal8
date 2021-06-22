@@ -53,7 +53,7 @@ interface GigyaHelperInterface {
 
   public function getUidByMail($mail);
 
-  public function getUidByUUID($uuid);
+  public function getDrupalUidByGigyaUid($uuid);
 
   public function getUidByName($name);
 

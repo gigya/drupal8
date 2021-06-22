@@ -59,7 +59,6 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 			'#title' => $this->t('UID mapping (advanced)'),
 			'#default_value' => $config->get('gigya.uid_mapping'),
 			'#description' => $this->t('Change this to map Gigya\'s UID to a different user field in Drupal (not recommended).'),
-			'#required' => TRUE,
 		];
 
 		$form['gigya_offline_sync'] = [

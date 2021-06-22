@@ -8,7 +8,7 @@
 use Drupal\Core\Database\Database;
 
 /**
- * Implements hook_install.
+ * Implements hook_install().
  */
 function gigya_raas_install() {
 	$spec_expiration = [
@@ -27,21 +27,25 @@ function gigya_raas_install() {
 	];
 
 	$schema = Database::getConnection()->schema();
+	$logger = \Drupal::logger('gigya_raas');
 
-	$error_message_format = 'Unable to create column `%s` in the `%s` table during Gigya RaaS module installation.
-													If the column already exists from a previous installation of the module, you may ignore this warning. If the column already exists from another module, please contact Gigya\'s support.
-													If the column does not exist, please try to reinstall the module.';
-
+	$error_message_format = 'Unable to create column `%column` in the `%table` table during Gigya RaaS module installation. If the column already exists from a previous installation of the module, you may ignore this warning. If the column already exists from another module, please contact Gigya\'s support. If the column does not exist, please try to reinstall the module.';
 	/* Create two new columns. The reason they are separated is that if one exists from a previous install, it should be able to create both, not fail */
 	try {
 		$schema->addField('sessions', 'expiration', $spec_expiration);
 	} catch (Exception $e) {
-		\Drupal::logger('gigya_raas')->warning(sprintf($error_message_format, 'expiration', 'sessions'));
+		$logger->warning($error_message_format, [
+			'%column' => 'expiration',
+			'%table' => 'sessions',
+		]);
 	}
 	try {
 		$schema->addField('sessions', 'is_remember_me', $spec_is_remember_me);
 	} catch (Exception $e) {
-		\Drupal::logger('gigya_raas')->warning(sprintf($error_message_format, 'is_remember_me', 'sessions'));
+		$logger->warning($error_message_format, [
+			'%column' => 'is_remember_me',
+			'%table' => 'sessions'
+		]);
 	}
 
 	$current_user = \Drupal::currentUser();
@@ -56,6 +60,16 @@ function gigya_raas_install() {
 	}
 }
 
+/**
+ * Implements hook_uninstall().
+ */
 function gigya_raas_uninstall() {
-
+	$schema = Database::getConnection()->schema();
+	try {
+		$schema->dropField('sessions', 'expiration');
+		$schema->dropField('sessions', 'is_remember_me');
+	}
+	catch (Exception $e) {
+		// Do nothing as no module's logger.
+	}
 }

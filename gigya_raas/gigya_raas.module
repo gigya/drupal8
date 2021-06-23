@@ -4,6 +4,7 @@ use Drupal\block\BlockInterface;
 use Drupal\block\Entity\Block;
 use Drupal\gigya\CmsStarterKit\GSApiException;
 use Drupal\gigya\Helper\GigyaHelper;
+use Drupal\gigya_raas\Helper\GigyaRaasHelper;
 
 const UPDATE_DELAY = 10000;
 const MAX_USERS = 1000;
@@ -189,7 +190,7 @@ function gigya_raas_cron() {
 	if ($enable_offline_sync) {
 		Drupal::logger('gigya_raas')->info('Gigya offline sync started');
 
-		$helper = new GigyaHelper();
+		$helper = new GigyaRaasHelper();
 		try {
 			$gigya_query = "SELECT * FROM accounts";
 			$last_customer_update = Drupal::config('gigya_raas.offline_sync')
@@ -262,8 +263,6 @@ function gigya_raas_cron() {
 
 /**
  * Implement hook_mail()
- *
- * {@inheritdoc}
  */
 function gigya_raas_mail($key, &$message, $params) {
 	$options = array(

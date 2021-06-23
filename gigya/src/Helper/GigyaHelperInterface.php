@@ -7,8 +7,6 @@
 
 namespace Drupal\gigya\Helper;
 
-use Drupal\user\UserInterface;
-use Drupal\gigya\CmsStarterKit\GSApiException;
 use Exception;
 use Gigya\PHP\GSObject;
 use Gigya\PHP\GSResponse;
@@ -37,8 +35,6 @@ interface GigyaHelperInterface {
 	 */
   public function sendApiCall(string $method, $params = null, $access_params = FALSE);
 
-  public function validateAndFetchRaasUser($uid, $signature, $sig_timestamp);
-
   public function getGigyaApiHelper();
 
   public function getGigyaDsQuery();
@@ -51,22 +47,6 @@ interface GigyaHelperInterface {
 
   public function saveUserLogoutCookie();
 
-  public function getUidByMail($mail);
-
-  public function getDrupalUidByGigyaUid($uuid);
-
-  public function getUidByName($name);
-
-	public function checkEmailsUniqueness($gigyaUser, $uid);
-
-	public function checkProfileEmail($profile_email, $loginIds);
-
-	public function getFieldMappingConfig();
-
-  public function processFieldMapping($gigya_data, UserInterface $drupal_user);
-
-  public function getGigyaUserFromArray($data);
-
   public function getGigyaLanguages();
 
   /**
@@ -74,8 +54,6 @@ interface GigyaHelperInterface {
    *  the environment string to add to the API call.
    */
   public function getEnvString();
-
-	public function sendCronEmail($job_type, $job_status, $to, $processed_items, $failed_items, $custom_email_body);
 
 	public function sendEmail($subject, $body, $to);
 }

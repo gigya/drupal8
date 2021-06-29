@@ -25,8 +25,11 @@
 	 */
 	class GigyaController extends ControllerBase
 	{
-		/** @var GigyaHelper */
+		/** @var GigyaRaasHelper */
 		protected $helper;
+
+		/** @var GigyaHelper */
+		protected $gigya_helper;
 
 		protected $auth_mode;
 
@@ -36,13 +39,14 @@
 		 * @param bool $helper
 		 */
 		public function __construct($helper = FALSE) {
-			if ($helper == FALSE)
+			if ($helper === FALSE)
 			{
-				$this->helper = new GigyaHelper();
+				$this->helper = new GigyaRaasHelper();
+				$this->gigya_helper = new GigyaHelper();
 			}
 			else
 			{
-				$this->helper = $helper;
+				$this->gigya_helper = $helper;
 			}
 
 			$gigya_conf = Drupal::config('gigya.settings');
@@ -137,15 +141,17 @@
 				$gigyaUser = $this->helper->validateAndFetchRaasUser($guid, $signature, $sig_timestamp);
 				if ($gigyaUser)
 				{
-					/* loginIDs.emails is missing in Gigya */
-					if (empty($gigyaUser->getLoginIDs()['emails']))
+					$userEmails = $gigyaUser->getAllVerifiedEmails();
+
+					/* loginIDs.emails and emails.verified is missing in Gigya */
+					if (empty($userEmails))
 					{
 						$err_msg = $this->t(
 							'Email address is required by Drupal and is missing, please contact the site administrator.'
 						);
-						$this->helper->saveUserLogoutCookie();
+						$this->gigya_helper->saveUserLogoutCookie();
 					}
-					/* loginIDs.emails in found in Gigya */
+					/* loginIDs.emails or emails.verified is found in Gigya */
 					else
 					{
 						/** @var UserInterface $user */
@@ -161,7 +167,7 @@
 									"User with email " . $user->getEmail()
 									. " that has 'bypass gigya raas' permission tried to login via gigya"
 								);
-								$this->helper->saveUserLogoutCookie();
+								$this->gigya_helper->saveUserLogoutCookie();
 								$err_msg = $this->t(
 									"Oops! Something went wrong during your login/registration process. Please try to login/register again."
 								);
@@ -180,7 +186,7 @@
 							}
 							else
 							{
-								$this->helper->saveUserLogoutCookie();
+								$this->gigya_helper->saveUserLogoutCookie();
 								$err_msg = $this->t("Email already exists");
 								$response->addCommand(new AlertCommand($err_msg));
 								return $response;
@@ -201,13 +207,13 @@
 						}
 						else /* User does not exist - register */
 						{
-							$uids = $this->helper->getUidByMails($gigyaUser->getLoginIds()['emails']);
+							$uids = $this->helper->getUidByMails($userEmails);
 							if (!empty($uids))
 							{
 								Drupal::logger('gigya_raas')->warning(
 									"User with uid " . $guid . " that already exists tried to register via gigya"
 								);
-								$this->helper->saveUserLogoutCookie();
+								$this->gigya_helper->saveUserLogoutCookie();
 								$err_msg = $this->t(
 									"Oops! Something went wrong during your login/registration process. Please try to login/register again."
 								);
@@ -220,7 +226,7 @@
 							}
 							else
 							{
-								$this->helper->saveUserLogoutCookie();
+								$this->gigya_helper->saveUserLogoutCookie();
 								$err_msg = $this->t("Email already exists");
 								$response->addCommand(new AlertCommand($err_msg));
 								return $response;
@@ -276,7 +282,7 @@
 								$err_msg = $this->t(
 									"Oops! Something went wrong during your registration process. You are registered to the site but not logged-in. Please try to login again."
 								);
-								$this->helper->saveUserLogoutCookie();
+								$this->gigya_helper->saveUserLogoutCookie();
 
 								/* Post-logout redirect hook */
 								Drupal::moduleHandler()->alter('gigya_post_logout_redirect', $logout_redirect);
@@ -286,7 +292,7 @@
 					}
 				}
 				else { /* No valid Gigya user found */
-					$this->helper->saveUserLogoutCookie();
+					$this->gigya_helper->saveUserLogoutCookie();
 					Drupal::logger('gigya_raas')->notice('Invalid user. Guid: ' . $guid);
 					$err_msg = $this->t(
 						"Oops! Something went wrong during your login/registration process. Please try to login/register again."

@@ -86,6 +86,11 @@ class GigyaUser extends GigyaJsonObject {
    */
   private $isActive;
 
+	/**
+	 * @var array
+	 */
+	private $emails;
+
   /**
    * @var array
    */
@@ -340,6 +345,20 @@ class GigyaUser extends GigyaJsonObject {
     $this->isActive = $isActive;
   }
 
+	/**
+	 * @return array
+	 */
+	public function getEmails() {
+		return $this->emails;
+	}
+
+	/**
+	 * @param array $emails
+	 */
+	public function setEmails(array $emails) {
+		$this->emails = $emails;
+	}
+
   /**
    * @return array
    */
@@ -350,7 +369,7 @@ class GigyaUser extends GigyaJsonObject {
   /**
    * @param array $loginIDs
    */
-  public function setLoginIDs($loginIDs) {
+  public function setLoginIDs(array $loginIDs) {
     $this->loginIDs = $loginIDs;
   }
 
@@ -418,6 +437,13 @@ class GigyaUser extends GigyaJsonObject {
 
     return $emailLoginId;
   }
+
+	/**
+	 * @return array All verified emails
+	 */
+	public function getAllVerifiedEmails() {
+		return array_merge($this->emails['verified'], $this->loginIDs['emails']);
+	}
 
   /**
    * @param $path : . (dot) separated string

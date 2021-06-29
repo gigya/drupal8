@@ -4,6 +4,7 @@
 	 */
 
 	use Drupal\gigya\Helper\GigyaHelper;
+	use Drupal\gigya_raas\Helper\GigyaRaasHelper;
 	use Drupal\gigya_user_deletion\Helper\GigyaUserDeletionHelper;
 
 	/**
@@ -35,6 +36,7 @@
 			Drupal::logger('gigya_user_deletion')->info('Gigya user deletion cron started');
 
 			$gigyaHelper = new GigyaHelper();
+			$gigyaRaasHelper = new GigyaRaasHelper();
 			$userDeletionHelper = new GigyaUserDeletionHelper();
 
 			/* Job frequency */
@@ -154,7 +156,7 @@
 					$item_array = (array) $item_user;
 
 					$uid = $item_array['data']['gigya_uid'];
-					if ($user = $gigyaHelper->getUidByUUID($uid)) { /* Gigya user found in Drupal */
+					if ($user = $gigyaRaasHelper->getDrupalUidByGigyaUid($uid)) { /* Gigya user found in Drupal */
 						try {
 							$drupal_uid = $user->get('uid')->value;
 							if ($deletion_type === 'hard') {

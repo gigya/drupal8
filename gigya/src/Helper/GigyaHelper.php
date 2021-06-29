@@ -9,23 +9,18 @@ namespace Drupal\gigya\Helper;
 
 use Drupal;
 use Drupal\Component\Serialization\Json;
-use Drupal\Core\Database\Database;
 use Drupal\gigya\CmsStarterKit\ds\DsQueryException;
 use Drupal\gigya\CmsStarterKit\GigyaApiRequest;
 use Drupal\gigya\CmsStarterKit\GigyaAuthRequest;
 use Drupal\gigya\CmsStarterKit\GSApiException;
-use Drupal\user\Entity\User;
-use Drupal\user\UserInterface;
 use Exception;
 use Drupal\gigya\CmsStarterKit\GigyaApiHelper;
 use Drupal\gigya\CmsStarterKit\user\GigyaProfile;
 use Drupal\gigya\CmsStarterKit\user\GigyaUser;
-use Drupal\gigya\CmsStarterKit\user\GigyaUserFactory;
 use Drupal\gigya\CmsStarterKit\ds\DsQueryObject;
 use Gigya\PHP\GSException;
 use Gigya\PHP\GSObject;
 use Gigya\PHP\GSResponse;
-use InvalidArgumentException;
 
 class GigyaHelper implements GigyaHelperInterface {
 
@@ -174,34 +169,6 @@ class GigyaHelper implements GigyaHelperInterface {
 		}
 	}
 
-	/**
-	 * Validates and gets Gigya user
-	 *
-	 * @param $uid
-	 * @param $signature
-	 * @param $sig_timestamp
-	 *
-	 * @return bool | GigyaUser
-	 */
-	public function validateAndFetchRaasUser($uid, $signature, $sig_timestamp) {
-		$params = ['environment' => $this->getEnvString()];
-
-		$auth_mode = Drupal::config('gigya.settings')->get('gigya.gigya_auth_mode') ?? 'user_secret';
-
-		try {
-      return ($auth_mode == 'user_rsa')
-				? $this->getGigyaApiHelper()->validateJwtAuth($uid, $signature, NULL, NULL, $params)
-				: $this->getGigyaApiHelper()->validateUid($uid, $signature, $sig_timestamp, NULL, NULL, $params);
-    } catch (GSApiException $e) {
-      Drupal::logger('gigya')->error("Gigya API call error: @error, Call ID: @callId", array('@callId' => $e->getCallId(), '@error' => $e->getMessage()));
-      return false;
-    }
-    catch (Exception $e) {
-      Drupal::logger('gigya')->error("General error validating gigya UID: " . $e->getMessage());
-      return false;
-    }
-  }
-
   public function getGigyaApiHelper() {
     $access_params = $this->getAccessParams();
     return new GigyaApiHelper($access_params['api_key'], $access_params['app_key'], $access_params['auth_key'], $access_params['data_center'], $access_params['auth_mode']);
@@ -272,219 +239,12 @@ class GigyaHelper implements GigyaHelperInterface {
     return $this->dsProcessSearch($res);
   }
 
-  private function dsProcessSearch($results) {
-    $processed = array();
-    foreach ($results as $result) {
-      if (isset($result['data']) && is_array($result['data'])) {
-        $processed += $result['data'];
-      }
-    }
-    return $processed;
-  }
-
   public function saveUserLogoutCookie() {
-    user_cookie_save(array('gigya' => 'gigyaLogOut'));
-  }
-
-  public function getUidByMail($mail) {
-    return Drupal::entityQuery('user')
-      ->condition('mail',  $mail)
-      ->execute();
-  }
-
-  public function getUidByMails($mails) {
-    return Drupal::entityQuery('user')
-      ->condition('mail',  $mails, 'IN')
-      ->execute();
-  }
-
-  /**
-   * @param $uuid
-   *
-   * @return User
-   */
-  public function getUidByUUID($uuid) {
-    return Drupal::service('entity.repository')->loadEntityByUuid('user', $uuid);
-  }
-
-	public function getUidByName($name) {
-		return Drupal::entityQuery('user')
-			->condition('name',  Database::getConnection()->escapeLike($name), 'LIKE')
-			->execute();
-	}
-
-  /**
-   * @param GigyaUser $gigyaUser
-   * @param integer   $uid
-   *
-   * @return bool
-   */
-  public function checkEmailsUniqueness($gigyaUser, $uid) {
-    if ($this->checkProfileEmail($gigyaUser->getProfile()->getEmail(), $gigyaUser->getLoginIDs()['emails'])) {
-      $uid_check = $this->getUidByMail($gigyaUser->getProfile()->getEmail());
-      if (empty($uid_check) || isset($uid_check[$uid])) {
-        return $gigyaUser->getProfile()->getEmail();
-      }
-    }
-
-    foreach ($gigyaUser->getloginIDs()['emails'] as $id) {
-      $uid_check = $this->getUidByMail($id);
-      if (empty($uid_check) || isset($uid_check[$uid])) {
-        return $id;
-      }
-    }
-    return FALSE;
-  }
-
-  public function checkProfileEmail($profile_email, $loginIds) {
-    $exists = FALSE;
-    foreach ($loginIds as $id) {
-      if ($id == $profile_email) {
-        $exists = TRUE;
-      }
-    }
-    return $exists;
-  }
-
-  /**
-	 * @return array|object|null
-	 */
-	public function getFieldMappingConfig() {
-		$config = json_decode(Drupal::config('gigya_raas.fieldmapping')
-			->get('gigya.fieldmapping_config'));
-		if (empty($config)) {
-			$config = Drupal::config('gigya.global')->get('gigya.fieldMapping');
-		}
-
-		return $config;
-	}
-
-	/**
-	 * This function enriches the Drupal user with Gigya data, but it does not permanently save the user data!
-	 *
-	 * @param GigyaUser     $gigya_data
-	 * @param UserInterface $drupal_user
-	 */
-  public function processFieldMapping($gigya_data, UserInterface $drupal_user) {
-    try {
-			$field_map = $this->getFieldMappingConfig();
-
-      try {
-	      Drupal::moduleHandler()
-	        ->alter('gigya_raas_map_data', $gigya_data, $drupal_user, $field_map);
-      }
-      catch (Exception $e) {
-	      Drupal::logger('gigya')->debug('Error altering field map data: @message',
-	                                     array('@message' => $e->getMessage()));
-      }
-
-      foreach ($field_map as $drupal_field => $raas_field) {
-      	/* Drupal fields to exclude even if configured in field mapping schema */
-        if ($drupal_field == 'mail' or $drupal_field == 'name') {
-          continue;
-        }
-
-				/* Field names must be strings. This protects against basic incorrect formatting, though care should be taken */
-				if (gettype($drupal_field) !== 'string' or gettype($raas_field) !== 'string') {
-					continue;
-				}
-
-        $raas_field_parts = explode('.', $raas_field);
-        $val = $this->getNestedValue($gigya_data, $raas_field_parts);
-
-				if ($val !== NULL) {
-	        $drupal_field_type = 'string';
-
-					try {
-						$drupal_field_type = $drupal_user->get($drupal_field)->getFieldDefinition()->getType();
-	        }
-	        catch (Exception $e)
-	        {
-		        Drupal::logger('gigya')->debug('Error getting field definition for field map: @message',
-							['@message' => $e->getMessage()]);
-					}
-
-	        /* Handles Boolean types */
-          if ($drupal_field_type == 'boolean') {
-            if (is_bool($val)) {
-              $val = intval($val);
-            }
-            else {
-              Drupal::logger('gigya')->error('Failed to map ' . $drupal_field . ' from Gigya - Drupal type is boolean but Gigya type isn\'t');
-            }
-          }
-
-          /* Perform the mapping from Gigya to Drupal */
-					try {
-						$drupal_user->set($drupal_field, $val);
-					} catch (InvalidArgumentException $e) {
-						Drupal::logger('gigya')
-							->debug('Error inserting mapped field: @message',
-								['@message' => $e->getMessage()]);
-					}
-        }
-			}
-		} catch (Exception $e) {
-			Drupal::logger('gigya')->debug('processFieldMapping error @message',
-				['@message' => $e->getMessage()]);
-		}
-	}
-
-	/**
-	 * Queries Gigya with the accounts.search call
-	 *
-	 * @param string|array $query The literal query to send to accounts.search,
-	 *   or a set of params to send instead (useful for cursors)
-	 * @param bool $use_cursor
-	 *
-	 * @return GigyaUser[]
-	 *
-	 * @throws GSApiException
-	 * @throws GSException
-	 */
-	public function searchGigyaUsers($query, $use_cursor = FALSE) {
-		$gigya_users = [];
-
-		if (is_array($query)) { /* Query is actually a set of params. Useful for setting cursor ID instead of query */
-			$params = $query;
-		}
-		else {
-			$params = ['query' => $query];
-			if ($use_cursor) {
-				$params['openCursor'] = TRUE;
-			}
-		}
-
-		$gigya_data = $this->getGigyaApiHelper()
-			->sendApiCall('accounts.search', $params)
-			->getData()
-			->serialize();
-
-		foreach ($gigya_data['results'] as $user_data) {
-			if (isset($user_data['profile'])) {
-				$profile_array = $user_data['profile'];
-				$gigya_user = GigyaUserFactory::createGigyaUserFromArray($user_data);
-				$gigya_profile = GigyaUserFactory::createGigyaProfileFromArray($profile_array);
-				$gigya_user->setProfile($gigya_profile);
-
-				$gigya_users[] = $gigya_user;
-			}
-		}
-
-		if (!empty($gigya_data['nextCursorId'])) {
-			$cursorId = $gigya_data['nextCursorId'];
-			return array_merge($gigya_users, $this->searchGigyaUsers(['cursorId' => $cursorId]));
-		}
-
-		return $gigya_users;
-	}
-
-	public function getGigyaUserFromArray($data) {
-    return GigyaUserFactory::createGigyaProfileFromArray($data);
+		setrawcookie('Drupal.visitor.gigya', rawurlencode('gigyaLogOut'), Drupal::time()->getRequestTime() + 31536000, '/', '', Drupal::request()->isSecure());
   }
 
   public function getGigyaLanguages() {
-    return array("en" => "English (default)","ar" => "Arabic","br" => "Bulgarian","ca" => "Catalan","hr" => "Croatian",
+    return array("en" => "English (default)","ar" => "Arabic","bg" => "Bulgarian","ca" => "Catalan","hr" => "Croatian",
                 "cs" => "Czech","da" => "Danish","nl" => "Dutch","fi" => "Finnish","fr" => "French","de" => "German",
                 "el" => "Greek","he" => "Hebrew","hu" => "Hungarian","id" => "Indonesian (Bahasa)","it" => "Italian",
                 "ja" => "Japanese","ko" => "Korean","ms" => "Malay","no" => "Norwegian","fa" => "Persian (Farsi)",
@@ -505,24 +265,6 @@ class GigyaHelper implements GigyaHelperInterface {
 		$info = Drupal::service('extension.list.module')->getExtensionInfo('gigya');
 
 		return '{"cms_name":"Drupal","cms_version":"Drupal_' . Drupal::VERSION . '","gigya_version":"Gigya_module_' . $info['version'] . '","php_version":"' . phpversion() . '"}';
-	}
-
-	public function sendCronEmail($job_type, $job_status, $to, $processed_items = NULL, $failed_items = NULL, $custom_email_body = '') {
-		$email_body = $custom_email_body;
-		if ($job_status == 'succeeded' or $job_status == 'completed with errors') {
-			$email_body = 'Job ' . $job_status . ' on ' . gmdate("F n, Y H:i:s") . ' (UTC).';
-			if ($processed_items !== NULL) {
-				$email_body .= PHP_EOL . $processed_items . ' ' . (($processed_items > 1) ? 'items' : 'item') . ' successfully processed, ' . $failed_items . ' failed.';
-			}
-		}
-		elseif ($job_status == 'failed') {
-			$email_body = 'Job failed. No items were processed. Please consult the Drupal log (Administration > Reports > Recent log messages) for more info.';
-		}
-
-		return $this->sendEmail('Gigya cron job of type ' . $job_type . ' ' . $job_status . ' on website ' . Drupal::request()
-				->getHost(),
-			$email_body,
-			$to);
 	}
 
 	public function sendEmail($subject, $body, $to) {
@@ -576,4 +318,14 @@ class GigyaHelper implements GigyaHelperInterface {
 
     return $stream->realpath();
   }
+
+	private function dsProcessSearch($results) {
+		$processed = array();
+		foreach ($results as $result) {
+			if (isset($result['data']) && is_array($result['data'])) {
+				$processed += $result['data'];
+			}
+		}
+		return $processed;
+	}
 }

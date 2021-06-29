@@ -7,10 +7,11 @@
 
 namespace Drupal\gigya_raas\Form;
 
+use Drupal;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\gigya\Helper\GigyaHelper;
+use Drupal\gigya_raas\Helper\GigyaRaasHelper;
 
 class GigyaFieldmappingForm extends ConfigFormBase {
 
@@ -19,7 +20,7 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 	public function __construct(ConfigFactoryInterface $config_factory) {
 		parent::__construct($config_factory);
 
-		$this->helper = new GigyaHelper();
+		$this->helper = new GigyaRaasHelper();
 	}
 
 	/**
@@ -37,7 +38,7 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 
 	/**
 	 * @param array $form
-	 * @param \Drupal\Core\Form\FormStateInterface $form_state
+	 * @param Drupal\Core\Form\FormStateInterface $form_state
 	 *
 	 * @return array
 	 */
@@ -52,6 +53,13 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 			'#open' => TRUE,
 			'#rows' => max(5, substr_count($fieldmapping_config, "\n") + 1),
 			'#default_value' => $fieldmapping_config,
+		];
+
+		$form['uid_mapping'] = [
+			'#type' => 'textfield',
+			'#title' => $this->t('UID mapping (advanced)'),
+			'#default_value' => $config->get('gigya.uid_mapping'),
+			'#description' => $this->t('Change this to map Gigya\'s UID to a different user field in Drupal (not recommended).'),
 		];
 
 		$form['gigya_offline_sync'] = [
@@ -101,7 +109,7 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 
 	/**
 	 * @param array $form
-	 * @param \Drupal\Core\Form\FormStateInterface $form_state
+	 * @param Drupal\Core\Form\FormStateInterface $form_state
 	 *
 	 * @throws \Exception
 	 */
@@ -127,14 +135,14 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 			$email_on_failure = $form_state->getValue('email_on_failure');
 
 			foreach (explode(',', $email_on_success) as $email) {
-				if ($email !== '' and !\Drupal::service('email.validator')
+				if ($email !== '' and !Drupal::service('email.validator')
 						->isValid(trim($email))) {
 					$form_state->setErrorByName('fieldmapping', $this->t('Invalid email address provided in email on success'));
 				}
 			}
 
 			foreach (explode(',', $email_on_failure) as $email) {
-				if ($email !== '' and !\Drupal::service('email.validator')
+				if ($email !== '' and !Drupal::service('email.validator')
 						->isValid(trim($email))) {
 					$form_state->setErrorByName('fieldmapping', $this->t('Invalid email address provided in email on failure'));
 				}
@@ -144,12 +152,13 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 
 	/**
 	 * @param array $form
-	 * @param \Drupal\Core\Form\FormStateInterface $form_state
+	 * @param Drupal\Core\Form\FormStateInterface $form_state
 	 */
 	public function submitForm(array &$form, FormStateInterface $form_state) {
 		$config = $this->config('gigya_raas.fieldmapping');
 
 		$config->set('gigya.fieldmapping_config', $form_state->getValue('gigya_fieldmapping_config'));
+		$config->set('gigya.uid_mapping', $form_state->getValue('uid_mapping'));
 
 		$config->set('gigya.offline_sync.enable_job', $form_state->getValue('enable_job'));
 		$config->set('gigya.offline_sync.email_on_success', $form_state->getValue('email_on_success'));

@@ -31,6 +31,9 @@ gigya_raas.fieldmapping:
     gigya:
       type: mapping
       mapping:
+        uid_mapping:
+          type: string
+          label: UID mapping
         fieldmapping_config:
           type: string
           label: Field Mapping Configuration
@@ -69,3 +72,23 @@ gigya_raas.screensets:
         custom_screensets:
           type: string
           label: Custom / Consent Screen-Sets
+
+block.settings.gigya_raas_custom_screenset:
+  type: block_settings
+  label: 'Gigya RaaS Custom Screen-Set block'
+  mapping:
+    display_type:
+      type: string
+      label: 'Display Type'
+    desktop_screenset:
+      type: string
+      label: 'Desktop Screen-Set'
+    container_id:
+      type: string
+      label: 'Container ID'
+    link_id:
+      type: string
+      label: 'Link ID'
+    link_class:
+      type: string
+      label: 'Link CSS Class'

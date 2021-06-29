@@ -6,9 +6,9 @@ use Exception;
 
 class GSApiException extends Exception {
 
-  private string $longMessage;
+  private $longMessage;
 
-  private string $callId;
+  private $callId;
 
   /**
    * GSApiException constructor.

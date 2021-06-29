@@ -3,5 +3,5 @@ type: module
 description: 'Gigya core module'
 package: Gigya
 configure: gigya.admin.form
-version: '9.x-1.1.1'
+version: '9.x-1.2'
 core_version_requirement: ^8 || ^9

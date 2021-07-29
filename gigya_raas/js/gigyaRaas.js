@@ -46,7 +46,7 @@
 		 */
 
 		if (!redirectTarget.startsWith('http'))
-			redirectTarget = window.location.origin + drupalSettings.path.baseUrl + redirectTarget;
+			redirectTarget = drupalSettings.gigya.raas.origin + drupalSettings.path.baseUrl + redirectTarget;
 
 		if (typeof sendSetSSOToken === 'undefined' || sendSetSSOToken === false)
 			location.replace(redirectTarget);
@@ -56,7 +56,7 @@
 
 	jQuery.fn.logoutRedirect = function (redirectTarget) {
 		if (!redirectTarget.startsWith('http'))
-			redirectTarget = window.location.origin + drupalSettings.path.baseUrl + redirectTarget;
+			redirectTarget = drupalSettings.gigya.raas.origin + drupalSettings.path.baseUrl + redirectTarget;
 
 		document.location = redirectTarget;
 	};

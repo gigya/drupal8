@@ -146,7 +146,7 @@ class GigyaRaasHelper {
 	}
 
 	/**
-	 * @return array|object|null
+	 * @return object|null
 	 */
 	public function getFieldMappingConfig() {
 		$config = json_decode(Drupal::config('gigya_raas.fieldmapping')
@@ -164,7 +164,7 @@ class GigyaRaasHelper {
 	 * @param GigyaUser     $gigya_data
 	 * @param UserInterface $drupal_user
 	 */
-	public function processFieldMapping($gigya_data, UserInterface $drupal_user) {
+	public function processFieldMapping(GigyaUser $gigya_data, UserInterface $drupal_user) {
 		try {
 			$field_map = $this->getFieldMappingConfig();
 
@@ -173,14 +173,19 @@ class GigyaRaasHelper {
 					->alter('gigya_raas_map_data', $gigya_data, $drupal_user, $field_map);
 			}
 			catch (Exception $e) {
-				Drupal::logger('gigya')->debug('Error altering field map data: @message',
+				Drupal::logger('gigya_raas')->debug('Error altering field map data: @message',
 					array('@message' => $e->getMessage()));
 			}
 
+			if (!is_object($field_map)) {
+				Drupal::logger('gigya_raas')
+					->error('Error processing field map data: incorrect format entered. The format for field mapping is a JSON object of the form: &#123;"drupalField": "gigyaField"&#125;. Proceeding with default field mapping configuration.');
+				$field_map = json_decode('{}');
+			}
 			$field_map->uuid = 'UID';
 			if (!empty($uid_mapping = Drupal::config('gigya_raas.fieldmapping')->get('gigya_uid_mapping'))) {
 				if ($drupal_user->hasField($uid_mapping)) {
-					$field_map['uuid'] = $uid_mapping;
+          $field_map->uuid = $uid_mapping;
 				}
 			}
 
@@ -216,7 +221,7 @@ class GigyaRaasHelper {
 							$val = intval($val);
 						}
 						else {
-							Drupal::logger('gigya')->error('Failed to map ' . $drupal_field . ' from Gigya - Drupal type is boolean but Gigya type isn\'t');
+							Drupal::logger('gigya_raas')->error('Failed to map ' . $drupal_field . ' from Gigya - Drupal type is boolean but Gigya type isn\'t');
 						}
 					}
 
@@ -224,14 +229,14 @@ class GigyaRaasHelper {
 					try {
 						$drupal_user->set($drupal_field, $val);
 					} catch (InvalidArgumentException $e) {
-						Drupal::logger('gigya')
+						Drupal::logger('gigya_raas')
 							->debug('Error inserting mapped field: @message',
 								['@message' => $e->getMessage()]);
 					}
 				}
 			}
 		} catch (Exception $e) {
-			Drupal::logger('gigya')->debug('processFieldMapping error @message',
+			Drupal::logger('gigya_raas')->debug('processFieldMapping error @message',
 				['@message' => $e->getMessage()]);
 		}
 	}

@@ -152,7 +152,7 @@ class GigyaRaasHelper {
 		$config = json_decode(Drupal::config('gigya_raas.fieldmapping')
 			->get('gigya.fieldmapping_config'));
 		if (empty($config)) {
-			$config = Drupal::config('gigya.global')->get('gigya.fieldMapping');
+			$config = (object)Drupal::config('gigya.global')->get('gigya.fieldMapping');
 		}
 
 		return $config;

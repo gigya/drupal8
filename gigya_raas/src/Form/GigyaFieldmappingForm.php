@@ -120,7 +120,7 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 
 		$fieldmapping_config = $form_state->getValue('gigya_fieldmapping_config');
 
-		if (!empty($fieldmapping_config) and $fieldmapping_config !== '[]') {
+		if (!empty($fieldmapping_config) and $fieldmapping_config !== '{}') {
 			if (empty(json_decode($fieldmapping_config))) {
 				$form_state->setErrorByName('fieldmapping', $this->t('Invalid field mapping configuration'));
 			}

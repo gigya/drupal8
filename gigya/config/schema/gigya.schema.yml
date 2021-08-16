@@ -26,9 +26,6 @@ gigya.global:
           type: boolean
         fieldMapping:
           type: mapping
-          mapping:
-            uuid:
-              type: string
 
 gigya.settings:
   type: config_object

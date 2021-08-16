@@ -3,7 +3,7 @@ type: module
 description: 'Allows permanently deleting users from Gigya and Drupal databases'
 package: Gigya
 configure: gigya.cron.form
-version: '9.x-1.2.1'
+version: '9.x-1.3'
 core_version_requirement: ^8 || ^9
 dependencies:
   - gigya

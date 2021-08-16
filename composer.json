@@ -1,8 +1,8 @@
 {
-  "name": "gigya/drupal",
+  "name": "gigya/gigya-drupal",
   "type": "drupal-module",
   "description": "Gigya Drupal module",
-  "license": "MIT",
+  "license": "GPL-2.0-or-later",
   "authors": [
     {
       "name": "Yuval Perelman",

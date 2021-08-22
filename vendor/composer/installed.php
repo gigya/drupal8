@@ -1,0 +1,41 @@
+<?php return array(
+    'root' => array(
+        'pretty_version' => 'dev-master',
+        'version' => 'dev-master',
+        'type' => 'drupal-module',
+        'install_path' => __DIR__ . '/../../',
+        'aliases' => array(),
+        'reference' => '9bae2bfd7ba45d20fae94ee41782b79ea63e323a',
+        'name' => 'gigya/drupal',
+        'dev' => true,
+    ),
+    'versions' => array(
+        'firebase/php-jwt' => array(
+            'pretty_version' => 'v5.4.0',
+            'version' => '5.4.0.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../firebase/php-jwt',
+            'aliases' => array(),
+            'reference' => 'd2113d9b2e0e349796e72d2a63cf9319100382d2',
+            'dev_requirement' => false,
+        ),
+        'gigya/drupal' => array(
+            'pretty_version' => 'dev-master',
+            'version' => 'dev-master',
+            'type' => 'drupal-module',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'reference' => '9bae2bfd7ba45d20fae94ee41782b79ea63e323a',
+            'dev_requirement' => false,
+        ),
+        'gigya/php-sdk' => array(
+            'pretty_version' => '3.0.2',
+            'version' => '3.0.2.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../gigya/php-sdk',
+            'aliases' => array(),
+            'reference' => '8b2910e5d7ec4fce0bbdd895c92733f15ba5a676',
+            'dev_requirement' => false,
+        ),
+    ),
+);

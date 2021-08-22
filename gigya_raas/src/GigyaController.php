@@ -20,6 +20,14 @@
 	use Symfony\Component\HttpFoundation\Request;
 	use Drupal\gigya\Helper\GigyaHelper;
 
+
+  define( 'MINUTE_IN_SECONDS', 60 );
+  define( 'HOUR_IN_SECONDS', 60 * MINUTE_IN_SECONDS );
+  define( 'DAY_IN_SECONDS', 24 * HOUR_IN_SECONDS );
+  define( 'WEEK_IN_SECONDS', 7 * DAY_IN_SECONDS );
+  define( 'MONTH_IN_SECONDS', 30 * DAY_IN_SECONDS );
+  define( 'YEAR_IN_SECONDS', 365 * DAY_IN_SECONDS );
+
 	/**
 	 * Returns responses for Editor module routes.
 	 */
@@ -350,15 +358,27 @@
 		 *
 		 * @param string $type	Whether the session is a 'regular' session, or a 'remember_me' session
 		 */
-		public function gigyaRaasSetLoginSession($type = 'regular') {
-			$session_params = GigyaRaasHelper::getSessionConfig($type);
-			$is_remember_me = ($type == 'remember_me');
+    public function gigyaRaasSetLoginSession( $type = 'regular' ) {
+      $session_params = GigyaRaasHelper::getSessionConfig( $type );
+      $is_remember_me = ( $type == 'remember_me' );
 
-			if ($session_params['type'] == 'dynamic') {
-				$this->gigyaRaasSetSession(-1, $is_remember_me);
-			} else {
-				$this->gigyaRaasSetSession(time() + $session_params['time'], $is_remember_me);
-			}
+      switch ( $session_params['type'] ) {
+        case 'dynamic':
+          $this->gigyaRaasSetSession( - 1, $is_remember_me );
+          break;
+        case 'fixed':
+          $this->gigyaRaasSetSession( time() + $session_params['time'], $is_remember_me );
+        case'forever':
+          $this->gigyaRaasSetSession( time() + ( 4 * YEAR_IN_SECONDS ), $is_remember_me );
+
+        case'until_browser_close':
+
+          $gigya_conf = Drupal::config( 'gigya.settings' );
+          $api_key    = $gigya_conf->get( 'gigya.gigya_api_key' );
+          setrawcookie( 'gigdubc_' . $api_key, rawurlencode( "gigya_d_ubc" ), 0, '/' );
+          $this->gigyaRaasSetSession( time() + ( 10 * YEAR_IN_SECONDS ), $is_remember_me );
+          break;
+      };
 
 			/*
 			 * The session details are written to the Drupal DB only after a Kernel event (KernelEvents::REQUEST) of AuthenticationSubscriber.
@@ -458,7 +478,27 @@
 			return TRUE;
 		}
 
-		private function getDynamicSessionSignatureUserSigned($token, $expiration, $userKey, $secret) {
+    private function isItUntilBrowserCloseSession($request, $login) {
+      Drupal::logger( 'gigyaRaasExtCookieAjax' )
+             ->debug('isItUntilBrowserCloseSession return: '.("until_browser_close" == Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type'))  );////
+      Drupal::logger( 'gigyaRaasExtCookieAjax' )
+                  ->debug('session type return: '. Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type') );////
+      if ("until_browser_close" != Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type')) {
+        return FALSE;
+      }
+
+//      $current_user = Drupal::currentUser();
+//      if ($current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas')) {
+//        $gigya_conf = Drupal::config('gigya.settings');
+//        $api_key = $gigya_conf->get('gigya.gigya_api_key');
+//        $gigdubc_cookie = $request->cookies->get('gigdubc_' . $api_key);
+//        return empty($gigdubc_cookie);
+//      }
+
+      return TRUE;
+    }
+
+    private function getDynamicSessionSignatureUserSigned($token, $expiration, $userKey, $secret) {
 			$unsignedExpString = utf8_encode($token . "_" . $expiration . "_" . $userKey);
 			$rawHmac = hash_hmac("sha1", utf8_encode($unsignedExpString), base64_decode($secret), TRUE);
 			$sig = base64_encode($rawHmac);

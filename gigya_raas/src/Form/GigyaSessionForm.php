@@ -45,14 +45,14 @@ class GigyaSessionForm extends ConfigFormBase {
 	 *
 	 * @return    array
 	 */
-	public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm( array $form, FormStateInterface $form_state ) {
 
     $form                 = parent::buildForm( $form, $form_state );
     $config               = $this->config( 'gigya_raas.settings' );
-    $sessions_types        = [
-      'fixed'                => $this->t( 'Fixed' ),
-      'dynamic'              => $this->t( 'Dynamic' ),
-      'forever'        => $this->t( 'Valid Forever' ),
+    $sessions_types       = [
+      'fixed'               => $this->t( 'Fixed' ),
+      'dynamic'             => $this->t( 'Dynamic' ),
+      'forever'             => $this->t( 'Valid Forever' ),
       'until_browser_close' => $this->t( 'Until browser closed' ),
     ];
     $form['session_type'] = [
@@ -70,38 +70,44 @@ class GigyaSessionForm extends ConfigFormBase {
       '#default_value' => $config->get( 'gigya_raas.session_time' ),
       '#states'        => [
         'visible' => [
-          ':input[name="session_type"]' => [ 'value' => 'fixed'] //TODO: Adding Dynamic session type.
+          ':input[name="session_type"]' => [
+            [ 'value' => 'fixed' ],
+            [ 'value' => 'dynamic' ],
+          ],
         ],
       ],
     ];
 
-		$form['session_section_remember_me'] = array(
-			'#type' => 'html_tag',
-			'#tag' => 'hr',
-		);
+    $form['session_section_remember_me'] = [
+      '#type' => 'html_tag',
+      '#tag'  => 'hr',
+    ];
 
-		$form['remember_me_session_type'] = array(
-			'#type'          => 'select',
-			'#title'         => $this->t('Remember Me Session Type'),
-			'#description'   => $this->t('If you choose "Fixed", the user session lasts for the duration specified below. If you choose “Dynamic”, the user session lasts the specified duration, and restarts with every server-side interaction.'),
-			'#options'       => $sessions_types,
-			'#default_value' => $config->get('gigya_raas.remember_me_session_type'),
-		);
-		$form['remember_me_session_time'] = array(
-			'#type'          => 'textfield',
-			'#title'         => $this->t('Remember Me Session Duration (in seconds)'),
-			'#default_value' => $config->get('gigya_raas.remember_me_session_time'),
-      'visible' => [
-        ':input[name="session_type"]' => [ 'value' => 'fixed'] //TODO: Adding Dynamic session type.
+    $form['remember_me_session_type'] = [
+      '#type'          => 'select',
+      '#title'         => $this->t( 'Remember Me Session Type' ),
+      '#description'   => $this->t( 'If you choose "Fixed", the user session lasts for the duration specified below. If you choose “Dynamic”, the user session lasts the specified duration, and restarts with every server-side interaction.' ),
+      '#options'       => $sessions_types,
+      '#default_value' => $config->get( 'gigya_raas.remember_me_session_type' ),
+    ];
+    $form['remember_me_session_time'] = [
+      '#type'          => 'textfield',
+      '#title'         => $this->t( 'Remember Me Session Duration (in seconds)' ),
+      '#default_value' => $config->get( 'gigya_raas.remember_me_session_time' ),
+      'visible'        => [
+        ':input[name="session_type"]' => [
+          [ 'value' => 'fixed' ],
+          [ 'value' => 'dynamic' ],
+        ],
       ],
-		);
+    ];
 
-		$form['session_section_redirection'] = array(
-			'#type' => 'html_tag',
-			'#tag' => 'hr',
-		);
+    $form['session_section_redirection'] = [
+      '#type' => 'html_tag',
+      '#tag'  => 'hr',
+    ];
 
-		$form['login_redirect'] = array(
+    $form['login_redirect'] = array(
 			'#type'          => 'textfield',
 			'#title'         => $this->t('Post login redirect URL'),
 			'#description'   => $this->t('A relative URI path or full URL to redirect the user after a successful login.'),

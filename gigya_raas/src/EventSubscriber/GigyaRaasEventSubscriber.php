@@ -99,6 +99,7 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 	 * @param int $uid
 	 */
 	public function handleFixedSession($gigya_raas_session, $drupal_session, $uid) {
+
 		$cached_session_expiration = $gigya_raas_session->get('session_expiration');
 		$session_expiration = NULL;
 
@@ -139,67 +140,62 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 
   public function handleUntilBrowserCloseSession( $gigya_raas_session, $drupal_session, $uid ) {
 
-    $gigya_conf = Drupal::config('gigya.settings');
-    $api_key = $gigya_conf->get('gigya.gigya_api_key');
-    $gigdubc_coockie = Drupal::request()->cookies->get('gigdubc_' . $api_key);////
+    $current_user = Drupal::currentUser();
+    if ($current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas')) {
 
-    \Drupal::logger( 'handleUntilBrowserCloseSession' )
-           ->debug('handleUntilBrowserCloseSession'  );////
+      $gigya_conf      = Drupal::config( 'gigya.settings' );
+      $api_key         = $gigya_conf->get( 'gigya.gigya_api_key' );
+      $gigdubc_coockie = Drupal::request()->cookies->get( 'gigdubc_' . $api_key );
 
-    if (!empty($gigdubc_coockie)) {
-      \Drupal::logger( 'handleUntilBrowserCloseSession' )
-             ->debug('inside the if'  );/////
+      if ( ! empty( $gigdubc_coockie ) ) {
 
-      $cached_session_expiration = $gigya_raas_session->get( 'session_expiration' );
-      $session_expiration        = NULL;
 
-      /* Session expiration is "cached" to reduce DB requests. It can only be empty under "fixed session" */
+        $cached_session_expiration = $gigya_raas_session->get( 'session_expiration' );
 
-      if ( empty( $cached_session_expiration ) ) {
-        $error_message = 'Gigya session information could not be retrieved from the database. It is likely that the Gigya RaaS module has not been installed correctly. Please attempt to reinstall it. Attempted to retrieve details for user ID: ' . $uid;
+        if ( empty( $cached_session_expiration ) ) {
+          $error_message = 'Gigya session information could not be retrieved from the database. It is likely that the Gigya RaaS module has not been installed correctly. Please attempt to reinstall it. Attempted to retrieve details for user ID: ' . $uid;
 
-        try {
+          try {
 
-          $session_expiration_row = Database::getConnection()
-                                            ->query( 'SELECT expiration, is_remember_me FROM {sessions} s WHERE s.uid = :uid AND s.sid = :sid', [
-                                              ':uid' => $uid,
-                                              ':sid' => Crypt::hashBase64( $drupal_session->getId() ),
-                                            ] )
-                                            ->fetchAssoc();
+            $session_expiration_row = Database::getConnection()
+                                              ->query( 'SELECT expiration, is_remember_me FROM {sessions} s WHERE s.uid = :uid AND s.sid = :sid', [
+                                                ':uid' => $uid,
+                                                ':sid' => Crypt::hashBase64( $drupal_session->getId() ),
+                                              ] )
+                                              ->fetchAssoc();
 
-          if ( ! isset( $session_expiration_row['expiration'] ) ) { /* Query succeeded but didn't return any expiration column (should never happen!) */
-            \Drupal::logger( 'gigya_raas' )->error( $error_message );
-            user_logout();
-          } else {
-            if ( $session_expiration_row['expiration'] < time() ) {
+            if ( ! isset( $session_expiration_row['expiration'] ) ) { /* Query succeeded but didn't return any expiration column (should never happen!) */
+              Drupal::logger( 'gigya_raas' )->error( $error_message );
               user_logout();
             } else {
-              $gigya_raas_session->set( 'session_expiration', $session_expiration_row['expiration'] );
-              $gigya_raas_session->set( 'session_is_remember_me', $session_expiration_row['is_remember_me'] );
+              if ( $session_expiration_row['expiration'] < time() ) {
+                user_logout();
+              } else {
+                $gigya_raas_session->set( 'session_expiration', $session_expiration_row['expiration'] );
+                $gigya_raas_session->set( 'session_is_remember_me', $session_expiration_row['is_remember_me'] );
+              }
             }
-          }
 
-        } catch ( \Exception $e ) {
-          \Drupal::logger( 'gigya_raas' )
-                 ->error( $error_message . PHP_EOL . 'Exception of type: ' . get_class( $e ) . ', exception error message: ' . $e->getMessage() );
-          user_logout();
+          } catch ( Exception $e ) {
+            Drupal::logger( 'gigya_raas' )
+                   ->error( $error_message . PHP_EOL . 'Exception of type: ' . get_class( $e ) . ', exception error message: ' . $e->getMessage() );
+            user_logout();
+          }
+        } /* Right after logging in, the session expiration exists, but isn't yet written to the DB--but by the time this request is executed, it is already written, so it's possible to update the DB. */
+        else {
+          if ( $cached_session_expiration < time() ) {
+            user_logout();
+          }
         }
-      } /* Right after logging in, the session expiration exists, but isn't yet written to the DB--but by the time this request is executed, it is already written, so it's possible to update the DB. */
-      else {
-        if ( $cached_session_expiration < time() ) {
-          user_logout();
-        }
+        /*There is no coockie of until browser closed*/
+      } else {
+        user_cookie_delete( 'gltexp_' . $api_key );
+        $gigya_raas_session->set( 'session_expiration', 0 );
+        user_logout();
+
       }
-      /*There is no coockie of until browser closed*/
-    }else{
-      \Drupal::logger( 'handleUntilBrowserCloseSession' )
-             ->debug('inside the else'  );
-      user_cookie_delete('gltexp_'. $api_key);
-      $gigya_raas_session->set( 'session_expiration', 0 );
-      user_logout();
 
     }
-
   }
 
 }

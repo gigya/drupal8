@@ -478,25 +478,6 @@
 			return TRUE;
 		}
 
-    private function isItUntilBrowserCloseSession($request, $login) {
-      Drupal::logger( 'gigyaRaasExtCookieAjax' )
-             ->debug('isItUntilBrowserCloseSession return: '.("until_browser_close" == Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type'))  );////
-      Drupal::logger( 'gigyaRaasExtCookieAjax' )
-                  ->debug('session type return: '. Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type') );////
-      if ("until_browser_close" != Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type')) {
-        return FALSE;
-      }
-
-//      $current_user = Drupal::currentUser();
-//      if ($current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas')) {
-//        $gigya_conf = Drupal::config('gigya.settings');
-//        $api_key = $gigya_conf->get('gigya.gigya_api_key');
-//        $gigdubc_cookie = $request->cookies->get('gigdubc_' . $api_key);
-//        return empty($gigdubc_cookie);
-//      }
-
-      return TRUE;
-    }
 
     private function getDynamicSessionSignatureUserSigned($token, $expiration, $userKey, $secret) {
 			$unsignedExpString = utf8_encode($token . "_" . $expiration . "_" . $userKey);

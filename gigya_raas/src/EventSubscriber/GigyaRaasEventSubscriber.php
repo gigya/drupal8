@@ -189,8 +189,10 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
         }
         /*There is no coockie of until browser closed*/
       } else {
-        user_cookie_delete( 'gltexp_' . $api_key );
-        $gigya_raas_session->set( 'session_expiration', 0 );
+        if(  !empty(Drupal::request()->cookies->get( 'gigdubc_' . $api_key ))) {
+          user_cookie_delete( 'gltexp_' . $api_key );
+          $gigya_raas_session->set( 'session_expiration', 0 );
+        }
         user_logout();
 
       }

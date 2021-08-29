@@ -200,8 +200,8 @@
 
               /* Log the user in */
               $this->helper->processFieldMapping($gigyaUser, $user);
-              $this->gigyaRaasExtCookieAjax($request, $raas_login);
               $this->gigyaRaasCreateUbcCookie($request, $raas_login);
+              $this->gigyaRaasExtCookieAjax($request, $raas_login);
               $user->save();
               user_login_finalize($user);
 
@@ -504,7 +504,7 @@
     }
 
     private function gigyaRaasCreateUBCCookie(Request $request, $login = FALSE) {
-      if ("until_browser_close" != Drupal::config('gigya_raas.settings')
+      if ('until_browser_close' === Drupal::config('gigya_raas.settings')
           ->get('gigya_raas.session_type')) {
 
         /* Retrieve config from Drupal */
@@ -517,20 +517,17 @@
 
         $token = $this->getGLTToken($request);
         $session_expiration = 0;
-        $gigdubc_cookie = $request->cookies->get('gigdubc_' . $api_key);
 
-        if (empty($gigdubc_cookie)) {
-
-          if (!empty($token)) {
-            if ($auth_mode === 'user_rsa') {
-              $session_sig = $this->calculateUBCSessionSignatureJwtSigned($token, $session_expiration, $app_key, $auth_key);
-            }
-            else {
-              $session_sig = $this->getDynamicSessionSignatureUserSigned($token, $session_expiration, $app_key, $auth_key);
-            }
-            setrawcookie('gigdubc_' . $api_key, rawurlencode($session_sig), 0, '/', $request->getHost(), $request->isSecure(), TRUE);
+        if (!empty($token)) {
+          if ($auth_mode === 'user_rsa') {
+            $session_sig = $this->calculateUBCSessionSignatureJwtSigned($token, $session_expiration, $app_key, $auth_key);
           }
-        }
+          else {
+            $session_sig = $this->getDynamicSessionSignatureUserSigned($token, $session_expiration, $app_key, $auth_key);
+          }
+          setrawcookie('gigdubc_' . $api_key, rawurlencode($session_sig), 0, '/', $request->getHost(), $request->isSecure(), TRUE);
+
+          }
       }
 
       return new AjaxResponse();

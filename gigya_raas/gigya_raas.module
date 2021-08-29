@@ -33,10 +33,25 @@ function gigya_raas_page_attachments(array &$attachments) {
 			$session_time = Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
 			$remember_me_session_time = Drupal::config('gigya_raas.settings')->get('gigya_raas.remember_me_session_time');
 			$attachments['#attached']['drupalSettings']['gigyaExtra']['session_time'] = $session_time;
-			$attachments['#attached']['drupalSettings']['gigyaExtra']['remember_me_session_time'] = $session_time;
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['remember_me_session_time'] = $remember_me_session_time;
 
       /* Get sessionExpiration from Raas settings and set globalParameters with the value */
-      $expiration = ($session_type == "dynamic") ? -1 : $session_time;
+      switch ($session_type) {
+        case "dynamic":
+          $expiration = -1;
+          break;
+        case  "fixed":
+          $expiration = $session_time;
+          break;
+        case  "forever":
+          $expiration = -2;
+          break;
+        case  "until_browser_close":
+          $expiration = 0;
+          break;
+        default:
+          throw new \Exception('Unexpected value');
+      }
 
       $global_params = Drupal::config('gigya.global')->get('gigya.globalParameters');
       $global_params['sessionExpiration'] = $expiration;
@@ -175,6 +190,13 @@ function gigya_raas_user_login($account) {
 function gigya_raas_user_logout($account) {
   $helper = new GigyaHelper();
   $helper->saveUserLogoutCookie();
+  if ($session_params = GigyaRaasHelper::getSessionConfig('regular')['type'] == 'until_browser_close') {
+    $gigya_conf = Drupal::config('gigya.settings');
+    $api_key = $gigya_conf->get('gigya.gigya_api_key');
+    if (!empty(Drupal::request()->cookies->get('gigdubc_' . $api_key))) {
+      user_cookie_delete('gigdubc_' . $api_key);
+    }
+  }
 }
 
 /**

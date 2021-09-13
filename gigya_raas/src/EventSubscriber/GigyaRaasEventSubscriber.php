@@ -56,7 +56,7 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
           $this->handleFixedSession($gigya_raas_session, $drupal_session, $uid);
           break;
         case 'until_browser_close':
-          $this->handleUntilBrowserCloseSession($gigya_raas_session, $drupal_session, $uid);
+          $this->handleUntilBrowserCloseSession();
           break;
       };
     }
@@ -137,7 +137,7 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 	}
 
 
-  public function handleUntilBrowserCloseSession($gigya_raas_session, $drupal_session, $uid) {
+  public function handleUntilBrowserCloseSession() {
 
     $current_user = Drupal::currentUser();
     if ($current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas')) {
@@ -146,11 +146,10 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
       $api_key = $gigya_conf->get('gigya.gigya_api_key');
       $gigdubc_coockie = Drupal::request()->cookies->get('gigdubc_' . $api_key);
       $glt_cookie = Drupal::request()->cookies->get('glt_' . $api_key);
-
       if (empty($gigdubc_coockie) || empty($glt_cookie)) {
         user_logout();
         if (!empty($gigdubc_coockie)) {
-          user_cookie_delete($gigdubc_coockie);
+          setrawcookie('gigdubc_' . $api_key, '', time() - 1000, '/', '', '', TRUE);
         }
       }
     }

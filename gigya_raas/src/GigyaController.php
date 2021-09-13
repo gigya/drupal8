@@ -322,12 +322,19 @@
      * @return bool|AjaxResponse    The Ajax response
      */
     public function gigyaRaasLogoutAjax(Request $request) {
+
+      $api_key = Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
+      $session_params = GigyaRaasHelper::getSessionConfig();
       $logout_redirect = Drupal::config('gigya_raas.settings')
         ->get('gigya_raas.logout_redirect');
 
       /* Log out user in SSO */
       if (!empty(Drupal::currentUser()->id())) {
         user_logout();
+      }
+
+      if ($session_params['type'] === 'until_browser_close') {
+        setrawcookie('gigdubc_' . $api_key, '', time() - 1000, '/', $request->getHost(), $request->isSecure(), TRUE);
       }
 
       $base_path = base_path();
@@ -357,6 +364,7 @@
       $is_remember_me = ($type == 'remember_me');
 
       switch ($session_params['type']) {
+        case 'until_browser_close':
         case 'dynamic':
           $this->gigyaRaasSetSession(-1, $is_remember_me);
           break;
@@ -364,9 +372,6 @@
           $this->gigyaRaasSetSession(time() + $session_params['time'], $is_remember_me);
           break;
         case 'forever':
-          $this->gigyaRaasSetSession(time() + (4 * YEAR_IN_SECONDS), $is_remember_me);
-          break;
-        case 'until_browser_close':
           $this->gigyaRaasSetSession(time() + (4 * YEAR_IN_SECONDS), $is_remember_me);
           break;
 

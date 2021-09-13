@@ -185,16 +185,16 @@ function gigya_raas_user_login($account) {
 /**
  * Implements hook_user_logout().
  *
- * @param $account
  */
-function gigya_raas_user_logout($account) {
+function gigya_raas_user_logout() {
   $helper = new GigyaHelper();
   $helper->saveUserLogoutCookie();
-  if ($session_params = GigyaRaasHelper::getSessionConfig('regular')['type'] == 'until_browser_close') {
+  if ( GigyaRaasHelper::getSessionConfig()['type'] == 'until_browser_close') {
     $gigya_conf = Drupal::config('gigya.settings');
     $api_key = $gigya_conf->get('gigya.gigya_api_key');
     if (!empty(Drupal::request()->cookies->get('gigdubc_' . $api_key))) {
-      user_cookie_delete('gigdubc_' . $api_key);
+      setrawcookie('gigdubc_' . $api_key, '', time() - 1000, '/', '', '', TRUE);
+
     }
   }
 }

@@ -27,12 +27,12 @@ function gigya_raas_page_attachments(array &$attachments) {
       $attachments['#attached']['drupalSettings']['gigyaExtra']['logoutRedirect'] = Drupal::config('gigya_raas.settings')->get('gigya_raas.logout_redirect');
       $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin'] = Drupal::currentUser()->isAuthenticated();
 
-			$session_type = Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type');
-			$attachments['#attached']['drupalSettings']['gigyaExtra']['session_type'] = $session_type;
+      $session_type = Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type');
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['session_type'] = $session_type;
 
-			$session_time = Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
-			$remember_me_session_time = Drupal::config('gigya_raas.settings')->get('gigya_raas.remember_me_session_time');
-			$attachments['#attached']['drupalSettings']['gigyaExtra']['session_time'] = $session_time;
+      $session_time = Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
+      $remember_me_session_time = Drupal::config('gigya_raas.settings')->get('gigya_raas.remember_me_session_time');
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['session_time'] = $session_time;
       $attachments['#attached']['drupalSettings']['gigyaExtra']['remember_me_session_time'] = $remember_me_session_time;
 
       /* Get sessionExpiration from Raas settings and set globalParameters with the value */
@@ -40,17 +40,16 @@ function gigya_raas_page_attachments(array &$attachments) {
         case "dynamic":
           $expiration = -1;
           break;
-        case  "fixed":
-          $expiration = $session_time;
-          break;
         case  "forever":
           $expiration = -2;
           break;
         case  "until_browser_close":
           $expiration = 0;
           break;
+        case  "fixed":
         default:
-          throw new \Exception('Unexpected value');
+          $expiration = $session_time;
+          break;
       }
 
       $global_params = Drupal::config('gigya.global')->get('gigya.globalParameters');
@@ -186,17 +185,10 @@ function gigya_raas_user_login($account) {
  * Implements hook_user_logout().
  *
  */
-function gigya_raas_user_logout() {
+function gigya_raas_user_logout($account) {
+
   $helper = new GigyaHelper();
   $helper->saveUserLogoutCookie();
-  if ( GigyaRaasHelper::getSessionConfig()['type'] == 'until_browser_close') {
-    $gigya_conf = Drupal::config('gigya.settings');
-    $api_key = $gigya_conf->get('gigya.gigya_api_key');
-    if (!empty(Drupal::request()->cookies->get('gigdubc_' . $api_key))) {
-      setrawcookie('gigdubc_' . $api_key, '', time() - 1000, '/', '', '', TRUE);
-
-    }
-  }
 }
 
 /**

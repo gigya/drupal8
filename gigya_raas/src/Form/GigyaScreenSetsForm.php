@@ -34,7 +34,6 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 	 */
 	public function buildForm(array $form, FormStateInterface $form_state) {
 		$config = $this->config('gigya_raas.screensets');
-		var_dump(ini_get('gc_maxlifetime'),TRUE);
 		$form['gigya_login_screensets'] = [
 			'#type' => 'details',
 			'#title' => $this->t('Registration–Login Screen-Set'),

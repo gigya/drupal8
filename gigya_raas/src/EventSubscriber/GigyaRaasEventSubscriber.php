@@ -51,12 +51,13 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
         case 'dynamic':
           $this->handleDynamicSession($session_params, $gigya_raas_session, $uid);
           break;
-        case 'fixed':
-        case 'forever':
-          $this->handleFixedSession($gigya_raas_session, $drupal_session, $uid);
-          break;
         case 'until_browser_close':
           $this->handleUntilBrowserCloseSession();
+          break;
+        case 'fixed':
+        case 'forever':
+        default:
+          $this->handleFixedSession($gigya_raas_session, $drupal_session, $uid);
           break;
       };
     }
@@ -140,17 +141,15 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
   public function handleUntilBrowserCloseSession() {
 
     $current_user = Drupal::currentUser();
-    if ($current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas')) {
 
+    if ($current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas')) {
+      $request = Drupal::request();
       $gigya_conf = Drupal::config('gigya.settings');
       $api_key = $gigya_conf->get('gigya.gigya_api_key');
-      $gigdubc_coockie = Drupal::request()->cookies->get('gigdubc_' . $api_key);
-      $glt_cookie = Drupal::request()->cookies->get('glt_' . $api_key);
-      if (empty($gigdubc_coockie) || empty($glt_cookie)) {
+      $glt_cookie = $request->cookies->get('glt_' . $api_key);
+
+      if (empty($glt_cookie)) {
         user_logout();
-        if (!empty($gigdubc_coockie)) {
-          setrawcookie('gigdubc_' . $api_key, '', time() - 1000, '/', '', '', TRUE);
-        }
       }
     }
   }

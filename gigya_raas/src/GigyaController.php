@@ -21,12 +21,12 @@
 	use Drupal\gigya\Helper\GigyaHelper;
 
 
-  define( 'MINUTE_IN_SECONDS', 60 );
-  define( 'HOUR_IN_SECONDS', 60 * MINUTE_IN_SECONDS );
-  define( 'DAY_IN_SECONDS', 24 * HOUR_IN_SECONDS );
-  define( 'WEEK_IN_SECONDS', 7 * DAY_IN_SECONDS );
-  define( 'MONTH_IN_SECONDS', 30 * DAY_IN_SECONDS );
-  define( 'YEAR_IN_SECONDS', 365 * DAY_IN_SECONDS );
+  define('MINUTE_IN_SECONDS', 60);
+  define('HOUR_IN_SECONDS', 60 * MINUTE_IN_SECONDS);
+  define('DAY_IN_SECONDS', 24 * HOUR_IN_SECONDS);
+  define('WEEK_IN_SECONDS', 7 * DAY_IN_SECONDS);
+  define('MONTH_IN_SECONDS', 30 * DAY_IN_SECONDS);
+  define('YEAR_IN_SECONDS', 365 * DAY_IN_SECONDS);
 
 	/**
 	 * Returns responses for Editor module routes.
@@ -200,8 +200,15 @@
 
               /* Log the user in */
               $this->helper->processFieldMapping($gigyaUser, $user);
-              $this->gigyaRaasCreateUbcCookie($request, $raas_login);
-              $this->gigyaRaasExtCookieAjax($request, $raas_login);
+
+              $session_exp_type = Drupal::config('gigya_raas.settings')
+                ->get('gigya_raas.session_type');
+
+              /*check if this session type is dynamic session and create his cookie*/
+              if ($this->shouldAddExtCookie($request, $raas_login)) {
+                $this->gigyaRaasExtCookieAjax($request, $raas_login);
+              }
+
               $user->save();
               user_login_finalize($user);
 
@@ -333,10 +340,6 @@
         user_logout();
       }
 
-      if ($session_params['type'] === 'until_browser_close') {
-        setrawcookie('gigdubc_' . $api_key, '', time() - 1000, '/', $request->getHost(), $request->isSecure(), TRUE);
-      }
-
       $base_path = base_path();
       $redirect_path = ($base_path === '/') ? '/' : $base_path . '/';
       if (substr($logout_redirect, 0, 4) !== 'http') {
@@ -365,14 +368,17 @@
 
       switch ($session_params['type']) {
         case 'until_browser_close':
+          $this->gigyaRaasSetSession(0, $is_remember_me);
+          break;
         case 'dynamic':
           $this->gigyaRaasSetSession(-1, $is_remember_me);
           break;
-        case 'fixed':
-          $this->gigyaRaasSetSession(time() + $session_params['time'], $is_remember_me);
-          break;
         case 'forever':
-          $this->gigyaRaasSetSession(time() + (4 * YEAR_IN_SECONDS), $is_remember_me);
+          $this->gigyaRaasSetSession(time() + (10 * YEAR_IN_SECONDS), $is_remember_me);
+          break;
+        case 'fixed':
+        default:
+          $this->gigyaRaasSetSession(time() + $session_params['time'], $is_remember_me);
           break;
 
       };
@@ -424,7 +430,7 @@
         $auth_mode = $gigya_conf->get('gigya.gigya_auth_mode');
         $auth_key = $helper->decrypt(($auth_mode === 'user_rsa') ? $gigya_conf->get('gigya.gigya_rsa_private_key') : $gigya_conf->get('gigya.gigya_application_secret_key'));
 
-        $token = $this->getGLTToken($request);
+        $token = $this->getGigyaLoginToken($request);
 
         $now = $_SERVER['REQUEST_TIME'];
         $session_expiration = strval($now + $session_time);
@@ -445,6 +451,7 @@
 
         if (empty($gltexp_cookie_timestamp) or (time() < $gltexp_cookie_timestamp)) {
           if (!empty($token)) {
+
             if ($auth_mode === 'user_rsa') {
               $session_sig = $this->calculateDynamicSessionSignatureJwtSigned($token, $session_expiration, $app_key, $auth_key);
             }
@@ -480,7 +487,6 @@
       return TRUE;
     }
 
-
     private function getDynamicSessionSignatureUserSigned($token, $expiration, $userKey, $secret) {
       $unsignedExpString = utf8_encode($token . "_" . $expiration . "_" . $userKey);
       $rawHmac = hash_hmac("sha1", utf8_encode($unsignedExpString), base64_decode($secret), TRUE);
@@ -500,54 +506,11 @@
       return JWT::encode($payload, $privateKey, 'RS256', $applicationKey);
     }
 
-    private function getGLTToken(Request $request) {
+    public function getGigyaLoginToken(Request $request) {
 
       $gigya_conf = Drupal::config('gigya.settings');
       $api_key = $gigya_conf->get('gigya.gigya_api_key');
       $glt_cookie = $request->cookies->get('glt_' . $api_key);
       return (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL;
     }
-
-    private function gigyaRaasCreateUBCCookie(Request $request, $login = FALSE) {
-      if ('until_browser_close' === Drupal::config('gigya_raas.settings')
-          ->get('gigya_raas.session_type')) {
-
-        /* Retrieve config from Drupal */
-        $helper = new GigyaHelper();
-        $gigya_conf = Drupal::config('gigya.settings');
-        $api_key = $gigya_conf->get('gigya.gigya_api_key');
-        $app_key = $gigya_conf->get('gigya.gigya_application_key');
-        $auth_mode = $gigya_conf->get('gigya.gigya_auth_mode');
-        $auth_key = $helper->decrypt(($auth_mode === 'user_rsa') ? $gigya_conf->get('gigya.gigya_rsa_private_key') : $gigya_conf->get('gigya.gigya_application_secret_key'));
-
-        $token = $this->getGLTToken($request);
-        $session_expiration = 0;
-
-        if (!empty($token)) {
-          if ($auth_mode === 'user_rsa') {
-            $session_sig = $this->calculateUBCSessionSignatureJwtSigned($token, $session_expiration, $app_key, $auth_key);
-          }
-          else {
-            $session_sig = $this->getDynamicSessionSignatureUserSigned($token, $session_expiration, $app_key, $auth_key);
-          }
-          setrawcookie('gigdubc_' . $api_key, rawurlencode($session_sig), 0, '/', $request->getHost(), $request->isSecure(), TRUE);
-
-          }
-      }
-
-      return new AjaxResponse();
-    }
-
-    protected function calculateUBCSessionSignatureJwtSigned(string $loginToken, int $expiration, string $applicationKey, string $privateKey) {
-      $payload = [
-        'sub' => $loginToken,
-        'iat' => time(),
-        'exp' => $expiration,
-        'aud' => 'gigdubc',
-      ];
-
-      return JWT::encode($payload, $privateKey, 'RS256', $applicationKey);
-
-    }
-
   }

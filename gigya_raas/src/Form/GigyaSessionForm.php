@@ -53,7 +53,7 @@ class GigyaSessionForm extends ConfigFormBase {
       'fixed'               => $this->t( 'Fixed' ),
       'dynamic'             => $this->t( 'Dynamic' ),
       'forever'             => $this->t( 'Valid Forever' ),
-      'until_browser_close' => $this->t( 'Until browser closed' ),
+      'until_browser_close' => $this->t( 'Until browser closes' ),
     ];
     $form['session_type'] = [
       '#type'          => 'select',

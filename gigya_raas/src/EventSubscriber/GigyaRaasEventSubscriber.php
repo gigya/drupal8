@@ -10,6 +10,8 @@ use Drupal\gigya_raas\Helper\GigyaRaasHelper;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Drupal;
+
 
 class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 
@@ -45,13 +47,19 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 		if ($uid and !$current_user->hasPermission('bypass gigya raas')) {
 			$session_type = ($is_remember_me) ? 'remember_me' : 'regular';
 			$session_params = GigyaRaasHelper::getSessionConfig($session_type);
-
-			if ($session_params['type'] === 'dynamic') {
-				$this->handleDynamicSession($session_params, $gigya_raas_session, $uid);
-			}
-			elseif ($session_params['type'] === 'fixed') {
-				$this->handleFixedSession($gigya_raas_session, $drupal_session, $uid);
-			}
+			switch ($session_params['type']) {
+				case 'dynamic':
+					$this->handleDynamicSession($session_params, $gigya_raas_session, $uid);
+					break;
+				case 'until_browser_close':
+					$this->handleUntilBrowserCloseSession();
+					break;
+				case 'fixed':
+				case 'forever':
+				default:
+					$this->handleFixedSession($gigya_raas_session, $drupal_session, $uid);
+					break;
+			};
 		}
 	}
 
@@ -91,6 +99,7 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 	 * @param int $uid
 	 */
 	public function handleFixedSession($gigya_raas_session, $drupal_session, $uid) {
+
 		$cached_session_expiration = $gigya_raas_session->get('session_expiration');
 		$session_expiration = NULL;
 
@@ -127,4 +136,22 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 			}
 		}
 	}
+
+
+	public function handleUntilBrowserCloseSession() {
+
+		$current_user = Drupal::currentUser();
+
+		if ($current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas')) {
+			$request = Drupal::request();
+			$gigya_conf = Drupal::config('gigya.settings');
+			$api_key = $gigya_conf->get('gigya.gigya_api_key');
+			$glt_cookie = $request->cookies->get('glt_' . $api_key);
+
+			if (empty($glt_cookie)) {
+				user_logout();
+			}
+		}
+	}
+
 }

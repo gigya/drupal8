@@ -33,15 +33,29 @@ function gigya_raas_page_attachments(array &$attachments) {
 			$session_time = Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
 			$remember_me_session_time = Drupal::config('gigya_raas.settings')->get('gigya_raas.remember_me_session_time');
 			$attachments['#attached']['drupalSettings']['gigyaExtra']['session_time'] = $session_time;
-			$attachments['#attached']['drupalSettings']['gigyaExtra']['remember_me_session_time'] = $session_time;
+			$attachments['#attached']['drupalSettings']['gigyaExtra']['remember_me_session_time'] = $remember_me_session_time;
 
-      /* Get sessionExpiration from Raas settings and set globalParameters with the value */
-      $expiration = ($session_type == "dynamic") ? -1 : $session_time;
+			/* Get sessionExpiration from Raas settings and set globalParameters with the value */
+			switch ($session_type) {
+				case "dynamic":
+					$expiration = -1;
+					break;
+				case  "forever":
+					$expiration = -2;
+					break;
+				case  "until_browser_close":
+					$expiration = 0;
+					break;
+				case  "fixed":
+				default:
+					$expiration = $session_time;
+					break;
+			}
 
-      $global_params = Drupal::config('gigya.global')->get('gigya.globalParameters');
-      $global_params['sessionExpiration'] = $expiration;
-      $global_params['rememberSessionExpiration'] = $remember_me_session_time;
-      $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
+			$global_params = Drupal::config('gigya.global')->get('gigya.globalParameters');
+			$global_params['sessionExpiration'] = $expiration;
+			$global_params['rememberSessionExpiration'] = $remember_me_session_time;
+			$attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
 
 			$default_login_screenset = 'Default-RegistrationLogin';
 			$default_profile_screenset = 'Default-ProfileUpdate';

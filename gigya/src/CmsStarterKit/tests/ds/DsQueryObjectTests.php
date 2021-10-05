@@ -37,7 +37,7 @@ class TestDsQueryObject extends \PHPUnit_Framework_TestCase
     {
         $class  = new \ReflectionClass(DsQueryObject::class);
         $method = $class->getMethod($name);
-        $method->setAccessible(true);
+        $method->setAccessible(TRUE);
 
         return $method;
     }
@@ -124,7 +124,7 @@ class TestDsQueryObject extends \PHPUnit_Framework_TestCase
     {
         $this->queryObject->addWhere("field1", ">", 0, "int")->addAnd("field1", "<", 1, "int")->addAnd(
                 "field1", "=", 2, "int"
-            )->addOr("field2", ">=", 3, "int")->addOr("field2", "<=", 4, "int")->addAnd("field3", "!=", true, "bool");
+            )->addOr("field2", ">=", 3, "int")->addOr("field2", "<=", 4, "int")->addAnd("field3", "!=", TRUE, "bool");
         $build = self::getMethod('buildQuery');
         $build->invoke($this->queryObject);
         $qry = $this->queryObject->getQuery();

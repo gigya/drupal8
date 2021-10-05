@@ -25,7 +25,7 @@
 		/**
 		 * @var bool
 		 */
-		private $testRealAws = true;
+		private $testRealAws = TRUE;
 
 		/**
 		 * @var string
@@ -93,7 +93,7 @@
 			$this->coreModuleHelperMock = $this->getMockBuilder('\Drupal\gigya\Helper\GigyaHelper')
 				->setMethods(array('getEncKeyFile', 'decrypt'))
 				->getMock();
-			$this->coreModuleHelperMock->expects($this->any())->method('getEncKeyFile')->willReturn(false);
+			$this->coreModuleHelperMock->expects($this->any())->method('getEncKeyFile')->willReturn(FALSE);
 			$this->coreModuleHelperMock->expects($this->any())->method('decrypt')->will($this->returnCallback(function() use ($key) {
 				return $this->secretKey;
 			}));
@@ -108,7 +108,7 @@
 				$this->assertEquals($expected, $userDeletionHelper->getRegion());
 			}
 			else
-				$this->assertEquals(true, true); // TODO: Implement mock for S3 service
+				$this->assertEquals(TRUE, TRUE); // TODO: Implement mock for S3 service
 		}
 
 		public function testLoadFileFromServer() {
@@ -120,7 +120,7 @@
 				$this->assertEquals($expected, $userDeletionHelper->loadFileFromServer($this->awsFolderName . '/' . $this->awsFileName));
 			}
 			else
-				$this->assertEquals(true, true); // TODO: Implement mock for S3 service
+				$this->assertEquals(TRUE, TRUE); // TODO: Implement mock for S3 service
 		}
 
 		private function uid_csv_parse($csv_file_string) {
@@ -142,7 +142,7 @@
 				$this->assertEquals($expected, $userDeletionHelper->getUsers($this->awsFolderName . '/' . $this->awsFileName));
 			}
 			else
-				$this->assertEquals(true, true); // TODO: Implement mock for S3 service
+				$this->assertEquals(TRUE, TRUE); // TODO: Implement mock for S3 service
 		}
 
 		public function testGetFileList() {
@@ -156,6 +156,6 @@
 				$this->assertEquals($expected, $file_list[0]['Key']);
 			}
 			else
-				$this->assertEquals(true, true); // TODO: Implement mock for S3 service
+				$this->assertEquals(TRUE, TRUE); // TODO: Implement mock for S3 service
 		}
 	}

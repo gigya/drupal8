@@ -12,24 +12,24 @@
 	 * @ingroup gigya_user_deletion
 	 */
 	function gigya_user_deletion_schema() {
-		$schema['gigya_user_deletion'] = array(
+		$schema['gigya_user_deletion'] = [
 			'description' => '',
-			'fields'      => array(
-				'filename' => array(
+			'fields'      => [
+				'filename'       => [
 					'type'        => 'varchar',
 					'length'      => 127,
-					'not null'    => true,
+					'not null'    => TRUE,
 					'description' => 'File name processed',
-				),
-				'time_processed'     => array(
+				],
+				'time_processed' => [
 					'type'        => 'int',
 					'description' => 'Timestamp of the cron run when this file was successfully processed',
-				),
-			),
-			'primary key' => array(
+				],
+			],
+			'primary key' => [
 				'filename',
-			),
-		);
+			],
+		];
 
 		return $schema;
 	}

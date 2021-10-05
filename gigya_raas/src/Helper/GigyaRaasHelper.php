@@ -57,11 +57,11 @@ class GigyaRaasHelper {
 				: $this->gigya_helper->getGigyaApiHelper()->validateUid($uid, $signature, $sig_timestamp, NULL, NULL, $params);
 		} catch (GSApiException $e) {
 			Drupal::logger('gigya')->error("Gigya API call error: @error, Call ID: @callId", array('@callId' => $e->getCallId(), '@error' => $e->getMessage()));
-			return false;
+			return FALSE;
 		}
 		catch (Exception $e) {
 			Drupal::logger('gigya')->error("General error validating gigya UID: " . $e->getMessage());
-			return false;
+			return FALSE;
 		}
 	}
 
@@ -102,7 +102,7 @@ class GigyaRaasHelper {
 			}
 		}
 
-		return false;
+		return FALSE;
 	}
 
 	public function getUidByName($name) {

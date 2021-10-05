@@ -45,7 +45,7 @@ class GigyaApiRequest extends GSRequest
 	 *
 	 * @throws GSKeyNotFoundException
 	 */
-	public function __construct($apiKey, $secret, $apiMethod, $params, $dataCenter, $useHTTPS = true, $userKey = null) {
+	public function __construct($apiKey, $secret, $apiMethod, $params, $dataCenter, $useHTTPS = TRUE, $userKey = NULL) {
 		parent::__construct($apiKey, $secret, $apiMethod, $params, $useHTTPS, $userKey);
 		$this->setAPIDomain($dataCenter);
 	}

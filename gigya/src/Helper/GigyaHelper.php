@@ -88,12 +88,12 @@ class GigyaHelper implements GigyaHelperInterface {
         if (!empty($key))
           return $key;
       }
-      return false;
+      return FALSE;
     }
     catch (Exception $e)
     {
       Drupal::logger('gigya')->error('Key file not found. Configure the correct path in your gigya.global YML file.');
-      return false;
+      return FALSE;
     }
   }
 
@@ -127,7 +127,7 @@ class GigyaHelper implements GigyaHelperInterface {
       if (!$access_params) {
         $access_params = $this->getAccessParams();
       }
-      if ($params == null) {
+      if ($params == NULL) {
         $params = new GSObject();
       }
 

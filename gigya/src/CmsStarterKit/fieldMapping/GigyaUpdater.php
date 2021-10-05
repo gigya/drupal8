@@ -139,9 +139,9 @@ abstract class GigyaUpdater {
 
   /**
    * Retrieves the field mapping object from cache.
-   * if no mapping is found or there is an error returns false.
+   * if no mapping is found or there is an error returns FALSE.
    *
-   * @return mixed
+   * @return mixed | FALSE
    */
   abstract protected function getMappingFromCache();
 

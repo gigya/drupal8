@@ -223,7 +223,7 @@
 		/**
 		 * Get S3 Region
 		 *
-		 * @return string | false
+		 * @return string | FALSE
 		 */
 		public function getRegion() {
 			/* Get S3 connection details from DB */
@@ -282,7 +282,7 @@
 		/**
 		 * @param string $error
 		 *
-		 * @return false|mixed
+		 * @return mixed | FALSE
 		 */
 		public function getRegionFromAwsError(string $error) {
 			if (preg_match('/the region \'([a-zA-Z0-9-]+)\' is wrong; expecting \'([a-z0-9-]+)\'/', $error, $matches)) {

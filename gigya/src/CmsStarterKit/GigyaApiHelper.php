@@ -108,7 +108,7 @@ class GigyaApiHelper
 			}
 		}
 
-		return false;
+		return FALSE;
 	}
 
 	/**
@@ -130,7 +130,7 @@ class GigyaApiHelper
 		if ($jwt && !empty($jwt->sub) && $jwt->sub === $uid) {
 			return $this->fetchGigyaAccount($uid, $include, $extraProfileFields, $orgParams);
 		} else {
-			return false;
+			return FALSE;
 		}
 	}
 
@@ -193,7 +193,7 @@ class GigyaApiHelper
 		}
 		else {
 			$params = ['query' => $query];
-			if ($useCursor) { /* openCursor in Gigya only supports true but not false */
+			if ($useCursor) { /* openCursor in Gigya only supports TRUE but not FALSE */
 				$params['openCursor'] = TRUE;
 			}
 		}
@@ -309,23 +309,18 @@ class GigyaApiHelper
 	 * @throws \Exception
 	 * @throws GSException
 	 */
-	public function isRaasEnabled($apiKey = null) {
-		if (null === $apiKey)
-		{
+	public function isRaasEnabled($apiKey = NULL) {
+		if (NULL === $apiKey) {
 			$apiKey = $this->apiKey;
 		}
-		$params = GSFactory::createGSObjectFromArray(array("apiKey" => $apiKey));
-		try
-		{
+		$params = GSFactory::createGSObjectFromArray(["apiKey" => $apiKey]);
+		try {
 			$this->sendApiCall("accounts.getGlobalConfig", $params);
 
-			return true;
-		}
-		catch (GSApiException $e)
-		{
-			if ($e->getErrorCode() == 403036)
-			{
-				return false;
+			return TRUE;
+		} catch (GSApiException $e) {
+			if ($e->getErrorCode() == 403036) {
+				return FALSE;
 			}
 
 			throw new GSException($e->getMessage(), $e->getCode());

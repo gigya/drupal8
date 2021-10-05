@@ -68,7 +68,7 @@ class DsFactoryTests extends PHPUnit_Framework_TestCase
     {
         $class  = new ReflectionClass('Gigya\ds\DsQueryObject');
         $method = $class->getMethod($name);
-        $method->setAccessible(true);
+        $method->setAccessible(TRUE);
 
         return $method;
     }

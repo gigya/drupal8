@@ -19,7 +19,7 @@ class GSFactory
 	 *
 	 * @throws \Exception
 	 */
-	public static function createGsRequest($apiKey, $secret, $apiMethod, $params, $dataCenter = "us1.gigya.com", $useHTTPS = true)
+	public static function createGsRequest($apiKey, $secret, $apiMethod, $params, $dataCenter = "us1.gigya.com", $useHTTPS = TRUE)
 	{
 		return new GigyaApiRequest($apiKey, $secret, $apiMethod, $params, $dataCenter, $useHTTPS);
 	}
@@ -37,7 +37,7 @@ class GSFactory
 	 *
 	 * @throws \Exception
 	 */
-	public static function createGSRequestAppKey($apiKey, $key, $secret, $apiMethod, $params, $dataCenter = "us1.gigya.com", $useHTTPS = true)
+	public static function createGSRequestAppKey($apiKey, $key, $secret, $apiMethod, $params, $dataCenter = "us1.gigya.com", $useHTTPS = TRUE)
 	{
 		return new GigyaApiRequest($apiKey, $secret, $apiMethod, $params, $dataCenter, $useHTTPS, $key);
 	}
@@ -54,7 +54,7 @@ class GSFactory
 	 * @return GigyaAuthRequest
 	 * @throws \Gigya\PHP\GSKeyNotFoundException
 	 */
-	public static function createGSRequestPrivateKey($apiKey, $userKey, $privateKey, $apiMethod, $params, $dataCenter = "us1.gigya.com", $useHTTPS = true)
+	public static function createGSRequestPrivateKey($apiKey, $userKey, $privateKey, $apiMethod, $params, $dataCenter = "us1.gigya.com", $useHTTPS = TRUE)
 	{
 		return new GigyaAuthRequest($apiKey, $privateKey, $apiMethod, $params, $dataCenter, $useHTTPS, $userKey);
 	}
@@ -70,7 +70,7 @@ class GSFactory
 	 *
 	 * @throws \Exception
 	 */
-	public static function createGSRequestAccessToken($token, $apiMethod, $params, $dataCenter = "us1.gigya.com", $useHTTPS = true)
+	public static function createGSRequestAccessToken($token, $apiMethod, $params, $dataCenter = "us1.gigya.com", $useHTTPS = TRUE)
 	{
 		return new GigyaApiRequest($token, null, $apiMethod, $params, $dataCenter, $useHTTPS);
 	}
@@ -88,7 +88,7 @@ class GSFactory
 			throw new GSException("Array is expected got " . gettype($array));
 		}
 		$json = json_encode($array, JSON_UNESCAPED_SLASHES);
-		if ($json === false) {
+		if ($json === FALSE) {
 			throw new GSException("Error converting array to json see json errno in error code", json_last_error());
 		}
 

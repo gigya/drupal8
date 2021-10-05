@@ -20,9 +20,9 @@
 		/**
 		 * @var bool | GigyaHelper
 		 */
-		public $helper = false;
+		public $helper = FALSE;
 
-		protected array $aws_regions = [
+		protected $aws_regions = [
 			'us-east-2' => 'US East (Ohio)',
 			'us-east-1' => 'US East (N. Virginia)',
 			'us-west-1' => 'US West (N. California)',
@@ -267,7 +267,7 @@
 
 				foreach ($jobRequiredFields as $field)
 				{
-					if (strpos($field, 'storageDetails') !== false)
+					if (strpos($field, 'storageDetails') !== FALSE)
 					{
 						$num = strlen($field) - strlen('storageDetails') - 1;
 						$field = substr($field, 0 - $num);

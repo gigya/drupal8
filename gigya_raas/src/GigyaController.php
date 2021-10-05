@@ -265,19 +265,17 @@
 
 							/* Allow other modules to modify the data before user is created in the Drupal database (create user hook). */
 							Drupal::moduleHandler()->alter('gigya_raas_create_user', $gigyaUser, $user);
-							try
-							{
+							try {
 								$user->save();
-								$raas_login = true;
+								$raas_login = TRUE;
 								$this->gigyaRaasExtCookieAjax($request, $raas_login);
 								user_login_finalize($user);
 
 								/* Set user session */
 								$this->gigyaRaasSetLoginSession($session_type);
-							}
-							catch (Exception $e)
-							{
-								Drupal::logger('gigya_raas')->notice('User with username: '.$username.' could not log in after registration. Exception: '.$e->getMessage());
+							} catch (Exception $e) {
+								Drupal::logger('gigya_raas')->notice('User with username: ' . $username
+									. ' could not log in after registration. Exception: ' . $e->getMessage());
 								session_destroy();
 								$err_msg = $this->t(
 									"Oops! Something went wrong during your registration process. You are registered to the site but not logged-in. Please try to login again."
@@ -313,7 +311,7 @@
 				return $response;
 			}
 
-			return false;
+			return FALSE;
 		}
 
 		/**
@@ -410,7 +408,7 @@
 
 				if (!empty($gltexp_cookie)) {
 					if ($auth_mode === 'user_rsa') {
-						$claims = json_decode(JWT::urlsafeB64Decode(explode('.', $gltexp_cookie)[1]), true, 512, JSON_BIGINT_AS_STRING);
+						$claims = json_decode(JWT::urlsafeB64Decode(explode('.', $gltexp_cookie)[1]), TRUE, 512, JSON_BIGINT_AS_STRING);
 						if (!empty($claims) && !empty($claims['exp'])) {
 							$gltexp_cookie_timestamp = $claims['exp'];
 						}

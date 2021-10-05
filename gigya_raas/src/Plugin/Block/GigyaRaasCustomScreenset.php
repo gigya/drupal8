@@ -89,7 +89,7 @@ class GigyaRaasCustomScreenset extends BlockBase implements BlockPluginInterface
 		$form['container_id'] = array(
 			'#type' => 'textfield',
 			'#title' => 'Container ID',
-			'#required' => true,
+			'#required' => TRUE,
 			'#default_value' => isset($block_config['container_id']) ? $block_config['container_id'] : '',
 		);
 

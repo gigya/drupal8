@@ -23,8 +23,16 @@ class GigyaAuthRequest extends GSRequest
 	 *
 	 * @throws GSKeyNotFoundException
 	 */
-	public function __construct($apiKey, $privateKey, $apiMethod, $params, $dataCenter, $useHTTPS = true, $userKey = null) {
-		parent::__construct($apiKey, null, $apiMethod, $params, $useHTTPS, $userKey, $privateKey);
+	public function __construct(
+		$apiKey,
+		$privateKey,
+		$apiMethod,
+		$params,
+		$dataCenter,
+		$useHTTPS = TRUE,
+		$userKey = NULL
+	) {
+		parent::__construct($apiKey, NULL, $apiMethod, $params, $useHTTPS, $userKey, $privateKey);
 		$this->setAPIDomain($dataCenter);
 	}
 
@@ -37,17 +45,19 @@ class GigyaAuthRequest extends GSRequest
 	 * @throws GSApiException
 	 * @throws GSKeyNotFoundException
 	 */
-	public function send($timeout = null) {
+	public function send($timeout = NULL) {
 		$res = parent::send($timeout);
 
-		if ($res->getErrorCode() == 0)
-		{
+		if ($res->getErrorCode() == 0) {
 			return $res;
 		}
 
 		if (!empty($res->getData())) { /* Actual error response from Gigya */
-			throw new GSApiException($res->getErrorMessage(), $res->getErrorCode(), $res->getResponseText(), $res->getString("callId", "N/A"));
-		} else { /* Hard-coded error in PHP SDK, or another failure */
+			throw new GSApiException(
+				$res->getErrorMessage(), $res->getErrorCode(), $res->getResponseText(), $res->getString("callId", "N/A")
+			);
+		}
+		else { /* Hard-coded error in PHP SDK, or another failure */
 			throw new GSException($res->getErrorMessage(), $res->getErrorCode());
 		}
 	}

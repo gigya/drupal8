@@ -44,7 +44,7 @@ class TestGigyaUpdater extends \PHPUnit_Framework_TestCase
             ->setConstructorArgs(array($cmsArray, $uid, $path, $this->helper))
             ->setMethods(array('callCmsHook', 'setMappingCache', 'getMappingFromCache'))
             ->getMock();
-        $updater->method('getMappingFromCache')->willReturn(false);
+        $updater->method('getMappingFromCache')->willReturn(FALSE);
         $this->assertTrue($updater->isMapped());
         $updater->updateGigya();
     }

@@ -84,37 +84,6 @@ function gigya_raas_page_attachments(array &$attachments) {
 				Drupal::moduleHandler()->alter('gigya_raas_profile_settings', $raas_profile);
         $attachments['#attached']['drupalSettings']['gigya']['raas']['profile'] = $raas_profile;
       }
-
-      /* Load screen-set config into front-end for custom screen-set in UI blocks functionality */
-      $custom_screensets = array();
-			/** @var BlockInterface[] $blocks; */
-			$blocks = Block::loadMultiple();
-			foreach ($blocks as $key => $block) {
-				$settings = $block->get('settings');
-				if ($settings['id'] == 'gigya_raas_custom_screenset') {
-					$custom_screensets[] = $settings;
-				}
-			}
-			$screenset_config = (array)json_decode(Drupal::config('gigya_raas.screensets')->get('gigya.custom_screensets'));
-			foreach ($screenset_config as $key => $screenset) {
-				if (isset($screenset->remove))
-					unset($screenset->remove);
-				$screenset = (array)$screenset;
-				$screenset_config[$screenset['desktop']] = $screenset;
-				unset($screenset_config[$key]);
-			}
-			foreach ($custom_screensets as $key => $screenset) {
-				if (!empty($screenset_config[$screenset['desktop_screenset']])) {
-					$custom_screensets[$key]['sync_data'] = $screenset_config[$screenset['desktop_screenset']]['sync'];
-					if (!empty($screenset_config[$screenset['desktop_screenset']]['mobile']))
-						$custom_screensets[$key]['mobile_screenset'] = $screenset_config[$screenset['desktop_screenset']]['mobile'];
-					else
-						$custom_screensets[$key]['mobile_screenset'] = $screenset_config[$screenset['desktop_screenset']]['desktop'];
-				}
-			}
-			$attachments['#attached']['drupalSettings']['gigya']['raas']['customScreenSets'] = $custom_screensets;
-
-      $attachments['#attached']['library'][] = 'gigya_raas/gigyaRaas';
     }
   }
 }

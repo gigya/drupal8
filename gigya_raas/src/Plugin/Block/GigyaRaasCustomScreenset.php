@@ -63,6 +63,16 @@ class GigyaRaasCustomScreenset extends BlockBase implements BlockPluginInterface
 			'#display_type' => $config['display_type'],
 			'#container_id' => $config['container_id'],
 			'#screenset' => $screenset_params,
+			'#attached' => [
+				'library' => ['gigya_raas/customScreenSets'],
+				'drupalSettings' => [
+					'gigya' => [
+						'raas' => [
+							'customScreenSets' => [$config['container_id'] => $config],
+						],
+					],
+				],
+			],
 		];
 		return $build;
 	}

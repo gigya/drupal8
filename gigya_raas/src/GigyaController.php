@@ -204,8 +204,12 @@ class GigyaController extends ControllerBase {
 						$session_exp_type = Drupal::config('gigya_raas.settings')
 						                          ->get('gigya_raas.session_type');
 
+						if ($session_exp_type=='until_browser_close') {
+              $this->gigyaRaasCreateUbcCookie($request, $raas_login);
+            }
+
 						/*check if this session type is dynamic session and create his cookie*/
-						if ($this->shouldAddExtCookie($request, $raas_login)) {
+						else if ($this->shouldAddExtCookie($request, $raas_login)) {
 							$this->gigyaRaasExtCookieAjax($request, $raas_login);
 						}
 
@@ -513,4 +517,58 @@ class GigyaController extends ControllerBase {
 		$glt_cookie = $request->cookies->get('glt_' . $api_key);
 		return (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL;
 	}
+
+  /**
+   * @param \Symfony\Component\HttpFoundation\Request|null $request
+   * @param false $login
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   */
+  public function gigyaRaasCreateUBCCookie(Request $request = NULL, $login = FALSE) {
+
+    if ('until_browser_close' === Drupal::config('gigya_raas.settings')
+        ->get('gigya_raas.session_type')) {
+
+      /* Retrieve config from Drupal */
+      $helper = new GigyaHelper();
+      $gigya_conf = Drupal::config('gigya.settings');
+      $api_key = $gigya_conf->get('gigya.gigya_api_key');
+      $app_key = $gigya_conf->get('gigya.gigya_application_key');
+      $auth_mode = $gigya_conf->get('gigya.gigya_auth_mode');
+      $auth_key = $helper->decrypt(($auth_mode === 'user_rsa') ? $gigya_conf->get('gigya.gigya_rsa_private_key') : $gigya_conf->get('gigya.gigya_application_secret_key'));
+
+      if ($request == NULL) {
+        $request = Drupal::request();
+      }
+
+      $token = $this->getGigyaLoginToken($request);
+      $session_expiration = 0;
+
+      if (!empty($token)) {
+        if ($auth_mode === 'user_rsa') {
+          $session_sig = $this->calculateUBCSessionSignatureJwtSigned($token, $session_expiration, $app_key, $auth_key);
+        }
+        else {
+          $session_sig = $this->getDynamicSessionSignatureUserSigned($token, $session_expiration, $app_key, $auth_key);
+        }
+
+        setrawcookie('gig_ubc_' . $api_key, rawurlencode($session_sig), 0, '/', $request->getHost(), $request->isSecure());
+      }
+    }
+
+    return new AjaxResponse();
+  }
+
+  protected function calculateUBCSessionSignatureJwtSigned(string $loginToken, int $expiration, string $applicationKey, string $privateKey) {
+    $payload = [
+      'sub' => $loginToken,
+      'iat' => time(),
+      'exp' => $expiration,
+      'aud' => 'gigdubc',
+    ];
+
+    return JWT::encode($payload, $privateKey, 'RS256', $applicationKey);
+
+  }
+
 }

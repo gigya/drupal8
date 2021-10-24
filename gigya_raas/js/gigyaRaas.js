@@ -173,16 +173,37 @@ var getUrlPrefix = function () {
 		myAjaxObject.execute();
     };
 
+  var validateSessionAndCreateUbcCookie = function (response) {
+    if (response['errorCode'] == 0) {
+      var gigyaData = {};
+      var ajaxSettings = {
+        url: getUrlPrefix() + 'gigya/raas-create-ubc-cookie',
+        submit: {gigyaData: gigyaData}
+      };
+      console.log("url: " + getUrlPrefix() + 'gigya/raas-init-raas');
+
+      var myAjaxObject = Drupal.ajax(ajaxSettings);
+      myAjaxObject.execute();
+
+    } else {
+      gigya.accounts.logout();
+    }
+  }
 	/**
 	 * @property gigya.accounts.showScreenSet
 	 * @property drupalSettings.gigya.enableRaaS
 	 * @property drupalSettings.gigya.raas
 	 * @property drupalSettings.gigya.raas.login
-	 */
-    var initRaaS = function () {
-        if (drupalSettings.gigya.enableRaaS) {
-        	var id;
-            $('.gigya-raas-login').once('gigya-raas').click(function (e) {
+   * @property drupalSettings.gigya.should_do_get_account_info_call
+   */
+  var initRaaS = function () {
+    if (drupalSettings.gigya.enableRaaS) {
+      var id;
+      if (drupalSettings.gigya.should_do_get_account_info_call) {
+        gigya.accounts.getAccountInfo({callback: validateSessionAndCreateUbcCookie});
+      }
+
+      $('.gigya-raas-login').once('gigya-raas').click(function (e) {
                 e.preventDefault();
                 gigya.accounts.showScreenSet(drupalSettings.gigya.raas.login);
                 drupalSettings.gigya.raas.linkId = $(this).attr('id');
@@ -219,7 +240,6 @@ var getUrlPrefix = function () {
             }
         }
     };
-
 	/**
 	 * @property gigya.accounts.showScreenSet
 	 * @property drupalSettings.gigya.raas.customScreenSets

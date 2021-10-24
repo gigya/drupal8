@@ -137,20 +137,28 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 		}
 	}
 
-	public function handleUntilBrowserCloseSession() {
 
-		$current_user = Drupal::currentUser();
+  public function handleUntilBrowserCloseSession() {
 
-		if ($current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas')) {
-			$request = Drupal::request();
-			$gigya_conf = Drupal::config('gigya.settings');
-			$api_key = $gigya_conf->get('gigya.gigya_api_key');
-			$glt_cookie = $request->cookies->get('glt_' . $api_key);
+    $current_user = Drupal::currentUser();
+    $need_to_make_the_call = FALSE;
+    if ($current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas')) {
 
-			if (empty($glt_cookie)) {
-				user_logout();
-			}
-		}
-	}
+      $gigya_conf = Drupal::config('gigya.settings');
+      $api_key = $gigya_conf->get('gigya.gigya_api_key');
+      $gigdubc_coockie = Drupal::request()->cookies->get('gigdubc_' . $api_key);
+      $glt_cookie = Drupal::request()->cookies->get('glt_' . $api_key);
+      if (!empty($glt_cookie) && empty($gigdubc_cookie)) {
+        $need_to_make_the_call = TRUE;
+        //need to complete? here we need to verify if session exists in gigya.
+      }
+      else {
+        if (empty($glt_cookie)) {
+          user_logout();
+        }
+      }
+
+    }
+  }
 
 }

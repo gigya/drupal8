@@ -108,7 +108,7 @@ class DsQueryObject {
       $term = '"' . trim($term, '"') . '"';
     }
     );
-    $ins = join(', ', $terms);
+    $ins = implode(', ', $terms);
     $in = " in($ins)";
     if ("or" == $andOr) {
       $this->ors[] = $this->prefixField($filed) . $in;
@@ -390,7 +390,7 @@ class DsQueryObject {
     foreach ($this->fields as $field) {
       $queryFields[] = $this->prefixField($field);
     }
-    return join(", ", $queryFields);
+    return implode(", ", $queryFields);
   }
 
   private function prefixField($field) {
@@ -421,7 +421,7 @@ class DsQueryObject {
   private function buildFieldsStringForGet() {
     return in_array("*", $this->fields)
       ? "*"
-      : join(
+      : implode(
         ",", $this->fields
       );
 
@@ -445,7 +445,7 @@ class DsQueryObject {
       else {
         $q .= " AND ";
       }
-      $ands = join(" AND ", $this->ands);
+      $ands = implode(" AND ", $this->ands);
       $q .= $ands;
     }
     if (!empty($this->ors)) {
@@ -455,7 +455,7 @@ class DsQueryObject {
       else {
         $q .= " OR ";
       }
-      $ors = join(" OR ", $this->ors);
+      $ors = implode(" OR ", $this->ors);
       $q .= $ors;
     }
     $this->query = $q;

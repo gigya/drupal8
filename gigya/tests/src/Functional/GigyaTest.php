@@ -1,10 +1,5 @@
 <?php
 
-	/**
-	 * @file
-	 * Contains \Drupal\Tests\gigya\Functional\GigyaTest.
-	 */
-
 	namespace Drupal\Tests\gigya\Functional;
 
 	use Drupal;

@@ -279,7 +279,7 @@
 							}
 
 							$user = User::create(
-								array('name' => $username, 'pass' => Drupal::service('password_generator')->generate(32), 'status' => 1, 'mail' => $email)
+								array('name' => $username, 'pass' => Drupal::hasService('password_generator') ? Drupal::service('password_generator')->generate(32) : user_password(), 'status' => 1, 'mail' => $email)
 							);
 							$user->save();
 							$this->helper->processFieldMapping($gigyaUser, $user);

@@ -12,7 +12,6 @@ use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Drupal;
 
-
 class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 
 	/**
@@ -44,22 +43,22 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 		}
 
 		/* User is logged in through Gigya */
-		if ($uid and !$current_user->hasPermission('bypass gigya raas')) {
-			$session_type = ($is_remember_me) ? 'remember_me' : 'regular';
-			$session_params = GigyaRaasHelper::getSessionConfig($session_type);
-			switch ($session_params['type']) {
-				case 'dynamic':
-					$this->handleDynamicSession($session_params, $gigya_raas_session, $uid);
-					break;
-				case 'until_browser_close':
-					$this->handleUntilBrowserCloseSession();
-					break;
-				case 'fixed':
-				case 'forever':
-				default:
-					$this->handleFixedSession($gigya_raas_session, $drupal_session, $uid);
-					break;
-			};
+    if ($uid and !$current_user->hasPermission('bypass gigya raas')) {
+      $session_type = ($is_remember_me) ? 'remember_me' : 'regular';
+      $session_params = GigyaRaasHelper::getSessionConfig($session_type);
+      switch ($session_params['type']) {
+        case 'dynamic':
+          $this->handleDynamicSession($session_params, $gigya_raas_session, $uid);
+          break;
+        case 'until_browser_close':
+          $this->handleUntilBrowserCloseSession();
+          break;
+        case 'fixed':
+        case 'forever':
+        default:
+          $this->handleFixedSession($gigya_raas_session, $drupal_session, $uid);
+          break;
+      };
 		}
 	}
 
@@ -99,7 +98,6 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 	 * @param int $uid
 	 */
 	public function handleFixedSession($gigya_raas_session, $drupal_session, $uid) {
-
 		$cached_session_expiration = $gigya_raas_session->get('session_expiration');
 		$session_expiration = NULL;
 
@@ -137,7 +135,6 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 		}
 	}
 
-
   public function handleUntilBrowserCloseSession() {
 
     $current_user = Drupal::currentUser();
@@ -146,9 +143,9 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 
       $gigya_conf = Drupal::config('gigya.settings');
       $api_key = $gigya_conf->get('gigya.gigya_api_key');
-      $gigdubc_coockie = Drupal::request()->cookies->get('gigdubc_' . $api_key);
+      $gigya_ubc_cookie = Drupal::request()->cookies->get('gigdubc_' . $api_key);
       $glt_cookie = Drupal::request()->cookies->get('glt_' . $api_key);
-      if (!empty($glt_cookie) && empty($gigdubc_cookie)) {
+      if (!empty($glt_cookie) && empty($gigya_ubc_cookie)) {
         $need_to_make_the_call = TRUE;
         //need to complete? here we need to verify if session exists in gigya.
       }
@@ -157,7 +154,6 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
           user_logout();
         }
       }
-
     }
   }
 

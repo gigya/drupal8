@@ -194,12 +194,12 @@ var getUrlPrefix = function () {
 	 * @property drupalSettings.gigya.enableRaaS
 	 * @property drupalSettings.gigya.raas
 	 * @property drupalSettings.gigya.raas.login
-   * @property drupalSettings.gigya.should_do_get_account_info_call
+   * @property drupalSettings.gigya.should_validate_session
    */
   var initRaaS = function () {
     if (drupalSettings.gigya.enableRaaS) {
       var id;
-      if (drupalSettings.gigya.should_do_get_account_info_call) {
+      if (drupalSettings.gigya.should_validate_session) {
         gigya.accounts.getAccountInfo({callback: validateSessionAndCreateUbcCookie});
       }
 

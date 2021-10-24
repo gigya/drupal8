@@ -33,29 +33,29 @@ function gigya_raas_page_attachments(array &$attachments) {
 			$session_time = Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
 			$remember_me_session_time = Drupal::config('gigya_raas.settings')->get('gigya_raas.remember_me_session_time');
 			$attachments['#attached']['drupalSettings']['gigyaExtra']['session_time'] = $session_time;
-			$attachments['#attached']['drupalSettings']['gigyaExtra']['remember_me_session_time'] = $remember_me_session_time;
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['remember_me_session_time'] = $remember_me_session_time;
 
-			/* Get sessionExpiration from Raas settings and set globalParameters with the value */
-			switch ($session_type) {
-				case "dynamic":
-					$expiration = -1;
-					break;
-				case  "forever":
-					$expiration = -2;
-					break;
-				case  "until_browser_close":
-					$expiration = 0;
-					break;
-				case  "fixed":
-				default:
-					$expiration = $session_time;
-					break;
-			}
+      /* Get sessionExpiration from Raas settings and set globalParameters with the value */
+      switch ($session_type) {
+        case "dynamic":
+          $expiration = -1;
+          break;
+        case  "forever":
+          $expiration = -2;
+          break;
+        case  "until_browser_close":
+          $expiration = 0;
+          break;
+        case  "fixed":
+        default:
+          $expiration = $session_time;
+          break;
+      }
 
-			$global_params = Drupal::config('gigya.global')->get('gigya.globalParameters');
-			$global_params['sessionExpiration'] = $expiration;
-			$global_params['rememberSessionExpiration'] = $remember_me_session_time;
-			$attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
+      $global_params = Drupal::config('gigya.global')->get('gigya.globalParameters');
+      $global_params['sessionExpiration'] = $expiration;
+      $global_params['rememberSessionExpiration'] = $remember_me_session_time;
+      $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
 
 			$default_login_screenset = 'Default-RegistrationLogin';
 			$default_profile_screenset = 'Default-ProfileUpdate';
@@ -288,17 +288,14 @@ function gigya_raas_mail($key, &$message, $params) {
 }
 
 function gigya_preprocess_page(&$variables) {
-  //Add a JS library
 
-  $variables['#attached']['library'][]  = 'gigya_raas/gigyaRaas';
-  // pass variable to Drupal.Settings
-  $variables['#attached']['drupalSettings']['gigya']['should_do_get_account_info_call'] = isCallGetAccountInfoNeeded();
+  $variables['#attached']['drupalSettings']['gigya']['should_validate_session'] = isValidateSessionViaGigyaNeeded();
 }
 
 /**
  * @return bool
  */
-function isCallGetAccountInfoNeeded(): bool {
+function isValidateSessionViaGigyaNeeded(): bool {
 
   $current_user = Drupal::currentUser();
   $need_to_make_the_call = FALSE;
@@ -310,10 +307,10 @@ function isCallGetAccountInfoNeeded(): bool {
 
       $gigya_conf = Drupal::config('gigya.settings');
       $api_key = $gigya_conf->get('gigya.gigya_api_key');
-      $gigdubc_cookie = Drupal::request()->cookies->get('gigdubc_' . $api_key);
+      $gigya_ubc_cookie = Drupal::request()->cookies->get('gig_ubc_' . $api_key);
       $glt_cookie = Drupal::request()->cookies->get('glt_' . $api_key);
 
-      if (!empty($glt_cookie) && empty($gigdubc_cookie)) {
+      if (!empty($glt_cookie) && empty($gigya_ubc_cookie)) {
         $need_to_make_the_call = TRUE;
       }
       else {

@@ -556,7 +556,7 @@
             $session_sig = $this->getDynamicSessionSignatureUserSigned($token, $session_expiration, $app_key, $auth_key);
           }
 
-          setrawcookie('gig_ubc_' . $api_key, rawurlencode($session_sig), 0, '/', $request->getHost(), $request->isSecure());
+          setrawcookie('gubc_' . $api_key, rawurlencode($session_sig), 0, '/', $request->getHost(), $request->isSecure());
         }
       }
 

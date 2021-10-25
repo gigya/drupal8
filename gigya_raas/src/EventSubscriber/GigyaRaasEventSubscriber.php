@@ -137,23 +137,11 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 
   public function handleUntilBrowserCloseSession() {
 
-    $current_user = Drupal::currentUser();
-    $need_to_make_the_call = FALSE;
-    if ($current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas')) {
+    $gigya_raas_helper = new GigyaRaasHelper();
+    $validation_result = $gigya_raas_helper->validateUBCCookie();
 
-      $gigya_conf = Drupal::config('gigya.settings');
-      $api_key = $gigya_conf->get('gigya.gigya_api_key');
-      $gigya_ubc_cookie = Drupal::request()->cookies->get('gigdubc_' . $api_key);
-      $glt_cookie = Drupal::request()->cookies->get('glt_' . $api_key);
-      if (!empty($glt_cookie) && empty($gigya_ubc_cookie)) {
-        $need_to_make_the_call = TRUE;
-        //need to complete? here we need to verify if session exists in gigya.
-      }
-      else {
-        if (empty($glt_cookie)) {
-          user_logout();
-        }
-      }
+    if ($validation_result['errorCode'] == 2 or $validation_result['errorCode'] == 3) {
+      user_logout();
     }
   }
 

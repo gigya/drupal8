@@ -280,4 +280,49 @@ class GigyaRaasHelper {
 			$email_body,
 			$to);
 	}
+
+  /**
+   * @return array that contain error code key and error case key
+   */
+
+  public function validateUBCCookie() {
+
+    $compare_option_results = [
+      0 => ['errorCode' => 0, 'error case' => 'valid'],
+      1 => ['errorCode' => 2, 'error case' => 'empty ubc but not empty glt'],
+      2 => ['errorCode' => 1, 'error case' => 'empty glt but not ubc'],
+      3 => ['errorCode' => 3, 'error case' => 'both empty'],
+    ];
+    $result = $compare_option_results[0];
+    $current_user = Drupal::currentUser();
+
+    if ('until_browser_close' === Drupal::config('gigya_raas.settings')
+        ->get('gigya_raas.session_type') && $current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas')) {
+
+
+      $gigya_conf = Drupal::config('gigya.settings');
+      $api_key = $gigya_conf->get('gigya.gigya_api_key');
+      $gigya_ubc_cookie = Drupal::request()->cookies->get('gubc_' . $api_key);
+      $glt_cookie = Drupal::request()->cookies->get('glt_' . $api_key);
+
+      if (!empty($glt_cookie) && empty($gigya_ubc_cookie)) {
+        $result = $compare_option_results[2];
+      }
+      else {
+        if (empty($glt_cookie)) {
+          if (empty($gigya_ubc_cookie)) {
+            $result = $compare_option_results[3];
+          }
+          else {
+            $result = $compare_option_results[2];
+          }
+          //In any case that user doesn't have 'glt' cookie he will logged out automatically.
+          user_logout();
+        }
+      }
+    }
+
+    return $result;
+  }
+
 }

@@ -288,10 +288,11 @@ class GigyaRaasHelper {
   public function validateUBCCookie() {
 
     $compare_option_results = [
-      0 => ['errorCode' => 0, 'error case' => 'valid'],
-      1 => ['errorCode' => 2, 'error case' => 'empty ubc but not empty glt'],
-      2 => ['errorCode' => 1, 'error case' => 'empty glt but not ubc'],
-      3 => ['errorCode' => 3, 'error case' => 'both empty'],
+      0 => ['errorCode' => 0, 'errorMessage' => 'valid session.'],
+      1 => ['errorCode' => 1, 'errorMessage' => "There was an error validate the session, the gubc cookie wasn't exists. This session will validate via gigya."],
+      2 => ['errorCode' => 2, 'errorMessage' => "There was an error validate the session, the glt cookie wasn't exists. This session is closing."],
+      3 => ['errorCode' => 3, 'errorMessage' => "gubc cookie and glt cookie were empty"],
+      4 => ['errorCode' => 4, 'errorMessage' => "There was an error validate the session, the gubc cookie wasn't compatible with glt cookie. This session is closing."],
     ];
     $result = $compare_option_results[0];
     $current_user = Drupal::currentUser();
@@ -305,12 +306,38 @@ class GigyaRaasHelper {
       $gigya_ubc_cookie = Drupal::request()->cookies->get('gubc_' . $api_key);
       $glt_cookie = Drupal::request()->cookies->get('glt_' . $api_key);
 
-      if (!empty($glt_cookie) && empty($gigya_ubc_cookie)) {
-        $result = $compare_option_results[2];
-      }
-      else {
-        if (empty($glt_cookie)) {
+      /*Do if there is glt cookie*/
+      if (!empty($glt_cookie)) {
+        $glt_token = explode('|', $glt_cookie)[0];
+
+        /*Do if there is ubc cookie*/
+        if (!empty($gigya_ubc_cookie)) {
+          $gubc_token = explode('|', $gigya_ubc_cookie)[0];
+
+          /*if both  cookies got the same value, the session is valid. otherwise, there was something malicious so do logout*/
+          if (!empty($glt_token) and !empty($gubc_token)) {
+
+            if ($glt_token !== $gubc_token) {
+
+              user_logout();
+              $result = $compare_option_results[4];
+              Drupal::logger("gigya_raas")->debug($result['errorMessage']);
+            }
+            /*Do while at least one of the cookie is empty*/
+          }else {
+            user_logout();
+            $result = $compare_option_results[4];
+            Drupal::logger("gigya_raas")->debug($result['errorMessage']);
+          }
+          /*Do if there is no ubc cookie*/
+        }else {
+            $result = $compare_option_results[1];
+            Drupal::logger("gigya_raas")->debug($result['errorMessage']);
+          }
+        /*do if glt cookie is empty*/
+      }else {
           if (empty($gigya_ubc_cookie)) {
+
             $result = $compare_option_results[3];
           }
           else {
@@ -318,7 +345,6 @@ class GigyaRaasHelper {
           }
           //In any case that user doesn't have 'glt' cookie he will logged out automatically.
           user_logout();
-        }
       }
     }
 

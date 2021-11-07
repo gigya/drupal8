@@ -67,7 +67,6 @@ var getUrlPrefix = function () {
 	jQuery.fn.logoutRedirect = function (redirectTarget) {
 		if (!redirectTarget.startsWith('http'))
 			redirectTarget = window.location.origin + drupalSettings.path.baseUrl + redirectTarget;
-
 		document.location = redirectTarget;
 	};
 
@@ -175,12 +174,18 @@ var getUrlPrefix = function () {
 
   var validateSessionAndCreateUbcCookie = function (response) {
     if (response['errorCode'] == 0) {
-      var gigyaData = {};
-      var ajaxSettings = {
-        url: getUrlPrefix() + 'gigya/raas-create-ubc-cookie',
-        submit: {gigyaData: gigyaData}
+      var data = {
+        "uid": response.UID,
+        "uid_sig": response.UIDSignature,
+        "sig_timestamp": response.signatureTimestamp,
+        "id_token": response.id_token,
+        "is_session_validation_process": true
       };
-      console.log("url: " + getUrlPrefix() + 'gigya/raas-init-raas');
+
+      var ajaxSettings = {
+        url: getUrlPrefix() + 'gigya/raas-login',
+        submit: data
+      };
 
       var myAjaxObject = Drupal.ajax(ajaxSettings);
       myAjaxObject.execute();
@@ -194,13 +199,13 @@ var getUrlPrefix = function () {
 	 * @property drupalSettings.gigya.enableRaaS
 	 * @property drupalSettings.gigya.raas
 	 * @property drupalSettings.gigya.raas.login
-   * @property drupalSettings.gigya.should_validate_session
+   * @property drupalSettings.gigya.shouldValidateSession
    */
   var initRaaS = function () {
     if (drupalSettings.gigya.enableRaaS) {
       var id;
-      if (drupalSettings.gigya.should_validate_session) {
-        gigya.accounts.getAccountInfo({callback: validateSessionAndCreateUbcCookie});
+      if (drupalSettings.gigya.shouldValidateSession) {
+        gigya.accounts.getAccountInfo({include:'id_toke'},{callback: validateSessionAndCreateUbcCookie});
       }
 
       $('.gigya-raas-login').once('gigya-raas').click(function (e) {

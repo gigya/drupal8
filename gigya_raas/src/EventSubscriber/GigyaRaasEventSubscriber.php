@@ -104,7 +104,6 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 		/* Session expiration is "cached" to reduce DB requests. It can only be empty under "fixed session" */
 		if (empty($cached_session_expiration)) {
 			$error_message = 'Gigya session information could not be retrieved from the database. It is likely that the Gigya RaaS module has not been installed correctly. Please attempt to reinstall it. Attempted to retrieve details for user ID: ' . $uid;
-
 			try {
 				$session_expiration_row = Database::getConnection()->query('SELECT expiration, is_remember_me FROM {sessions} s WHERE s.uid = :uid AND s.sid = :sid', [
 					':uid' => $uid,
@@ -140,7 +139,7 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
     $gigya_raas_helper = new GigyaRaasHelper();
     $validation_result = $gigya_raas_helper->validateUBCCookie();
 
-    if ($validation_result['errorCode'] == 2 or $validation_result['errorCode'] == 3) {
+    if ($validation_result['errorCode'] == 2 or $validation_result['errorCode'] == 3 or $validation_result['errorCode'] == 4) {
       user_logout();
     }
   }

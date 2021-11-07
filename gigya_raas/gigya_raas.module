@@ -289,14 +289,11 @@ function gigya_raas_mail($key, &$message, $params) {
 
 function gigya_preprocess_page(&$variables) {
 
-  $should_validate_session = FALSE;
   $gigya_raas_helper = new GigyaRaasHelper();
   $validation_result = $gigya_raas_helper->validateUBCCookie();
 
-  if ($validation_result['errorCode'] === 1) {
-    $should_validate_session = TRUE;
-  }
-  $variables['#attached']['drupalSettings']['gigya']['should_validate_session'] = $should_validate_session;
+
+  $variables['#attached']['drupalSettings']['gigya']['shouldValidateSession'] = ($validation_result['errorCode'] === 1);
 }
 
 

@@ -205,7 +205,7 @@ var getUrlPrefix = function () {
     if (drupalSettings.gigya.enableRaaS) {
       var id;
       if (drupalSettings.gigya.shouldValidateSession) {
-        gigya.accounts.getAccountInfo({include:'id_toke'},{callback: validateSessionAndCreateUbcCookie});
+        gigya.accounts.getAccountInfo({include:'id_token'},{callback: validateSessionAndCreateUbcCookie});
       }
 
       $('.gigya-raas-login').once('gigya-raas').click(function (e) {

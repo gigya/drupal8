@@ -328,16 +328,19 @@
                 }
               } catch (Exception $e) {
                 if ($is_session_validation_process) {
-                  $logger_message = ['type'=>'gigya_raas', 'message'=>'can not save the user.'];
+                  $logger_message = ['type' => 'gigya_raas', 'message' => 'can not save the user.'];
                   $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
-
-                }else {
-                  $logger_message = ['type'=>'gigya_raas', 'message'=>'User with username: ' . $username . ' could not log in after registration. Exception: ' . $e->getMessage()];
+                }
+                else {
+                  $logger_message = [
+                    'type' => 'gigya_raas',
+                    'message' => 'User with username: ' . $username . ' could not log in after registration. Exception: ' . $e->getMessage(),
+                  ];
                   $err_msg = $this->t(
                     "Oops! Something went wrong during your registration process. You are registered to the site but not logged-in. Please try to login again."
                   );
                   session_destroy();
-                  $this->noticeUserAndAdminByLoginIssue($response,$logger_message, $err_msg);
+                  $this->noticeUserAndAdminByLoginIssue($response, $logger_message, $err_msg);
                   $this->gigya_helper->saveUserLogoutCookie();
 
                   /* Post-logout redirect hook */
@@ -345,21 +348,24 @@
                   $response->addCommand(new InvokeCommand(NULL, 'logoutRedirect', [$logout_redirect]));
                 }
               }
-            }else{ /* Validation flow – user had already been validated, but suddenly isn't found in Drupal – possibly deleted */
-              $logger_message = ['type'=>'gigya_raas', 'message'=>'User had already been validate, probably this user was deleted.'];
+            }
+            else { /* Validation flow – user had already been validated, but suddenly isn't found in Drupal – possibly deleted */
+              $logger_message = ['type' => 'gigya_raas', 'message' => 'User had already been validate, probably this user was deleted.'];
               $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
             }
           }
-        }else { /* No valid Gigya user found */
-          if(!$is_session_validation_process) {
+        }
+        else { /* No valid Gigya user found */
+          if (!$is_session_validation_process) {
             $this->gigya_helper->saveUserLogoutCookie();
-            $logger_message = ['type'=>'gigya_raas','message'=>'Invalid user. Guid: ' . $guid];
+            $logger_message = ['type' => 'gigya_raas', 'message' => 'Invalid user. Guid: ' . $guid];
             $err_msg = $this->t(
               "Oops! Something went wrong during your login/registration process. Please try to login/register again."
             );
-            $this->noticeUserAndAdminByLoginIssue($response,$logger_message, $err_msg);
-          }else{
-            $logger_message = ['type'=>'gigya_raas','message'=>'Invalid user try to get session.'];
+            $this->noticeUserAndAdminByLoginIssue($response, $logger_message, $err_msg);
+          }
+          else {
+            $logger_message = ['type' => 'gigya_raas', 'message' => 'Invalid user try to get session.'];
             $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
           }
         }
@@ -564,7 +570,7 @@
      *
      * @return \Drupal\Core\Ajax\AjaxResponse
      */
-    public function gigyaRaasCreateUBCCookie(Request $request = NULL, $login = FALSE) {
+    public function gigyaRaasCreateUBCCookie(Request $request = NULL, $login = FALSE): AjaxResponse {
 
       if ('until_browser_close' === Drupal::config('gigya_raas.settings')
           ->get('gigya_raas.session_type')) {
@@ -580,34 +586,23 @@
 
         if (!empty($token)) {
 
-          setrawcookie('gubc_' . $api_key,$token , 0, '/', $request->getHost(), $request->isSecure(), TRUE);
+          setrawcookie('gubc_' . $api_key, $token, 0, '/', $request->getHost(), $request->isSecure(), TRUE);
         }
       }
 
       return new AjaxResponse();
     }
 
-    protected function calculateUBCSessionSignatureJwtSigned(string $loginToken, int $expiration, string $applicationKey, string $privateKey) {
-      $payload = [
-        'sub' => $loginToken,
-        'iat' => time(),
-        'exp' => intval($expiration),
-      ];
 
-      return JWT::encode($payload, $privateKey, 'RS256', $applicationKey);
-
-    }
-
-
-    protected function noticeUserAndAdminByLoginIssue($response,$logger_message ,$err_msg) {
+    protected function noticeUserAndAdminByLoginIssue($response, $logger_message, $err_msg) {
 
 
       Drupal::logger($logger_message['type'])->notice($logger_message['message']);
       $response->addCommand(new AlertCommand($err_msg));
 
     }
-    protected function writeErrorValidationMessageToLoggerAndLogout($logger_message)
-    {
+
+    protected function writeErrorValidationMessageToLoggerAndLogout($logger_message) {
       Drupal::logger($logger_message['type'])->warning($logger_message['message']);
       user_logout();
     }

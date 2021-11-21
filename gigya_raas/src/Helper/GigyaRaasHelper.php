@@ -288,11 +288,11 @@ class GigyaRaasHelper {
   public function validateUBCCookie() {
 
     $compare_option_results = [
-      0 => ['errorCode' => 0, 'errorMessage' => 'valid session.'],
-      1 => ['errorCode' => 1, 'errorMessage' => "There was an error validate the session, the gubc cookie wasn't exists. This session will validate via gigya."],
-      2 => ['errorCode' => 2, 'errorMessage' => "There was an error validate the session, the glt cookie wasn't exists. This session is closing."],
-      3 => ['errorCode' => 3, 'errorMessage' => "gubc cookie and glt cookie were empty"],
-      4 => ['errorCode' => 4, 'errorMessage' => "There was an error validate the session, the gubc cookie wasn't compatible with glt cookie. This session is closing."],
+      0 => ['errorCode' => 0, 'errorMessage' => "Valid session"],
+      1 => ['errorCode' => 1, 'errorMessage' => "There was an error validating the session, the gubc cookie didn't exist. This session will validate via Gigya"],
+      2 => ['errorCode' => 2, 'errorMessage' => "There was an error validating the session, the glt cookie didn't exist. This session is closing"],
+      3 => ['errorCode' => 3, 'errorMessage' => "The gubc cookie and the glt cookie were empty"],
+      4 => ['errorCode' => 4, 'errorMessage' => "There was an error validating the session, the gubc cookie wasn't compatible with glt cookie. This session is closing"],
     ];
     $result = $compare_option_results[0];
     $current_user = Drupal::currentUser();

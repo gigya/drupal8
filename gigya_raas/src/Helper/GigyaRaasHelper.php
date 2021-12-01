@@ -56,6 +56,9 @@ class GigyaRaasHelper {
 				? $this->gigya_helper->getGigyaApiHelper()->validateJwtAuth($uid, $signature, NULL, NULL, $params)
 				: $this->gigya_helper->getGigyaApiHelper()->validateUid($uid, $signature, $sig_timestamp, NULL, NULL, $params);
 		} catch (GSApiException $e) {
+			if($e->getErrorCode()=='403007') {
+				Drupal::logger('gigya')->error("Please check your application key permissions on Gigya console, error code: @errorCode", array('@errorCode' => $e->getErrorCode()));
+			}
 			Drupal::logger('gigya')->error("Gigya API call error: @error, Call ID: @callId", array('@callId' => $e->getCallId(), '@error' => $e->getMessage()));
 			return false;
 		}

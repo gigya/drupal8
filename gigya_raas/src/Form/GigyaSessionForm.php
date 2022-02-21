@@ -86,11 +86,26 @@ class GigyaSessionForm extends ConfigFormBase {
 			'#tag' => 'hr',
 		);
 
+    $form['login_redirect_mode'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Post login redirect'),
+      '#options' => array(
+        'current' => $this->t('Current path'),
+        'custom' => $this->t('Custom path'),
+      ),
+      '#default_value' => $config->get('gigya_raas.login_redirect_mode'),
+    );
+
 		$form['login_redirect'] = array(
 			'#type'          => 'textfield',
 			'#title'         => $this->t('Post login redirect URL'),
 			'#description'   => $this->t('A relative URI path or full URL to redirect the user after a successful login.'),
 			'#default_value' => $config->get('gigya_raas.login_redirect'),
+      '#states'      => [
+        'visible' => [
+          ':input[name="login_redirect_mode"]' => ['value' => 'custom'],
+        ],
+      ],
 		);
 		$form['logout_redirect'] = array(
 			'#type'          => 'textfield',
@@ -128,6 +143,7 @@ class GigyaSessionForm extends ConfigFormBase {
 		$config->set('gigya_raas.remember_me_session_time', $this->getValue($form_state, 'remember_me_session_time'));
 		$config->set('gigya_raas.login_redirect', $this->getValue($form_state, 'login_redirect'));
 		$config->set('gigya_raas.logout_redirect', $this->getValue($form_state, 'logout_redirect'));
+    $config->set('gigya_raas.login_redirect_mode', $this->getValue($form_state, 'login_redirect_mode'));
 		$config->save();
 
 		parent::submitForm($form, $form_state);

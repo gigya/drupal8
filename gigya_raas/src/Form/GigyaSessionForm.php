@@ -85,7 +85,6 @@ class GigyaSessionForm extends ConfigFormBase {
 			'#type' => 'html_tag',
 			'#tag' => 'hr',
 		);
-
 		$form['login_redirect_mode'] = array(
 		  '#type' => 'select',
 		  '#title' => $this->t('Post login redirect'),

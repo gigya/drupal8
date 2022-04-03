@@ -55,21 +55,26 @@ var getUrlPrefix = function () {
 		 *   browsers that do not support 3rd party cookies)
 		 */
 
-		if (!redirectTarget.startsWith('http'))
-			redirectTarget = window.location.origin + drupalSettings.path.baseUrl + redirectTarget;
+    if (!redirectTarget.startsWith('http')) {
 
-		if (typeof sendSetSSOToken === 'undefined' || sendSetSSOToken === false)
-			location.replace(redirectTarget);
-		else if (sendSetSSOToken === true)
-			gigya.setSSOToken({redirectURL: redirectTarget});
-	};
+      /* If Drupal is located in a subfolder */
+      if (redirectTarget.startsWith(drupalSettings.path.baseUrl)) {
+        redirectTarget = redirectTarget.substring(drupalSettings.path.baseUrl.length);
+      }
 
-	jQuery.fn.logoutRedirect = function (redirectTarget) {
-		if (!redirectTarget.startsWith('http'))
-			redirectTarget = window.location.origin + drupalSettings.path.baseUrl + redirectTarget;
+      redirectTarget = drupalSettings.gigya.raas.origin + drupalSettings.path.baseUrl + redirectTarget;
+    }
+    if (typeof sendSetSSOToken === 'undefined' || sendSetSSOToken === false)
+      location.replace(redirectTarget);
+    else if (sendSetSSOToken === true)
+      gigya.setSSOToken({redirectURL: redirectTarget});
+  };
 
-		document.location = redirectTarget;
-	};
+  jQuery.fn.logoutRedirect = function (redirectTarget) {
+    if (!redirectTarget.startsWith('http'))
+      redirectTarget = drupalSettings.gigya.raas.origin + drupalSettings.path.baseUrl + redirectTarget;
+    document.location = redirectTarget;
+  };
 
 	/**
 	 * @property drupalSettings.gigya.loginUIParams

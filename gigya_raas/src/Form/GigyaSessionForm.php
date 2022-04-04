@@ -101,11 +101,11 @@ class GigyaSessionForm extends ConfigFormBase {
 			'#title'         => $this->t('Post login redirect URL'),
 			'#description'   => $this->t('A relative URI path or full URL to redirect the user after a successful login.'),
 			'#default_value' => $config->get('gigya_raas.login_redirect'),
-      //'#states'      => [
-      //  'visible' => [
-      //    ':input[name="login_redirect_mode"]' => ['value' => 'custom'],
-      //  ],
-   //   ],
+      '#states'      => [
+        'visible' => [
+          ':input[name="login_redirect_mode"]' => ['value' => 'custom'],
+        ],
+      ],
 		);
 		$form['logout_redirect'] = array(
 			'#type'          => 'textfield',

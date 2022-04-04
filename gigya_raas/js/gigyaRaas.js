@@ -71,8 +71,12 @@ var getUrlPrefix = function () {
   };
 
   jQuery.fn.logoutRedirect = function (redirectTarget) {
-    if (!redirectTarget.startsWith('http'))
-      redirectTarget = drupalSettings.gigya.raas.origin + drupalSettings.path.baseUrl + redirectTarget;
+    /* If Drupal is located in a subfolder */
+    if (redirectTarget.startsWith(drupalSettings.path.baseUrl)) {
+      redirectTarget = redirectTarget.substring(drupalSettings.path.baseUrl.length);
+    }
+
+    redirectTarget = drupalSettings.gigya.raas.origin + drupalSettings.path.baseUrl + redirectTarget;
     document.location = redirectTarget;
   };
 

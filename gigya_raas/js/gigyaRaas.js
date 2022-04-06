@@ -57,7 +57,6 @@ var getUrlPrefix = function () {
 
     if (!redirectTarget.startsWith('http')) {
 
-      /* If Drupal is located in a subfolder */
       if (redirectTarget.startsWith(drupalSettings.path.baseUrl)) {
         redirectTarget = redirectTarget.substring(drupalSettings.path.baseUrl.length);
       }
@@ -71,7 +70,7 @@ var getUrlPrefix = function () {
   };
 
   jQuery.fn.logoutRedirect = function (redirectTarget) {
-    /* If Drupal is located in a subfolder */
+
     if (redirectTarget.startsWith(drupalSettings.path.baseUrl)) {
       redirectTarget = redirectTarget.substring(drupalSettings.path.baseUrl.length);
     }

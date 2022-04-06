@@ -109,30 +109,36 @@
       return $this->gigyaRaasProfileAjax($request);
     }
 
-    /**
-     * @param Request $request The incoming request object.
-     *
-     * @return bool|AjaxResponse    The Ajax response
-     *
-     * @throws Drupal\Core\Entity\EntityStorageException
-     */
-    public function gigyaRaasLoginAjax(Request $request) {
+		/**
+		 * @param Request $request      The incoming request object.
+		 *
+		 * @return bool|AjaxResponse    The Ajax response
+		 *
+		 * @throws Drupal\Core\Entity\EntityStorageException
+		 */
+		public function gigyaRaasLoginAjax(Request $request) {
       $is_session_validation_process = $request->get('is_session_validation_process');
 
       if (Drupal::currentUser()->isAnonymous() || $is_session_validation_process) {
 
-        global $raas_login;
-        $err_msg = FALSE;
-        $sig_timestamp = $request->get('sig_timestamp');
-        $guid = $request->get('uid');
-        $uid_sig = $request->get('uid_sig');
-        $id_token = $request->get('id_token');
+				global $raas_login;
+				$err_msg = FALSE;
+				$sig_timestamp = $request->get('sig_timestamp');
+				$guid = $request->get('uid');
+				$uid_sig = $request->get('uid_sig');
+				$id_token = $request->get('id_token');
+
         if (!$is_session_validation_process) {
           $session_type = ($request->get('remember') == 'true') ? 'remember_me' : 'regular';
         }
 
-        $login_redirect = Drupal::config('gigya_raas.settings')->get('gigya_raas.login_redirect');
-        $logout_redirect = Drupal::config('gigya_raas.settings')->get('gigya_raas.logout_redirect');
+        $login_redirect = \Drupal::config('gigya_raas.settings')->get('gigya_raas.login_redirect') ?: '/';
+
+        if ($destination = \Drupal::request()->query->get('destination')) {
+          $login_redirect = urldecode($destination);
+        }
+
+				$logout_redirect = Drupal::config('gigya_raas.settings')->get('gigya_raas.logout_redirect');
 
         $base_path = base_path();
         $redirect_path = ($base_path === '/') ? '/' : $base_path . '/';

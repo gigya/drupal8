@@ -55,20 +55,29 @@ var getUrlPrefix = function () {
 		 *   browsers that do not support 3rd party cookies)
 		 */
 
-		if (!redirectTarget.startsWith('http'))
-			redirectTarget = window.location.origin + drupalSettings.path.baseUrl + redirectTarget;
+    if (!redirectTarget.startsWith('http')) {
 
-		if (typeof sendSetSSOToken === 'undefined' || sendSetSSOToken === false)
-			location.replace(redirectTarget);
-		else if (sendSetSSOToken === true)
-			gigya.setSSOToken({redirectURL: redirectTarget});
-	};
+      if (redirectTarget.startsWith(drupalSettings.path.baseUrl)) {
+        redirectTarget = redirectTarget.substring(drupalSettings.path.baseUrl.length);
+      }
 
-	jQuery.fn.logoutRedirect = function (redirectTarget) {
-		if (!redirectTarget.startsWith('http'))
-			redirectTarget = window.location.origin + drupalSettings.path.baseUrl + redirectTarget;
-		document.location = redirectTarget;
-	};
+      redirectTarget = drupalSettings.gigya.raas.origin + drupalSettings.path.baseUrl + redirectTarget;
+    }
+    if (typeof sendSetSSOToken === 'undefined' || sendSetSSOToken === false)
+      location.replace(redirectTarget);
+    else if (sendSetSSOToken === true)
+      gigya.setSSOToken({redirectURL: redirectTarget});
+  };
+
+  jQuery.fn.logoutRedirect = function (redirectTarget) {
+
+    if (redirectTarget.startsWith(drupalSettings.path.baseUrl)) {
+      redirectTarget = redirectTarget.substring(drupalSettings.path.baseUrl.length);
+    }
+
+    redirectTarget = drupalSettings.gigya.raas.origin + drupalSettings.path.baseUrl + redirectTarget;
+    document.location = redirectTarget;
+  };
 
 	/**
 	 * @property drupalSettings.gigya.loginUIParams
@@ -112,6 +121,18 @@ var getUrlPrefix = function () {
 		gigya.setGroupContext({
 			"remember": remember
 		});
+
+    var url = drupalSettings.path.baseUrl + 'gigya/raas-login';
+    if (typeof drupalSettings.gigyaExtra != 'undefined' && typeof drupalSettings.gigyaExtra.loginRedirectMode != 'undefined' && drupalSettings.gigyaExtra.loginRedirectMode == 'current') {
+      url += '?destination=/' + drupalSettings.path.currentPath;
+      if (typeof drupalSettings.path.currentQuery == 'object') {
+        url += encodeURIComponent('?' + $.param(drupalSettings.path.currentQuery));
+      }
+    }
+    var ajaxSettings = {
+      url: url,
+      submit: data
+    };
 
 		var data = {
 			"uid": res.UID,

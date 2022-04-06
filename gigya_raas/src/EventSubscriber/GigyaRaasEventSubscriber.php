@@ -10,7 +10,6 @@ use Drupal\gigya_raas\Helper\GigyaRaasHelper;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Drupal;
 
 class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 
@@ -42,13 +41,13 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 			}
 		}
 
-		/* User is logged in through Gigya */
-    if ($uid and !$current_user->hasPermission('bypass gigya raas')) {
-      $session_type = ($is_remember_me) ? 'remember_me' : 'regular';
-      $session_params = GigyaRaasHelper::getSessionConfig($session_type);
-      switch ($session_params['type']) {
+    /* User is logged in through Gigya */
+    if ( $uid and ! $current_user->hasPermission( 'bypass gigya raas' ) ) {
+      $session_type   = ( $is_remember_me ) ? 'remember_me' : 'regular';
+      $session_params = GigyaRaasHelper::getSessionConfig( $session_type );
+      switch ( $session_params['type'] ) {
         case 'dynamic':
-          $this->handleDynamicSession($session_params, $gigya_raas_session, $uid);
+          $this->handleDynamicSession( $session_params, $gigya_raas_session, $uid );
           break;
         case 'until_browser_close':
           $this->handleUntilBrowserCloseSession();
@@ -56,11 +55,11 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
         case 'fixed':
         case 'forever':
         default:
-          $this->handleFixedSession($gigya_raas_session, $drupal_session, $uid);
+          $this->handleFixedSession( $gigya_raas_session, $drupal_session, $uid );
           break;
       };
-		}
-	}
+    }
+  }
 
 	/**
 	 * {@inheritdoc}
@@ -139,7 +138,7 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
     $gigya_raas_helper = new GigyaRaasHelper();
     $validation_result = $gigya_raas_helper->validateUBCCookie();
 
-    if ($validation_result['errorCode'] == 2 or $validation_result['errorCode'] == 3 or $validation_result['errorCode'] == 4) {
+    if ( $validation_result['errorCode'] == 2 or $validation_result['errorCode'] == 3 or $validation_result['errorCode'] == 4 ) {
       user_logout();
     }
   }

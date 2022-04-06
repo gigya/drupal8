@@ -37,12 +37,12 @@ function gigya_raas_page_attachments(array &$attachments) {
       $attachments['#attached']['drupalSettings']['gigyaExtra']['remember_me_session_time'] = $remember_me_session_time;
 
       /* Get sessionExpiration from Raas settings and set globalParameters with the value */
-      switch ($session_type) {
+      switch ( $session_type ) {
         case "dynamic":
-          $expiration = -1;
+          $expiration = - 1;
           break;
         case  "forever":
-          $expiration = -2;
+          $expiration = - 2;
           break;
         case  "until_browser_close":
           $expiration = 0;
@@ -128,9 +128,9 @@ function gigya_raas_page_attachments(array &$attachments) {
 				}
       }
       $attachments['#attached']['drupalSettings']['gigya']['raas']['customScreenSets'] = $custom_screensets;
-      $attachments['#attached']['drupalSettings']['gigya']['raas']['origin'] = Drupal::request()
-        ->getSchemeAndHttpHost();
-      $attachments['#attached']['library'][] = 'gigya_raas/gigyaRaas';
+      $attachments['#attached']['drupalSettings']['gigya']['raas']['origin']           = Drupal::request()
+                                                                                               ->getSchemeAndHttpHost();
+      $attachments['#attached']['library'][]                                           = 'gigya_raas/gigyaRaas';
     }
   }
 }
@@ -289,13 +289,13 @@ function gigya_raas_mail($key, &$message, $params) {
 	$message['body'][] = $params['message'];
 }
 
-function gigya_preprocess_page(&$variables) {
+function gigya_preprocess_page( &$variables ) {
 
   $gigya_raas_helper = new GigyaRaasHelper();
   $validation_result = $gigya_raas_helper->validateUBCCookie();
 
 
-  $variables['#attached']['drupalSettings']['gigya']['shouldValidateSession'] = ($validation_result['errorCode'] === 1);
+  $variables['#attached']['drupalSettings']['gigya']['shouldValidateSession'] = ( $validation_result['errorCode'] === 1 );
 }
 
 

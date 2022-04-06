@@ -276,10 +276,10 @@ class GigyaRaasHelper {
 		}
 
 		return $this->gigya_helper->sendEmail('Gigya cron job of type ' . $job_type . ' ' . $job_status . ' on website ' . Drupal::request()
-				->getHost(),
-			$email_body,
-			$to);
-	}
+        ->getHost(),
+      $email_body,
+      $to );
+  }
 
   /**
    * @return array that contain error code key and error case key
@@ -288,63 +288,70 @@ class GigyaRaasHelper {
   public function validateUBCCookie() {
 
     $compare_option_results = [
-      0 => ['errorCode' => 0, 'errorMessage' => "Valid session"],
-      1 => ['errorCode' => 1, 'errorMessage' => "There was an error validating the session, the gubc cookie didn't exist. This session will validate via Gigya"],
-      2 => ['errorCode' => 2, 'errorMessage' => "There was an error validating the session, the glt cookie didn't exist. This session is closing"],
-      3 => ['errorCode' => 3, 'errorMessage' => "The gubc cookie and the glt cookie were empty"],
-      4 => ['errorCode' => 4, 'errorMessage' => "There was an error validating the session, the gubc cookie wasn't compatible with glt cookie. This session is closing"],
+      0 => [ 'errorCode' => 0, 'errorMessage' => "Valid session" ],
+      1 => [ 'errorCode'    => 1,
+             'errorMessage' => "There was an error validating the session, the gubc cookie didn't exist. This session will validate via Gigya",
+      ],
+      2 => [ 'errorCode'    => 2,
+             'errorMessage' => "There was an error validating the session, the glt cookie didn't exist. This session is closing",
+      ],
+      3 => [ 'errorCode'    => 3,
+             'errorMessage' => "The gubc cookie and the glt cookie were empty",
+      ],
+      4 => [ 'errorCode'    => 4,
+             'errorMessage' => "There was an error validating the session, the gubc cookie wasn't compatible with glt cookie. This session is closing",
+      ],
     ];
-    $result = $compare_option_results[0];
-    $current_user = Drupal::currentUser();
+    $result                 = $compare_option_results[0];
+    $current_user           = Drupal::currentUser();
 
-    if ('until_browser_close' === Drupal::config('gigya_raas.settings')
-        ->get('gigya_raas.session_type') && $current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas')) {
+    if ( 'until_browser_close' === Drupal::config( 'gigya_raas.settings' )
+                                         ->get( 'gigya_raas.session_type' ) && $current_user->isAuthenticated() && ! $current_user->hasPermission( 'bypass gigya raas' ) ) {
 
 
-      $gigya_conf = Drupal::config('gigya.settings');
-      $api_key = $gigya_conf->get('gigya.gigya_api_key');
-      $gigya_ubc_cookie = Drupal::request()->cookies->get('gubc_' . $api_key);
-      $glt_cookie = Drupal::request()->cookies->get('glt_' . $api_key);
+      $gigya_conf       = Drupal::config( 'gigya.settings' );
+      $api_key          = $gigya_conf->get( 'gigya.gigya_api_key' );
+      $gigya_ubc_cookie = Drupal::request()->cookies->get( 'gubc_' . $api_key );
+      $glt_cookie       = Drupal::request()->cookies->get( 'glt_' . $api_key );
 
       /*Do if there is glt cookie*/
-      if (!empty($glt_cookie)) {
-        $glt_token = explode('|', $glt_cookie)[0];
+      if ( ! empty( $glt_cookie ) ) {
+        $glt_token = explode( '|', $glt_cookie )[0];
 
         /*Do if there is ubc cookie*/
-        if (!empty($gigya_ubc_cookie)) {
-          $gubc_token = explode('|', $gigya_ubc_cookie)[0];
+        if ( ! empty( $gigya_ubc_cookie ) ) {
+          $gubc_token = explode( '|', $gigya_ubc_cookie )[0];
 
           /*if both  cookies got the same value, the session is valid. otherwise, there was something malicious so do logout*/
-          if (!empty($glt_token) and !empty($gubc_token)) {
+          if ( ! empty( $glt_token ) and ! empty( $gubc_token ) ) {
 
-            if ($glt_token !== $gubc_token) {
+            if ( $glt_token !== $gubc_token ) {
 
               user_logout();
               $result = $compare_option_results[4];
-              Drupal::logger("gigya_raas")->debug($result['errorMessage']);
+              Drupal::logger( "gigya_raas" )->debug( $result['errorMessage'] );
             }
             /*Do while at least one of the cookie is empty*/
-          }else {
+          } else {
             user_logout();
             $result = $compare_option_results[4];
-            Drupal::logger("gigya_raas")->debug($result['errorMessage']);
+            Drupal::logger( "gigya_raas" )->debug( $result['errorMessage'] );
           }
           /*Do if there is no ubc cookie*/
-        }else {
-            $result = $compare_option_results[1];
-            Drupal::logger("gigya_raas")->debug($result['errorMessage']);
-          }
+        } else {
+          $result = $compare_option_results[1];
+          Drupal::logger( "gigya_raas" )->debug( $result['errorMessage'] );
+        }
         /*do if glt cookie is empty*/
-      }else {
-          if (empty($gigya_ubc_cookie)) {
+      } else {
+        if ( empty( $gigya_ubc_cookie ) ) {
 
-            $result = $compare_option_results[3];
-          }
-          else {
-            $result = $compare_option_results[2];
-          }
-          //In any case that user doesn't have 'glt' cookie he will logged out automatically.
-          user_logout();
+          $result = $compare_option_results[3];
+        } else {
+          $result = $compare_option_results[2];
+        }
+        //In any case that user doesn't have 'glt' cookie he will logged out automatically.
+        user_logout();
       }
     }
 

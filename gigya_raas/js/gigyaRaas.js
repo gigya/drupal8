@@ -45,15 +45,13 @@ var getUrlPrefix = function () {
 	 *
 	 * @property gigya.setSSOToken
 	 */
-	jQuery.fn.loginRedirect = function (redirectTarget) {
-		/**
-		 * @var bool sendSetSSOToken	Should be set in Gigya's global
-		 *   configuration.
-		 * 								Set this to True if you would like setSSOToken to be
-		 *   called
-		 * 								(a redirect to Gigya to set the site's cookies, for
-		 *   browsers that do not support 3rd party cookies)
-		 */
+  jQuery.fn.loginRedirect = function (redirectTarget) {
+    /**
+     * @var bool sendSetSSOToken  Should be set in Gigya's global configuration.
+     * Set this to True if you would like setSSOToken to be called
+     * (a redirect to Gigya to set the site's cookies, for
+     *   browsers that do not support 3rd party cookies)
+     */
 
     if (!redirectTarget.startsWith('http')) {
 
@@ -134,40 +132,40 @@ var getUrlPrefix = function () {
       submit: data
     };
 
-		var data = {
-			"uid": res.UID,
-			"uid_sig": res.UIDSignature,
-			"sig_timestamp": res.signatureTimestamp,
-			"id_token": res.id_token,
-			"remember": remember
-		};
+    var data = {
+      "uid": res.UID,
+      "uid_sig": res.UIDSignature,
+      "sig_timestamp": res.signatureTimestamp,
+      "id_token": res.id_token,
+      "remember": remember
+    };
 
-		var ajaxSettings = {
-			url: getUrlPrefix() + 'gigya/raas-login',
-			submit: data
-		};
+    var ajaxSettings = {
+      url: getUrlPrefix() + 'gigya/raas-login',
+      submit: data
+    };
 
-		var myAjaxObject = Drupal.ajax(ajaxSettings);
-		myAjaxObject.execute();
-	};
+    var myAjaxObject = Drupal.ajax(ajaxSettings);
+    myAjaxObject.execute();
+  };
 
-	var profileUpdated = function(data) {
-		if (data.response.errorCode === 0) {
-			var gigyaData = {
-				UID: data.response.UID,
-				UIDSignature: data.response.UIDSignature,
-				signatureTimestamp: data.response.signatureTimestamp,
-				id_token: data.response.id_token
-			};
+  var profileUpdated = function (data) {
+    if (data.response.errorCode === 0) {
+      var gigyaData = {
+        UID: data.response.UID,
+        UIDSignature: data.response.UIDSignature,
+        signatureTimestamp: data.response.signatureTimestamp,
+        id_token: data.response.id_token
+      };
 
-			var ajaxSettings = {
-				url: getUrlPrefix() + 'gigya/raas-profile-update',
-				submit: {gigyaData: gigyaData}
-			};
+      var ajaxSettings = {
+        url: getUrlPrefix() + 'gigya/raas-profile-update',
+        submit: {gigyaData: gigyaData}
+      };
 
-			var myAjaxObject = Drupal.ajax(ajaxSettings);
-			myAjaxObject.execute();
-		}
+      var myAjaxObject = Drupal.ajax(ajaxSettings);
+      myAjaxObject.execute();
+    }
 	};
 
 	var checkLogout = function() {
@@ -215,57 +213,57 @@ var getUrlPrefix = function () {
       gigya.accounts.logout();
     }
   }
-	/**
-	 * @property gigya.accounts.showScreenSet
-	 * @property drupalSettings.gigya.enableRaaS
-	 * @property drupalSettings.gigya.raas
-	 * @property drupalSettings.gigya.raas.login
+  /**
+   * @property gigya.accounts.showScreenSet
+   * @property drupalSettings.gigya.enableRaaS
+   * @property drupalSettings.gigya.raas
+   * @property drupalSettings.gigya.raas.login
    * @property drupalSettings.gigya.shouldValidateSession
    */
   var initRaaS = function () {
     if (drupalSettings.gigya.enableRaaS) {
       var id;
       if (drupalSettings.gigya.shouldValidateSession) {
-        gigya.accounts.getAccountInfo({include:'id_token'},{callback: validateSessionAndCreateUbcCookie});
+        gigya.accounts.getAccountInfo({include: 'id_token'}, {callback: validateSessionAndCreateUbcCookie});
       }
 
       $('.gigya-raas-login').once('gigya-raas').click(function (e) {
-                e.preventDefault();
-                gigya.accounts.showScreenSet(drupalSettings.gigya.raas.login);
-                drupalSettings.gigya.raas.linkId = $(this).attr('id');
-            });
-            $('.gigya-raas-reg').once('gigya-raas').click(function (e) {
-                e.preventDefault();
-                gigya.accounts.showScreenSet(drupalSettings.gigya.raas.register);
-                drupalSettings.gigya.raas.linkId = $(this).attr('id');
-            });
-            $('.gigya-raas-prof, a[href="/user"]').once('gigya-raas').click(function (e) {
-                e.preventDefault();
-                drupalSettings.gigya.raas.profile.onAfterSubmit = profileUpdated;
-                gigya.accounts.showScreenSet(drupalSettings.gigya.raas.profile);
-            });
-            var loginDiv = $('#gigya-raas-login-div');
-            if (loginDiv.length > 0 && (typeof drupalSettings.gigya.raas.login !== 'undefined')) {
-				id = loginDiv.eq(0).attr('id');
-                drupalSettings.gigya.raas.login.containerID = id;
-                drupalSettings.gigya.raas.linkId = id;
-                gigya.accounts.showScreenSet(drupalSettings.gigya.raas.login);
-            }
-            var regDiv = $('#gigya-raas-register-div');
-            if (regDiv.length > 0 && (typeof drupalSettings.gigya.raas.register !== 'undefined')) {
-				id = regDiv.eq(0).attr('id');
-                drupalSettings.gigya.raas.register.containerID = id;
-                drupalSettings.gigya.raas.linkId = id;
-                gigya.accounts.showScreenSet(drupalSettings.gigya.raas.register);
-            }
-            var profDiv = $('#gigya-raas-profile-div');
-            if ((profDiv.length > 0) && (typeof drupalSettings.gigya.raas.profile !== 'undefined')) {
-                drupalSettings.gigya.raas.profile.containerID = profDiv.eq(0).attr('id');
-                drupalSettings.gigya.raas.profile.onAfterSubmit = profileUpdated;
-                gigya.accounts.showScreenSet(drupalSettings.gigya.raas.profile);
-            }
-        }
-    };
+        e.preventDefault();
+        gigya.accounts.showScreenSet(drupalSettings.gigya.raas.login);
+        drupalSettings.gigya.raas.linkId = $(this).attr('id');
+      });
+      $('.gigya-raas-reg').once('gigya-raas').click(function (e) {
+        e.preventDefault();
+        gigya.accounts.showScreenSet(drupalSettings.gigya.raas.register);
+        drupalSettings.gigya.raas.linkId = $(this).attr('id');
+      });
+      $('.gigya-raas-prof, a[href="/user"]').once('gigya-raas').click(function (e) {
+        e.preventDefault();
+        drupalSettings.gigya.raas.profile.onAfterSubmit = profileUpdated;
+        gigya.accounts.showScreenSet(drupalSettings.gigya.raas.profile);
+      });
+      var loginDiv = $('#gigya-raas-login-div');
+      if (loginDiv.length > 0 && (typeof drupalSettings.gigya.raas.login !== 'undefined')) {
+        id = loginDiv.eq(0).attr('id');
+        drupalSettings.gigya.raas.login.containerID = id;
+        drupalSettings.gigya.raas.linkId = id;
+        gigya.accounts.showScreenSet(drupalSettings.gigya.raas.login);
+      }
+      var regDiv = $('#gigya-raas-register-div');
+      if (regDiv.length > 0 && (typeof drupalSettings.gigya.raas.register !== 'undefined')) {
+        id = regDiv.eq(0).attr('id');
+        drupalSettings.gigya.raas.register.containerID = id;
+        drupalSettings.gigya.raas.linkId = id;
+        gigya.accounts.showScreenSet(drupalSettings.gigya.raas.register);
+      }
+      var profDiv = $('#gigya-raas-profile-div');
+      if ((profDiv.length > 0) && (typeof drupalSettings.gigya.raas.profile !== 'undefined')) {
+        drupalSettings.gigya.raas.profile.containerID = profDiv.eq(0).attr('id');
+        drupalSettings.gigya.raas.profile.onAfterSubmit = profileUpdated;
+        gigya.accounts.showScreenSet(drupalSettings.gigya.raas.profile);
+      }
+    }
+  };
 	/**
 	 * @property gigya.accounts.showScreenSet
 	 * @property drupalSettings.gigya.raas.customScreenSets

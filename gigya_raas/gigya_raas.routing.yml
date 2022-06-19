@@ -41,7 +41,7 @@ gigya.raas.profile:
   requirements:
     _permission: 'access content'
 
-gigya.raas.create.ubc,cookie:
+gigya.raas.create.ubc.cookie:
   path: 'gigya/raas-create-ubc-cookie'
   defaults:
     _controller: '\Drupal\gigya_raas\GigyaController::gigyaRaasCreateUBCCookie'

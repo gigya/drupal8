@@ -17,6 +17,9 @@ gigya_raas.settings:
         remember_me_session_time:
           type: integer
           label: Remember Me Session Duration (in seconds)
+        login_redirect_mode:
+          type: string
+          label: Post login redirect mode
         login_redirect:
           type: uri
           label: Post login redirect URL

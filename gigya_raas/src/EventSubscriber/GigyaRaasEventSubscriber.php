@@ -41,19 +41,25 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 			}
 		}
 
-		/* User is logged in through Gigya */
-		if ($uid and !$current_user->hasPermission('bypass gigya raas')) {
-			$session_type = ($is_remember_me) ? 'remember_me' : 'regular';
-			$session_params = GigyaRaasHelper::getSessionConfig($session_type);
-
-			if ($session_params['type'] === 'dynamic') {
-				$this->handleDynamicSession($session_params, $gigya_raas_session, $uid);
-			}
-			elseif ($session_params['type'] === 'fixed') {
-				$this->handleFixedSession($gigya_raas_session, $drupal_session, $uid);
-			}
-		}
-	}
+    /* User is logged in through Gigya */
+    if ( $uid and ! $current_user->hasPermission( 'bypass gigya raas' ) ) {
+      $session_type   = ( $is_remember_me ) ? 'remember_me' : 'regular';
+      $session_params = GigyaRaasHelper::getSessionConfig( $session_type );
+      switch ( $session_params['type'] ) {
+        case 'dynamic':
+          $this->handleDynamicSession( $session_params, $gigya_raas_session, $uid );
+          break;
+        case 'until_browser_close':
+          $this->handleUntilBrowserCloseSession();
+          break;
+        case 'fixed':
+        case 'forever':
+        default:
+          $this->handleFixedSession( $gigya_raas_session, $drupal_session, $uid );
+          break;
+      };
+    }
+  }
 
 	/**
 	 * {@inheritdoc}
@@ -97,7 +103,6 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 		/* Session expiration is "cached" to reduce DB requests. It can only be empty under "fixed session" */
 		if (empty($cached_session_expiration)) {
 			$error_message = 'Gigya session information could not be retrieved from the database. It is likely that the Gigya RaaS module has not been installed correctly. Please attempt to reinstall it. Attempted to retrieve details for user ID: ' . $uid;
-
 			try {
 				$session_expiration_row = Database::getConnection()->query('SELECT expiration, is_remember_me FROM {sessions} s WHERE s.uid = :uid AND s.sid = :sid', [
 					':uid' => $uid,
@@ -127,4 +132,15 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 			}
 		}
 	}
+
+  public function handleUntilBrowserCloseSession() {
+
+    $gigya_raas_helper = new GigyaRaasHelper();
+    $validation_result = $gigya_raas_helper->validateUBCCookie();
+
+    if ( $validation_result['errorCode'] == 2 or $validation_result['errorCode'] == 3 or $validation_result['errorCode'] == 4 ) {
+      user_logout();
+    }
+  }
+
 }

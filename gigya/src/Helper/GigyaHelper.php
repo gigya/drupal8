@@ -9,6 +9,7 @@ namespace Drupal\gigya\Helper;
 
 use Drupal;
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Site\Settings;
 use Drupal\gigya\CmsStarterKit\ds\DsQueryException;
 use Drupal\gigya\CmsStarterKit\GigyaApiRequest;
 use Drupal\gigya\CmsStarterKit\GigyaAuthRequest;
@@ -59,11 +60,25 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
   public function enc($str) {
-    return GigyaApiHelper::enc($str, $this->getEncryptKey());
+    $key = $this->getEncryptKey();
+    if ( ! $key ) {
+      if ( Settings::get( 'encryption_key' ) ) {
+        return GigyaApiHelper::enc( $str, Settings::get( 'encryption_key' ) );
+      }
+    }
+    return GigyaApiHelper::enc($str, $key);
+
   }
 
   public function decrypt($str) {
-    return GigyaApiHelper::decrypt($str, $this->getEncryptKey());
+    $key = $this->getEncryptKey();
+    if ( ! $key ) {
+      if ( Settings::get( 'encryption_key' ) ) {
+        return GigyaApiHelper::decrypt( $str, Settings::get( 'encryption_key' ) );
+      }
+    }
+
+    return GigyaApiHelper::decrypt( $str, $key );
   }
 
   public function checkEncryptKey() {

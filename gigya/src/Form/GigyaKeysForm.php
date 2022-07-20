@@ -56,8 +56,8 @@ class GigyaKeysForm extends ConfigFormBase {
 
 		/* Verify requirements */
 		$messenger = Drupal::service('messenger');
-		if (!$this->helper->checkEncryptKey()) {
-			$messenger->addError($this->t('Cannot read encryption key. Either the file path is incorrect or the file is empty.'));
+		if (!$this->helper->checkEncryptKey() && !Settings::get( 'encryption_key' )) {
+			$messenger->addError($this->t('Cannot read encryption key. Please take the key below and put it in "setting.php" file.'));
 		}
 		if (!class_exists('Gigya\\PHP\\GSObject')) {
 			$messenger->addError($this->t('The required library Gigya PHP SDK cannot be found. Please install it via Composer.'));
@@ -174,7 +174,7 @@ class GigyaKeysForm extends ConfigFormBase {
       '#type'        => 'textfield',
       '#title'       => $this->t('Gigya Key Encryption'),
       "#attributes"    => ['readonly'=> 'readonly'],
-      '#default_value' => $this->helper->checkEncryptKey() ? ( $this->helper->getEncryptKey() ): ( base64_decode( Settings::get( 'encryption_key' ) ) ? ( base64_decode( Settings::get( 'encryption_key' ) ) ) : $this->helper->getGigyaApiHelper() ::genKeyFromString(null, 128) ),
+      '#default_value' => $this->helper->checkEncryptKey() ? ( $this->helper->getEncryptKey() ): (  Settings::get( 'encryption_key' )  ? ( base64_decode( Settings::get( 'encryption_key' ) ) ) : $this->helper->getGigyaApiHelper() ::genKeyFromString(null, 128) ),
       '#description' => $this->t('Using this key for encryption all the field that needed to encrypt, Please put this key in the settings.php file.'),
     ];
 		return $form;

@@ -8,6 +8,7 @@
 namespace Drupal\gigya\Form;
 
 use Drupal;
+use Drupal\Core\Site\Settings;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -169,6 +170,13 @@ class GigyaKeysForm extends ConfigFormBase {
 			],
 		];
 
+    $form['gigya_key_encryption'] = [
+      '#type'        => 'textfield',
+      '#title'       => $this->t('Gigya Key Encryption'),
+      "#attributes"    => ['readonly'=> 'readonly'],
+      '#default_value' => $this->helper->checkEncryptKey() ? ( $this->helper->getEncryptKey() ): ( base64_decode( Settings::get( 'encryption_key' ) ) ? ( base64_decode( Settings::get( 'encryption_key' ) ) ) : $this->helper->getGigyaApiHelper() ::genKeyFromString(null, 128) ),
+      '#description' => $this->t('Using this key for encryption all the field that needed to encrypt, Please put this key in the settings.php file.'),
+    ];
 		return $form;
 	}
 

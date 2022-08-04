@@ -8,7 +8,6 @@
 namespace Drupal\gigya\Form;
 
 use Drupal;
-use Drupal\Core\Site\Settings;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -64,15 +63,9 @@ class GigyaKeysForm extends ConfigFormBase {
     /* Verify requirements */
 		$messenger = Drupal::service('messenger');
 		if (!$this->helper->checkEncryptKey()) {
-			$messenger->addError($this->t('Cannot read encryption key. Please take the key below and put it in "setting.php" file.'));
+			$messenger->addError($this->t('Gigya\'s Encryption key doesn\'t exists. Please take the new key below and put it in the "setting.php" file as "gigya_encryption_Key".'));
+      $messenger->addWarning($this->t('This is the new encryption Key: ' . $this->helper->getGigyaApiHelper()::genKeyFromString( NULL, 128 )));
 
-      $form['gigya_key_encryption'] = [
-        '#type'          => 'textfield',
-        '#title'         => $this->t( 'Gigya Key Encryption' ),
-        "#attributes"    => [ 'readonly' => 'readonly' ],
-        '#default_value' => $this->helper->getGigyaApiHelper()::genKeyFromString( NULL, 128 ),
-        '#description'   => $this->t( 'Using this key for encryption all the field that needed to encrypt, Please put this key in the settings.php file.' ),
-      ];
 		}else {
 
 
@@ -316,7 +309,7 @@ class GigyaKeysForm extends ConfigFormBase {
 		}
 		else {
 			$messenger = Drupal::service('messenger');
-			$messenger->addMessage($this->t('Gigya validated properly. This site is authorized to use Gigya services'));
+			$messenger->addMessage($this->t('Gigya validated properly. This site is authorized to use Gigya services, if you are using a new encryption key, try to put all the gigya keys again.'));
 		}
 	}
 

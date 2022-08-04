@@ -74,7 +74,7 @@ class GigyaHelper implements GigyaHelperInterface {
   public function getEncryptKey() {
     $path    = Drupal::config( 'gigya.global' )->get( 'gigya.keyPath' );
     $keypath = $this->getEncKeyFile( $path );
-    $key     = Settings::get( 'encryption_key' );
+    $key     = Settings::get( 'gigya_encryption_Key' );
 
     if ( $key ) {
       return $key;

@@ -7,9 +7,12 @@
 
 namespace Drupal\gigya_raas\Form;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\gigya\Helper\GigyaHelper;
+use Drupal\gigya\Helper\GigyaHelperInterface;
 
 class GigyaScreenSetsForm extends ConfigFormBase {
 
@@ -20,7 +23,10 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 	 *   An array of configuration object names that are editable if called in
 	 *   conjunction with the trait's config() method.
 	 */
-	protected function getEditableConfigNames() {
+
+  public $helper = FALSE;
+
+  protected function getEditableConfigNames() {
 		return [
 			'gigya_raas.screensets',
 		];
@@ -32,8 +38,23 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 	 *
 	 * @return array
 	 */
-	public function buildForm(array $form, FormStateInterface $form_state) {
-		$config = $this->config('gigya_raas.screensets');
+	public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL) {
+
+    if ($helper == NULL ) {
+      $this->helper = new GigyaHelper();
+    } else {
+      $this->helper = $helper;
+    }
+
+    if ( !$this->helper->checkEncryptKey() )
+    {
+      $messenger = Drupal::service('messenger');
+      $messenger->addError($this->t('Please go to Gigya\'s general settings to define a Gigya\'s encryption key.'));
+
+      Return array();
+    }
+
+    $config = $this->config('gigya_raas.screensets');
 
 		$form['gigya_login_screensets'] = [
 			'#type' => 'details',

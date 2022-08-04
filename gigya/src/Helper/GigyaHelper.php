@@ -60,55 +60,43 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
   public function enc($str) {
-    $key = $this->getEncryptKey();
-    if ( ! $key ) {
-      if ( Settings::get( 'encryption_key' ) ) {
-        return GigyaApiHelper::enc( $str, Settings::get( 'encryption_key' ) );
-      }
-    }
-    return GigyaApiHelper::enc($str, $key);
-
+    return GigyaApiHelper::enc($str, $this->getEncryptKey());
   }
 
   public function decrypt($str) {
-    $key = $this->getEncryptKey();
-    if ( ! $key ) {
-      if ( Settings::get( 'encryption_key' ) ) {
-        return GigyaApiHelper::decrypt( $str, Settings::get( 'encryption_key' ) );
-      }
-    }
-
-    return GigyaApiHelper::decrypt( $str, $key );
+    return GigyaApiHelper::decrypt($str, $this->getEncryptKey());
   }
 
   public function checkEncryptKey() {
-    $keypath = Drupal::config('gigya.global')->get('gigya.keyPath');
-    $key = $this->getEncKeyFile($keypath);
-
-    if ($key !== FALSE && !empty(file_get_contents($key))) {
-      return TRUE;
-    }
-    else {
-      return FALSE;
-    }
+    return$this->getEncryptKey() !== FALSE;
   }
 
   public function getEncryptKey() {
-  	$path = Drupal::config('gigya.global')->get('gigya.keyPath');
-    $keypath = $this->getEncKeyFile($path);
+    $path    = Drupal::config( 'gigya.global' )->get( 'gigya.keyPath' );
+    $keypath = $this->getEncKeyFile( $path );
+    $key     = Settings::get( 'encryption_key' );
 
-    try
-    {
-      if ($keypath !== FALSE && $key = trim(file_get_contents($keypath))) {
-        if (!empty($key))
-          return $key;
+    if ( $key ) {
+      return $key;
+    } else {
+      try {
+
+        if ( $keypath !== FALSE && $key = trim( file_get_contents( $keypath ) ) ) {
+
+          if ( ! empty( $key ) ) {
+
+            return $key;
+          }
+        }
+
+        return FALSE;
+
+      } catch ( Exception $e ) {
+        Drupal::logger( 'gigya' )
+              ->error( 'Key file not found. Configure the correct path in your gigya.global YML file.' );
+
+        return FALSE;
       }
-      return false;
-    }
-    catch (Exception $e)
-    {
-      Drupal::logger('gigya')->error('Key file not found. Configure the correct path in your gigya.global YML file.');
-      return false;
     }
   }
 

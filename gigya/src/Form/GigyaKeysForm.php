@@ -53,130 +53,143 @@ class GigyaKeysForm extends ConfigFormBase {
 		else {
 			$this->helper = $helper;
 		}
+    $messenger = Drupal::service('messenger');
 
-		/* Verify requirements */
+    if (!class_exists('Gigya\\PHP\\GSObject')) {
+      $messenger->addError($this->t('The required library Gigya PHP SDK cannot be found. Please install it via Composer.'));
+    }
+
+    $form   = parent::buildForm( $form, $form_state );
+
+    /* Verify requirements */
 		$messenger = Drupal::service('messenger');
-		if (!$this->helper->checkEncryptKey() && !Settings::get( 'encryption_key' )) {
+		if (!$this->helper->checkEncryptKey()) {
 			$messenger->addError($this->t('Cannot read encryption key. Please take the key below and put it in "setting.php" file.'));
-		}
-		if (!class_exists('Gigya\\PHP\\GSObject')) {
-			$messenger->addError($this->t('The required library Gigya PHP SDK cannot be found. Please install it via Composer.'));
-		}
 
-		$form = parent::buildForm($form, $form_state);
-		$config = $this->config('gigya.settings');
+      $form['gigya_key_encryption'] = [
+        '#type'          => 'textfield',
+        '#title'         => $this->t( 'Gigya Key Encryption' ),
+        "#attributes"    => [ 'readonly' => 'readonly' ],
+        '#default_value' => $this->helper->getGigyaApiHelper()::genKeyFromString( NULL, 128 ),
+        '#description'   => $this->t( 'Using this key for encryption all the field that needed to encrypt, Please put this key in the settings.php file.' ),
+      ];
+		}else {
 
-		$form['gigya_api_key'] = [
-			'#type'          => 'textfield',
-			'#title'         => $this->t('Gigya API Key'),
-			'#description'   => $this->t('Specify the Gigya API Key for this domain'),
-			'#default_value' => $config->get('gigya.gigya_api_key'),
-			'#required'      => TRUE,
-		];
 
-		$form['gigya_application_key'] = [
-			'#type'          => 'textfield',
-			'#title'         => $this->t('Gigya Application Key'),
-			'#description'   => $this->t('Specify the Gigya Application key for this domain'),
-			'#default_value' => $config->get('gigya.gigya_application_key'),
-			'#required'      => TRUE,
-		];
+      $config = $this->config( 'gigya.settings' );
 
-		$form['gigya_auth_mode'] = [
-			'#type'          => 'radios',
-			'#title'         => $this->t('Gigya Authentication Mode'),
-			'#description'   => $this->t('Gigya allows to authenticate with a user or application and secret key pair, or an RSA key pair'),
-			'#options'       => [
-				'user_secret' => $this->t('User / Secret key pair'),
-				'user_rsa'    => $this->t('RSA key pair'),
-			],
-			'#default_value' => $config->get('gigya.gigya_auth_mode') ?? 'user_secret',
-		];
+      $form['gigya_api_key'] = [
+        '#type'          => 'textfield',
+        '#title'         => $this->t( 'Gigya API Key' ),
+        '#description'   => $this->t( 'Specify the Gigya API Key for this domain' ),
+        '#default_value' => $config->get( 'gigya.gigya_api_key' ),
+        '#required'      => TRUE,
+      ];
 
-		$rsa_private_key = $this->helper->decrypt($config->get('gigya.gigya_rsa_private_key'));
-		$rsa_private_key = substr(trim(str_replace([
-			'-----BEGIN RSA PRIVATE KEY-----',
-			'-----BEGIN PRIVATE KEY-----',
-			'-----END RSA PRIVATE KEY-----',
-			'-----END PRIVATE KEY-----',
-		], '', $rsa_private_key)), 0, -2);
-		$is_private_key_entered = (!empty($rsa_private_key));
-		$form['gigya_rsa_private_key'] = [
-			'#type'        => 'textarea',
-			'#title'       => $this->t('Gigya RSA Private Key'),
-			'#description' => $is_private_key_entered
-				? '<span class="gigya-msg-success">' . $this->t('RSA private key entered') . '</span>'
-				: $this->t('Specify the Gigya RSA private key Key for this domain'),
-			'#rows'        => 16,
-			'#cols'        => 64,
-			'#attributes'  => [
-				'placeholder' => ($is_private_key_entered)
-					? $this->t('Gigya RSA private key has been entered. Entered key is: ') . substr($rsa_private_key, 0, 4) . '****' . substr($rsa_private_key, -4)
-					: $this->t('Enter your RSA private key, as provided by Gigya'),
-				'style'       => 'width: auto',
-			],
-			'#states'      => [
-				'visible' => [
-					':input[name="gigya_auth_mode"]' => ['value' => 'user_rsa'],
-				],
-			],
-		];
+      $form['gigya_application_key'] = [
+        '#type'          => 'textfield',
+        '#title'         => $this->t( 'Gigya Application Key' ),
+        '#description'   => $this->t( 'Specify the Gigya Application key for this domain' ),
+        '#default_value' => $config->get( 'gigya.gigya_application_key' ),
+        '#required'      => TRUE,
+      ];
 
-		$key = $config->get('gigya.gigya_application_secret_key');
-		$access_key = "";
-		if (!empty($key)) {
-			$access_key = $this->helper->decrypt($key);
-		}
-		$form['gigya_application_secret_key'] = [
-			'#type'        => 'textfield',
-			'#title'       => $this->t('Gigya Application Secret Key'),
-			'#description' => $this->t('Specify the Gigya Application Secret Key for this domain'),
-			'#attributes'  => [
-				'autocomplete' => 'off',
-			],
-			'#states'      => [
-				'visible' => [
-					':input[name="gigya_auth_mode"]' => ['value' => 'user_secret'],
-				],
-			],
-			'#required'    => FALSE,
-		];
+      $form['gigya_auth_mode'] = [
+        '#type'          => 'radios',
+        '#title'         => $this->t( 'Gigya Authentication Mode' ),
+        '#description'   => $this->t( 'Gigya allows to authenticate with a user or application and secret key pair, or an RSA key pair' ),
+        '#options'       => [
+          'user_secret' => $this->t( 'User / Secret key pair' ),
+          'user_rsa'    => $this->t( 'RSA key pair' ),
+        ],
+        '#default_value' => $config->get( 'gigya.gigya_auth_mode' ) ?? 'user_secret',
+      ];
 
-		if (!empty($access_key)) {
-			$form['gigya_application_secret_key']['#default_value'] = "*********";
-			$form['gigya_application_secret_key']['#description'] .= $this->t(". Current key first and last letters are @accessKey", [
-				'@accessKey' => substr($access_key, 0, 2) . "****" .
-					substr($access_key, strlen($access_key) - 2, 2),
-			]);
-		}
+      $rsa_private_key               = $this->helper->decrypt( $config->get( 'gigya.gigya_rsa_private_key' ) );
+      $rsa_private_key               = substr( trim( str_replace( [
+        '-----BEGIN RSA PRIVATE KEY-----',
+        '-----BEGIN PRIVATE KEY-----',
+        '-----END RSA PRIVATE KEY-----',
+        '-----END PRIVATE KEY-----',
+      ], '', $rsa_private_key ) ), 0, - 2 );
+      $is_private_key_entered        = ( ! empty( $rsa_private_key ) );
+      $form['gigya_rsa_private_key'] = [
+        '#type'        => 'textarea',
+        '#title'       => $this->t( 'Gigya RSA Private Key' ),
+        '#description' => $is_private_key_entered
+          ? '<span class="gigya-msg-success">' . $this->t( 'RSA private key entered' ) . '</span>'
+          : $this->t( 'Specify the Gigya RSA private key Key for this domain' ),
+        '#rows'        => 16,
+        '#cols'        => 64,
+        '#attributes'  => [
+          'placeholder' => ( $is_private_key_entered )
+            ? $this->t( 'Gigya RSA private key has been entered. Entered key is: ' ) . substr( $rsa_private_key, 0, 4 ) . '****' . substr( $rsa_private_key, - 4 )
+            : $this->t( 'Enter your RSA private key, as provided by Gigya' ),
+          'style'       => 'width: auto',
+        ],
+        '#states'      => [
+          'visible' => [
+            ':input[name="gigya_auth_mode"]' => [ 'value' => 'user_rsa' ],
+          ],
+        ],
+      ];
 
-		$data_centers = ['us1.gigya.com' => 'US', 'eu1.gigya.com' => 'EU', 'au1.gigya.com' => 'AU', 'ru1.gigya.com' => 'RU', 'cn1.gigya-api.cn' => 'CN', 'other' => "Other"];
-		$form['gigya_data_center'] = [
-			'#type'          => 'select',
-			'#title'         => $this->t('Data Center'),
-			'#description'   => $this->t('Please select the Gigya data center in which your site is defined. To verify your site location contact your Gigya implementation manager.'),
-			'#options'       => $data_centers,
-			'#default_value' => array_key_exists($config->get('gigya.gigya_data_center'), $data_centers) ? $config->get('gigya.gigya_data_center') : 'other',
-		];
+      $key        = $config->get( 'gigya.gigya_application_secret_key' );
+      $access_key = "";
+      if ( ! empty( $key ) ) {
+        $access_key = $this->helper->decrypt( $key );
+      }
+      $form['gigya_application_secret_key'] = [
+        '#type'        => 'textfield',
+        '#title'       => $this->t( 'Gigya Application Secret Key' ),
+        '#description' => $this->t( 'Specify the Gigya Application Secret Key for this domain' ),
+        '#attributes'  => [
+          'autocomplete' => 'off',
+        ],
+        '#states'      => [
+          'visible' => [
+            ':input[name="gigya_auth_mode"]' => [ 'value' => 'user_secret' ],
+          ],
+        ],
+        '#required'    => FALSE,
+      ];
 
-		$form['gigya_other_data_center'] = [
-			'#type'          => "textfield",
-			'#default_value' => $config->get('gigya.gigya_data_center'),
-			"#attributes"    => ["id" => "gigya-other-data-center"],
-			'#states'        => [
-				'visible' => [
-					':input[name="gigya_data_center"]' => ['value' => 'other'],
-				],
-			],
-		];
+      if ( ! empty( $access_key ) ) {
+        $form['gigya_application_secret_key']['#default_value'] = "*********";
+        $form['gigya_application_secret_key']['#description']   .= $this->t( ". Current key first and last letters are @accessKey", [
+          '@accessKey' => substr( $access_key, 0, 2 ) . "****" .
+                          substr( $access_key, strlen( $access_key ) - 2, 2 ),
+        ] );
+      }
 
-    $form['gigya_key_encryption'] = [
-      '#type'        => 'textfield',
-      '#title'       => $this->t('Gigya Key Encryption'),
-      "#attributes"    => ['readonly'=> 'readonly'],
-      '#default_value' => $this->helper->checkEncryptKey() ? ( $this->helper->getEncryptKey() ): (  Settings::get( 'encryption_key' )  ? ( base64_decode( Settings::get( 'encryption_key' ) ) ) : $this->helper->getGigyaApiHelper() ::genKeyFromString(null, 128) ),
-      '#description' => $this->t('Using this key for encryption all the field that needed to encrypt, Please put this key in the settings.php file.'),
-    ];
+      $data_centers              = [
+        'us1.gigya.com'    => 'US',
+        'eu1.gigya.com'    => 'EU',
+        'au1.gigya.com'    => 'AU',
+        'ru1.gigya.com'    => 'RU',
+        'cn1.gigya-api.cn' => 'CN',
+        'other'            => "Other"
+      ];
+      $form['gigya_data_center'] = [
+        '#type'          => 'select',
+        '#title'         => $this->t( 'Data Center' ),
+        '#description'   => $this->t( 'Please select the Gigya data center in which your site is defined. To verify your site location contact your Gigya implementation manager.' ),
+        '#options'       => $data_centers,
+        '#default_value' => array_key_exists( $config->get( 'gigya.gigya_data_center' ), $data_centers ) ? $config->get( 'gigya.gigya_data_center' ) : 'other',
+      ];
+
+      $form['gigya_other_data_center'] = [
+        '#type'          => "textfield",
+        '#default_value' => $config->get( 'gigya.gigya_data_center' ),
+        "#attributes"    => [ "id" => "gigya-other-data-center" ],
+        '#states'        => [
+          'visible' => [
+            ':input[name="gigya_data_center"]' => [ 'value' => 'other' ],
+          ],
+        ],
+      ];
+
+    }
 		return $form;
 	}
 

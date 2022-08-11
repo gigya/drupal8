@@ -62,11 +62,8 @@ class GigyaSessionForm extends ConfigFormBase {
     if ( !$this->helper->checkEncryptKey() )
     {
       $messenger = Drupal::service('messenger');
-      $messenger->addError($this->t('Please go to Gigya\'s general settings to define a Gigya\'s encryption key.'));
-
-      Return array();
+      $messenger->addWarning($this->t('Please go to Gigya\'s general settings to define a Gigya\'s encryption key.'));
     }
-
 
       $form                 = parent::buildForm( $form, $form_state );
       $config               = $this->config( 'gigya_raas.settings' );
@@ -87,7 +84,7 @@ class GigyaSessionForm extends ConfigFormBase {
       $form['session_time'] = [
         '#type'          => 'textfield',
         '#title'         => $this->t( 'Regular Session Duration (in seconds)' ),
-        '#description'   => $this->t( 'The session is led by Gigya. For more information visit <a href="@Gigya documentation"><u>Gigya\'s documentation</u></a>.', [ '@Gigya documentation' => 'https://developers.gigya.com/display/GD/GConnector+-+CMS+and+E-Commerce+Integrations' ] ),
+        '#description'   => $this->t( 'The session is led by Gigya. For more information visit <a href="@Gigya documentation"><u>Gigya\'s documentation</u></a>.', [ '@Gigya documentation' => 'https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/8b8d6fffe113457094a17701f63e3d6a/4157d5d370b21014bbc5a10ce4041860.html?q=%2FGConnector%20CMS%2Band%2BE-' ] ),
         '#default_value' => $config->get( 'gigya_raas.session_time' ),
         '#states'        => [
           'visible' => [

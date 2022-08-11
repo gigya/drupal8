@@ -63,8 +63,8 @@ class GigyaKeysForm extends ConfigFormBase {
     /* Verify requirements */
 		$messenger = Drupal::service('messenger');
 		if (!$this->helper->checkEncryptKey()) {
-			$messenger->addError($this->t('Gigya\'s Encryption key doesn\'t exists. Please take the new key below and put it in the "setting.php" file as "gigya_encryption_Key".'));
-      $messenger->addWarning($this->t('This is the new encryption Key: ' . $this->helper->getGigyaApiHelper()::genKeyFromString( NULL, 128 )));
+			$messenger->addError($this->t('Gigya\'s Encryption key doesn\'t exist. Please copy the key below and place it in the setting.php file as "gigya_encryption_key".'));
+      $messenger->addWarning($this->t('This is the new encryption key: ' . $this->helper->getGigyaApiHelper()::genKeyFromString( NULL, 128 )));
 
 		}else {
 
@@ -296,7 +296,7 @@ class GigyaKeysForm extends ConfigFormBase {
 					$code          = $res->getErrorCode();
 					$msg           = $res->getErrorMessage();
 					$error_message = new TranslatableMarkup('Gigya API error: @code – @msg. For more information, please refer to Gigya\'s documentation page on
-																	<a href="https://developers.gigya.com/display/GD/Response+Codes+and+Errors" target="_blank">Response Codes and Errors</a>.',
+																	<a href="https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/8b8d6fffe113457094a17701f63e3d6a/416d41b170b21014bbc5a10ce4041860.html?q=Response%20Codes%20and%20Errors" target="_blank">Response Codes and Errors</a>.',
 						['@code' => $code, '@msg' => $msg]);
 				}
 

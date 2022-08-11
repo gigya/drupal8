@@ -59,10 +59,9 @@ class GigyaFieldmappingForm extends ConfigFormBase {
     if ( !$this->api_helper->checkEncryptKey() )
     {
       $messenger = Drupal::service('messenger');
-      $messenger->addError($this->t('Please go to Gigya\'s general settings to define a Gigya\'s encryption key.'));
-
-      Return array();
+      $messenger->addWarning($this->t('Please go to Gigya\'s general settings to define a Gigya\'s encryption key.'));
     }
+
 		$form['gigya_fieldmapping_config'] = [
 			'#type' => 'textarea',
 			'#title' => $this->t('Field Mapping Configuration'),

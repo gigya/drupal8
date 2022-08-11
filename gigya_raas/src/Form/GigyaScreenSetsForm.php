@@ -49,9 +49,8 @@ class GigyaScreenSetsForm extends ConfigFormBase {
     if ( !$this->helper->checkEncryptKey() )
     {
       $messenger = Drupal::service('messenger');
-      $messenger->addError($this->t('Please go to Gigya\'s general settings to define a Gigya\'s encryption key.'));
+      $messenger->addWarning($this->t('Please go to Gigya\'s general settings to define a Gigya\'s encryption key.'));
 
-      Return array();
     }
 
     $config = $this->config('gigya_raas.screensets');

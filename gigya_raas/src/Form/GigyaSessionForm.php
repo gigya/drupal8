@@ -61,8 +61,8 @@ class GigyaSessionForm extends ConfigFormBase {
 
     if ( !$this->helper->checkEncryptKey() )
     {
-      $messenger = Drupal::service('messenger');
-      $messenger->addWarning($this->t('Please go to Gigya\'s general settings to define a Gigya\'s encryption key.'));
+      $messenger = Drupal::service( 'messenger' );
+      $messenger->addWarning( $this->t( 'Define Gigya\'s encryption key: Go to Gigya\'s general settings, copy the key below and place it in the setting.php file as "gigya_encryption_key".' ) );
     }
 
       $form                 = parent::buildForm( $form, $form_state );

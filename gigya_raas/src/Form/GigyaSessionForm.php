@@ -9,60 +9,61 @@ use Drupal\gigya\Helper\GigyaHelperInterface;
 
 class GigyaSessionForm extends ConfigFormBase {
 
-	/**
-	 * @param $form_state
-	 * @param $prop_name
-	 * @param $helper
-	 *
-	 * @return string
-	 */
-
-	public $helper = FALSE;
-	private function getValue($form_state, $prop_name) {
-		return trim($form_state->getValue($prop_name));
-	}
-
-	/**
-	 * Gets the configuration names that will be editable.
-	 *
-	 * @return array
-	 *   An array of configuration object names that are editable if called in
-	 *   conjunction with the trait's config() method.
-	 */
-	protected function getEditableConfigNames() {
-		return [
-			'gigya_raas.settings',
-		];
-	}
-
-	/**
-	 * Returns a unique string identifying the form.
-	 *
-	 * @return string
-	 *   The unique string identifying the form.
-	 */
-	public function getFormId() {
-		return 'gigya_raas_session';
-	}
-
-	/**
-	 * @param array $form
-	 * @param \Drupal\Core\Form\FormStateInterface $form_state
-	 *
-	 * @return    array
+  /**
+   * @param $form_state
+   * @param $prop_name
+   * @param $helper
+   *
+   * @return string
    */
-  public function buildForm( array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL ) {
 
-    if ($helper == NULL ) {
+  public $helper = FALSE;
+
+  private function getValue($form_state, $prop_name) {
+    return trim($form_state->getValue($prop_name));
+  }
+
+  /**
+   * Gets the configuration names that will be editable.
+   *
+   * @return array
+   *   An array of configuration object names that are editable if called in
+   *   conjunction with the trait's config() method.
+   */
+  protected function getEditableConfigNames() {
+    return [
+      'gigya_raas.settings',
+    ];
+  }
+
+  /**
+   * Returns a unique string identifying the form.
+   *
+   * @return string
+   *   The unique string identifying the form.
+   */
+  public function getFormId() {
+    return 'gigya_raas_session';
+  }
+
+  /**
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @return    array
+   */
+  public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL) {
+
+    if ($helper == NULL) {
       $this->helper = new GigyaHelper();
-    } else {
+    }
+    else {
       $this->helper = $helper;
     }
 
-    if ( !$this->helper->checkEncryptKey() )
-    {
-      $messenger = Drupal::service( 'messenger' );
-      $messenger->addWarning( $this->t( 'Define Gigya\'s encryption key: Go to Gigya\'s general settings, copy the key below and place it in the setting.php file as "gigya_encryption_key".' ) );
+    if (!$this->helper->checkEncryptKey()) {
+      $messenger = Drupal::service('messenger');
+      $messenger->addWarning($this->t('Define Gigya\'s encryption key: Go to Gigya\'s general settings, copy the key below and place it in the setting.php file as "gigya_encryption_key".'));
     }
 
       $form                 = parent::buildForm( $form, $form_state );

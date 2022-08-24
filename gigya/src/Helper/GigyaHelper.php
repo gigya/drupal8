@@ -68,22 +68,23 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
   public function checkEncryptKey() {
-    return$this->getEncryptKey() !== FALSE;
+    return $this->getEncryptKey() !== FALSE;
   }
 
   public function getEncryptKey() {
-    $path    = Drupal::config( 'gigya.global' )->get( 'gigya.keyPath' );
-    $keypath = $this->getEncKeyFile( $path );
-    $key     = Settings::get( 'gigya_encryption_Key' );
+    $path = Drupal::config('gigya.global')->get('gigya.keyPath');
+    $keypath = $this->getEncKeyFile($path);
+    $key = Settings::get('gigya_encryption_key');
 
-    if ( $key ) {
+    if ($key) {
       return $key;
-    } else {
+    }
+    else {
       try {
 
-        if ( $keypath !== FALSE && $key = trim( file_get_contents( $keypath ) ) ) {
+        if ($keypath !== FALSE && $key = trim(file_get_contents($keypath))) {
 
-          if ( ! empty( $key ) ) {
+          if (!empty($key)) {
 
             return $key;
           }
@@ -91,9 +92,9 @@ class GigyaHelper implements GigyaHelperInterface {
 
         return FALSE;
 
-      } catch ( Exception $e ) {
-        Drupal::logger( 'gigya' )
-              ->error( 'Key file not found. Configure the correct path in your gigya.global YML file.' );
+      } catch (Exception $e) {
+        Drupal::logger('gigya')
+          ->error('Key file not found. Configure the correct path in your gigya.global YML file.');
 
         return FALSE;
       }

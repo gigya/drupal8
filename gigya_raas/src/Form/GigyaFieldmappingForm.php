@@ -17,13 +17,14 @@ use Drupal\gigya_raas\Helper\GigyaRaasHelper;
 
 class GigyaFieldmappingForm extends ConfigFormBase {
 
-	private $raas_helper;
-  Public $api_helper = false;
+  private $raas_helper;
+
+  public $api_helper = FALSE;
 
   public function __construct(ConfigFactoryInterface $config_factory) {
-		parent::__construct($config_factory);
+    parent::__construct($config_factory);
 
-		$this->raas_helper = new GigyaRaasHelper();
+    $this->raas_helper = new GigyaRaasHelper();
 	}
 
 	/**
@@ -45,19 +46,19 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 	 *
 	 * @return array
 	 */
-	public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL) {
-		$config = $this->config('gigya_raas.fieldmapping');
-		$fieldmapping_config = json_encode($this->raas_helper->getFieldMappingConfig(), JSON_PRETTY_PRINT);
+  public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL) {
+    $config = $this->config('gigya_raas.fieldmapping');
+    $fieldmapping_config = json_encode($this->raas_helper->getFieldMappingConfig(), JSON_PRETTY_PRINT);
 
 
-    if ($helper == NULL ) {
+    if ($helper == NULL) {
       $this->api_helper = new GigyaHelper();
-    } else {
+    }
+    else {
       $this->api_helper = $helper;
     }
 
-    if ( !$this->api_helper->checkEncryptKey() )
-    {
+    if (!$this->api_helper->checkEncryptKey()) {
       $messenger = Drupal::service('messenger');
       $messenger->addWarning($this->t('Please go to Gigya\'s general settings to define a Gigya\'s encryption key.'));
     }

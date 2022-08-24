@@ -16,38 +16,38 @@ use Drupal\gigya\Helper\GigyaHelperInterface;
 
 class GigyaScreenSetsForm extends ConfigFormBase {
 
-	/**
-	 * Gets the configuration names that will be editable.
-	 *
-	 * @return array
-	 *   An array of configuration object names that are editable if called in
-	 *   conjunction with the trait's config() method.
-	 */
+  /**
+   * Gets the configuration names that will be editable.
+   *
+   * @return array
+   *   An array of configuration object names that are editable if called in
+   *   conjunction with the trait's config() method.
+   */
 
   public $helper = FALSE;
 
   protected function getEditableConfigNames() {
-		return [
-			'gigya_raas.screensets',
-		];
-	}
+    return [
+      'gigya_raas.screensets',
+    ];
+  }
 
-	/**
-	 * @param array $form
-	 * @param \Drupal\Core\Form\FormStateInterface $form_state
-	 *
-	 * @return array
-	 */
-	public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL) {
+  /**
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @return array
+   */
+  public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL) {
 
-    if ($helper == NULL ) {
+    if ($helper == NULL) {
       $this->helper = new GigyaHelper();
-    } else {
+    }
+    else {
       $this->helper = $helper;
     }
 
-    if ( !$this->helper->checkEncryptKey() )
-    {
+    if (!$this->helper->checkEncryptKey()) {
       $messenger = Drupal::service('messenger');
       $messenger->addWarning($this->t('Please go to Gigya\'s general settings to define a Gigya\'s encryption key.'));
 

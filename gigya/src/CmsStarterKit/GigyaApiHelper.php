@@ -403,13 +403,13 @@ class GigyaApiHelper
 	 *
 	 * @return mixed
 	 */
-	static public function genKeyFromString($str = null) {
+	static public function genKeyFromString($str = null, $size = 32) {
 		if (null == $str)
 		{
-			$str = openssl_random_pseudo_bytes(32);
+			$str = openssl_random_pseudo_bytes($size);
 		}
-		$salt = openssl_random_pseudo_bytes(32);
-		$key  = hash_pbkdf2("sha256", $str, $salt, 1000, 32);
+		$salt = openssl_random_pseudo_bytes($size);
+		$key  = hash_pbkdf2("sha256", $str, $salt, 1000, $size);
 
 		return $key;
 	}

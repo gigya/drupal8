@@ -9,6 +9,7 @@ namespace Drupal\gigya\Helper;
 
 use Drupal;
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Site\Settings;
 use Drupal\gigya\CmsStarterKit\ds\DsQueryException;
 use Drupal\gigya\CmsStarterKit\GigyaApiRequest;
 use Drupal\gigya\CmsStarterKit\GigyaAuthRequest;
@@ -67,33 +68,36 @@ class GigyaHelper implements GigyaHelperInterface {
   }
 
   public function checkEncryptKey() {
-    $keypath = Drupal::config('gigya.global')->get('gigya.keyPath');
-    $key = $this->getEncKeyFile($keypath);
-
-    if ($key !== FALSE && !empty(file_get_contents($key))) {
-      return TRUE;
-    }
-    else {
-      return FALSE;
-    }
+    return $this->getEncryptKey() !== FALSE;
   }
 
   public function getEncryptKey() {
-  	$path = Drupal::config('gigya.global')->get('gigya.keyPath');
+    $path = Drupal::config('gigya.global')->get('gigya.keyPath');
     $keypath = $this->getEncKeyFile($path);
+    $key = Settings::get('gigya_encryption_key');
 
-    try
-    {
-      if ($keypath !== FALSE && $key = trim(file_get_contents($keypath))) {
-        if (!empty($key))
-          return $key;
-      }
-      return false;
+    if ($key) {
+      return $key;
     }
-    catch (Exception $e)
-    {
-      Drupal::logger('gigya')->error('Key file not found. Configure the correct path in your gigya.global YML file.');
-      return false;
+    else {
+      try {
+
+        if ($keypath !== FALSE && $key = trim(file_get_contents($keypath))) {
+
+          if (!empty($key)) {
+
+            return $key;
+          }
+        }
+
+        return FALSE;
+
+      } catch (Exception $e) {
+        Drupal::logger('gigya')
+          ->error('Key file not found. Configure the correct path in your gigya.global YML file.');
+
+        return FALSE;
+      }
     }
   }
 

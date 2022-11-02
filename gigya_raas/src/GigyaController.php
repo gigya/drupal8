@@ -567,7 +567,11 @@
       $gigya_conf = Drupal::config('gigya.settings');
       $api_key = $gigya_conf->get('gigya.gigya_api_key');
       $glt_cookie = $request->cookies->get('glt_' . $api_key);
-      return (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL;
+      // Issue #115 -> Check if $glt_cookie is null before explode it.
+      $return_value = ($glt_cookie != NULL ?
+                        ((!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL) :
+                        NULL);
+      return ($return_value);
     }
 
     /**

@@ -25,7 +25,7 @@ var getUrlPrefix = function () {
 	Drupal.behaviors.gigyaRassDynamicSession = {
 		attach: function (context, settings) {
             if ("dynamic" === drupalSettings.gigyaExtra.session_type) {
-				Drupal.ajax({url: getUrlPrefix() + 'gigya/extcookie'}).execute();
+				//Drupal.ajax({url: getUrlPrefix() + 'gigya/extcookie'}).execute();
             }
         }
     };
@@ -268,6 +268,7 @@ var getUrlPrefix = function () {
 	 * @property gigya.accounts.showScreenSet
 	 * @property drupalSettings.gigya.raas.customScreenSets
 	 */
+
 	var initCustomScreenSet = function () {
 		if (drupalSettings.gigya.enableRaaS) {
 			var customScreenSets = drupalSettings.gigya.raas.customScreenSets;
@@ -354,5 +355,20 @@ var getUrlPrefix = function () {
 			}
 		}
 	};
+
+  var useLinkForLogin = function() {
+    if (drupalSettings.gigya.enableRaaS) {
+      var id;
+      if (drupalSettings.gigya.shouldValidateSession) {
+        gigya.accounts.getAccountInfo({include: 'id_token'}, {callback: validateSessionAndCreateUbcCookie});
+      }
+
+      $('.gigya-raas-login').once('gigya-raas').click(function (e) {
+        e.preventDefault();
+        gigya.accounts.showScreenSet(drupalSettings.gigya.raas.login);
+        drupalSettings.gigya.raas.linkId = $(this).attr('id');
+      });
+    }
+  }
 
 })(jQuery, Drupal, drupalSettings);

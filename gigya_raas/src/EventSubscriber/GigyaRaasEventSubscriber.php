@@ -2,18 +2,33 @@
 
 namespace Drupal\gigya_raas\EventSubscriber;
 
+use Drupal;
 use Drupal\Component\Utility\Crypt;
+use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Database\Database;
 use Drupal\Core\TempStore\TempStoreException;
 use Drupal\Core\TempStore\PrivateTempStore;
+use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\gigya_raas\Helper\GigyaRaasHelper;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 
-	/**
+  protected $helper;
+
+  public function __construct($helper = FALSE) {
+    if ($helper === FALSE) {
+      $this->helper = new GigyaRaasHelper();
+    }
+    else {
+      $this->$helper = $helper;
+    }
+  }
+
+  /**
 	 * Session management logic on each page load or action
 	 *
 	 * @param $event
@@ -21,11 +36,10 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 	public function onLoad($event) {
 		/* Get necessary parameters from outside the class */
 		/** @var PrivateTempStore $gigya_raas_session */
-		$gigya_raas_session = \Drupal::service('tempstore.private')->get('gigya_raas');
-		$drupal_session = \Drupal::service('session');
-		$current_user = \Drupal::currentUser();
+		$gigya_raas_session = Drupal::service('tempstore.private')->get('gigya_raas');
+		$drupal_session = Drupal::service('session');
+		$current_user = Drupal::currentUser();
 		$uid = $current_user->id();
-
 		/* Update DB with session expiration if this hasn't been done before ('session_registered' flag) */
 		$is_remember_me = intval($gigya_raas_session->get('session_is_remember_me'));
 		$cached_session_expiration = $gigya_raas_session->get('session_expiration');
@@ -47,7 +61,9 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
       $session_params = GigyaRaasHelper::getSessionConfig( $session_type );
       switch ( $session_params['type'] ) {
         case 'dynamic':
-          $this->handleDynamicSession( $session_params, $gigya_raas_session, $uid );
+          $this->extendTimeExpiration( $session_params, $gigya_raas_session, $uid );
+          $this->helper->gigyaRaasExtCookieAjax(Drupal::request());
+
           break;
         case 'until_browser_close':
           $this->handleUntilBrowserCloseSession();
@@ -57,11 +73,11 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
         default:
           $this->handleFixedSession( $gigya_raas_session, $drupal_session, $uid );
           break;
-      };
+      }
     }
   }
 
-	/**
+  /**
 	 * {@inheritdoc}
 	 */
 	public static function getSubscribedEvents() {
@@ -75,7 +91,9 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 	 * @param PrivateTempStore $gigya_raas_session
 	 * @param int $uid
 	 */
-	private function handleDynamicSession($session_params, $gigya_raas_session, $uid) {
+
+
+	private function extendTimeExpiration($session_params, $gigya_raas_session, $uid) {
 		$cached_session_expiration = $gigya_raas_session->get('session_expiration');
 		$new_session_expiration = time() + $session_params['time'];
 		$prev_session_expiration = (empty($cached_session_expiration) or $cached_session_expiration == -1) ? $new_session_expiration : $cached_session_expiration;
@@ -109,7 +127,7 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 					':sid' => Crypt::hashBase64($drupal_session->getId()),
 				])->fetchAssoc();
 				if (!isset($session_expiration_row['expiration'])) { /* Query succeeded but didn't return any expiration column (should never happen!) */
-					\Drupal::logger('gigya_raas')->error($error_message);
+					Drupal::logger('gigya_raas')->error($error_message);
 					user_logout();
 				}
 				else {
@@ -121,7 +139,7 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 					}
 				}
 			} catch (\Exception $e) {
-				\Drupal::logger('gigya_raas')->error($error_message . PHP_EOL . 'Exception of type: ' . get_class($e) . ', exception error message: ' . $e->getMessage());
+				Drupal::logger('gigya_raas')->error($error_message . PHP_EOL . 'Exception of type: ' . get_class($e) . ', exception error message: ' . $e->getMessage());
 				user_logout();
 			}
 		}

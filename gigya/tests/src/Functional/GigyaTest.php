@@ -371,7 +371,7 @@
 
 			$this->checkBadForm($form_state);
 
-			$err_msg = t("Oops! Something went wrong during your login/registration process. Please try to login/register again. --1");
+			$err_msg = t("Oops! Something went wrong during your login/registration process. Please try to login/register again.");
 
 			$this->checkBadLogin($err_msg);
 

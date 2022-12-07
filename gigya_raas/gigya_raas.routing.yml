@@ -59,14 +59,6 @@ gigya.raas.process.fieldmapping:
   requirements:
     _permission: 'access content'
 
-#gigya.raas.extcookie:
-#  path: 'gigya/extcookie'
-#  defaults:
-#    _controller: '\Drupal\gigya_raas\GigyaController::gigyaRaasExtCookieAjax'
-#  options:
-#    _theme: ajax_base_page
-#  requirements:
-#    _permission: 'access content'
 
 gigya.raas.config:
   path: '/admin/config/gigya/raas/session'
@@ -75,12 +67,3 @@ gigya.raas.config:
     _title: 'Gigya RaaS session settings'
   requirements:
     _permission: 'gigya major admin'
-
-gigya.raas.popup.loginscreen:
-  path: 'gigya/raas-login-screen-set-popup'
-  defaults:
-    _controller: '\Drupal\gigya_raas\js\useLinkForLogin'
-  options:
-    _theme: ajax_base_page
-  requirements:
-    _permission: 'access content'

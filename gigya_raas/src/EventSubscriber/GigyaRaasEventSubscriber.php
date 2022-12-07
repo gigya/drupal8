@@ -4,13 +4,10 @@ namespace Drupal\gigya_raas\EventSubscriber;
 
 use Drupal;
 use Drupal\Component\Utility\Crypt;
-use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Database\Database;
 use Drupal\Core\TempStore\TempStoreException;
 use Drupal\Core\TempStore\PrivateTempStore;
-use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\gigya_raas\Helper\GigyaRaasHelper;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -91,8 +88,6 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 	 * @param PrivateTempStore $gigya_raas_session
 	 * @param int $uid
 	 */
-
-
 	private function extendTimeExpiration($session_params, $gigya_raas_session, $uid) {
 		$cached_session_expiration = $gigya_raas_session->get('session_expiration');
 		$new_session_expiration = time() + $session_params['time'];

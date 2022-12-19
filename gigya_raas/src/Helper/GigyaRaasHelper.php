@@ -363,18 +363,19 @@ class GigyaRaasHelper {
   public function gigyaRaasExtCookieAjax(Request $request, $login = FALSE) {
     if ($this->shouldAddExtCookie($request, $login)) {
       /* Retrieve config from Drupal */
-      $helper = new GigyaHelper();
-      $gigya_conf = Drupal::config('gigya.settings');
-      $session_time = Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
-      $api_key = $gigya_conf->get('gigya.gigya_api_key');
-      $app_key = $gigya_conf->get('gigya.gigya_application_key');
-      $auth_mode = $gigya_conf->get('gigya.gigya_auth_mode');
-      $auth_key = $helper->decrypt(($auth_mode === 'user_rsa') ? $gigya_conf->get('gigya.gigya_rsa_private_key') : $gigya_conf->get('gigya.gigya_application_secret_key'));
+      $helper       = new GigyaHelper();
+      $gigya_conf   = Drupal::config('gigya.settings');
+      $session_time = Drupal::config('gigya_raas.settings')
+                            ->get('gigya_raas.session_time');
+      $api_key      = $gigya_conf->get('gigya.gigya_api_key');
+      $app_key      = $gigya_conf->get('gigya.gigya_application_key');
+      $auth_mode    = $gigya_conf->get('gigya.gigya_auth_mode');
+      $auth_key     = $helper->decrypt(($auth_mode === 'user_rsa') ? $gigya_conf->get('gigya.gigya_rsa_private_key') : $gigya_conf->get('gigya.gigya_application_secret_key'));
 
-      $token = $this->getGigyaLoginToken($request);
-      $now = $_SERVER['REQUEST_TIME'];
+      $token              = $this->getGigyaLoginToken($request);
+      $now                = $_SERVER['REQUEST_TIME'];
       $session_expiration = strval($now + $session_time);
-      $gltexp_cookie = $request->cookies->get('gltexp_' . $api_key);
+      $gltexp_cookie      = $request->cookies->get('gltexp_' . $api_key);
 
       if (!empty($gltexp_cookie)) {
         if ($auth_mode === 'user_rsa') {
@@ -412,7 +413,8 @@ class GigyaRaasHelper {
    */
 
   public function shouldAddExtCookie($request, $login) {
-    if ("dynamic" != Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type')) {
+    if ("dynamic" != Drupal::config('gigya_raas.settings')
+                           ->get('gigya_raas.session_type')) {
       return FALSE;
     }
 
@@ -422,8 +424,8 @@ class GigyaRaasHelper {
 
     $current_user = Drupal::currentUser();
     if ($current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas')) {
-      $gigya_conf = Drupal::config('gigya.settings');
-      $api_key = $gigya_conf->get('gigya.gigya_api_key');
+      $gigya_conf    = Drupal::config('gigya.settings');
+      $api_key       = $gigya_conf->get('gigya.gigya_api_key');
       $gltexp_cookie = $request->cookies->get('gltexp_' . $api_key);
       return !empty($gltexp_cookie);
     }
@@ -433,8 +435,8 @@ class GigyaRaasHelper {
 
   private function getDynamicSessionSignatureUserSigned($token, $expiration, $userKey, $secret) {
     $unsignedExpString = utf8_encode($token . "_" . $expiration . "_" . $userKey);
-    $rawHmac = hash_hmac("sha1", utf8_encode($unsignedExpString), base64_decode($secret), TRUE);
-    $sig = base64_encode($rawHmac);
+    $rawHmac           = hash_hmac("sha1", utf8_encode($unsignedExpString), base64_decode($secret), TRUE);
+    $sig               = base64_encode($rawHmac);
 
     return $expiration . '_' . $userKey . '_' . $sig;
   }
@@ -463,7 +465,7 @@ class GigyaRaasHelper {
   public function getGigyaLoginToken(Request $request) {
 
     $gigya_conf = Drupal::config('gigya.settings');
-    $api_key = $gigya_conf->get('gigya.gigya_api_key');
+    $api_key    = $gigya_conf->get('gigya.gigya_api_key');
     $glt_cookie = $request->cookies->get('glt_' . $api_key);
     return (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL;
   }

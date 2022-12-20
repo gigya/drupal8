@@ -26,6 +26,12 @@ gigya_raas.settings:
         logout_redirect:
           type: uri
           label: Post logout redirect URL
+        is_email_dummy:
+          type: boolean
+          label: Using dummy email while no exists email in Gigya
+        dummy_email_format:
+          type: string
+          label: Format of the dummy email
 
 gigya_raas.fieldmapping:
   type: config_object

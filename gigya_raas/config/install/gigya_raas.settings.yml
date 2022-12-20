@@ -5,3 +5,6 @@ gigya_raas:
   remember_me_session_time: '20000000'
   login_redirect: '/'
   logout_redirect: '/'
+  is_email_dummy: '/'
+  dummy_email_format: '/'
+

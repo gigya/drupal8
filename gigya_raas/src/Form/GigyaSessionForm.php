@@ -151,14 +151,36 @@ class GigyaSessionForm extends ConfigFormBase {
           ],
         ],
       ];
-      $form['logout_redirect'] = [
-        '#type'          => 'textfield',
-        '#title'         => $this->t( 'Post logout redirect URL' ),
-        '#description'   => $this->t( 'A relative URI path or full URL to redirect the user after a successful logout.' ),
-        '#default_value' => $config->get( 'gigya_raas.logout_redirect' ),
-      ];
 
-      return $form;
+    $form['logout_redirect'] = [
+      '#type'          => 'textfield',
+      '#title'         => $this->t( 'Post logout redirect URL' ),
+      '#description'   => $this->t( 'A relative URI path or full URL to redirect the user after a successful logout.' ),
+      '#default_value' => $config->get( 'gigya_raas.logout_redirect' ),
+    ];
+
+    $form['is_email_dummy'] = [
+      '#type'          => 'checkbox',
+      '#title'         => $this->t( 'Creating dummy email while using non email login' ),
+      '#description'   => $this->t( 'a fake email will be create in case email doesn\'t exists.' ),
+      '#default_value' => $config->get( 'gigya_raas.is_email_dummy' ),
+    ];
+
+    $form['dummy_email_format'] = [
+      '#type'          => 'textfield',
+      '#title'         => $this->t( 'Dummy email Format' ),
+      '#description'   => $this->t( 'The format of the dummy email, \\n use ${loginId} for the user login ID' ),
+      '#default_value' => $config->get( 'gigya_raas.dummy_email_format' ),
+      '#states'        => [
+        'visible' => [
+          ':input[name="is_email_dummy"]' => [
+            [ 'value' => 'checked' ],
+          ],
+        ],
+      ],
+    ];
+
+    return $form;
     }
 
     /**
@@ -190,6 +212,8 @@ class GigyaSessionForm extends ConfigFormBase {
       $config->set( 'gigya_raas.login_redirect_mode', $this->getValue( $form_state, 'login_redirect_mode' ) );
       $config->set( 'gigya_raas.login_redirect', $this->getValue( $form_state, 'login_redirect' ) );
       $config->set( 'gigya_raas.logout_redirect', $this->getValue( $form_state, 'logout_redirect' ) );
+      $config->set( 'gigya_raas.is_email_dummy', $this->getValue( $form_state, 'is_email_dummy' ) );
+      $config->set( 'gigya_raas.dummy_email_format', $this->getValue( $form_state, 'dummy_email_format' ) );
       $config->save();
 
       parent::submitForm( $form, $form_state );

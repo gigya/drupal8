@@ -65,7 +65,7 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
       switch ($session_params['type']) {
         case 'dynamic':
           $this->extendDynamicSessionCookie($session_params, $gigya_raas_session, $uid);
-          $this->helper->gigyaRaasExtCookieAjax(Drupal::request());
+          $this->helper->gigyaRaasExtCookie(Drupal::request());
 
           break;
         case 'until_browser_close':

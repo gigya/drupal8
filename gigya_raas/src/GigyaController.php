@@ -252,7 +252,7 @@
               }
               else if ($this->helper->shouldAddExtCookie($request, $raas_login)) { /*Handle dynamic session*/
 
-                  $this->helper->gigyaRaasExtCookieAjax($request, $raas_login);
+                  $this->helper->gigyaRaasExtCookie($request, $raas_login);
                 }
 
               $user->save();
@@ -325,7 +325,7 @@
               try {
                 $user->save();
                 $raas_login = TRUE;
-                $this->helper->gigyaRaasExtCookieAjax($request, $raas_login);
+                $this->helper->gigyaRaasExtCookie($request, $raas_login);
                 user_login_finalize($user);
 
                 if (!$is_session_validation_process) {

@@ -360,7 +360,7 @@ class GigyaRaasHelper {
     return $result;
   }
 
-  public function gigyaRaasExtCookieAjax(Request $request, $login = FALSE) {
+  public function gigyaRaasExtCookie(Request $request, $login = FALSE) {
     if ($this->shouldAddExtCookie($request, $login)) {
       /* Retrieve config from Drupal */
       $helper       = new GigyaHelper();

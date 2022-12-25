@@ -17,19 +17,6 @@ var getUrlPrefix = function () {
 
     'use strict';
 
-	/**
-	 * @type {{attach: Drupal.behaviors.gigyaRassDynamicSession.attach}}
-	 *
-	 * @property drupalSettings.gigyaExtra.session_type
-	 */
-	Drupal.behaviors.gigyaRassDynamicSession = {
-		attach: function (context, settings) {
-            if ("dynamic" === drupalSettings.gigyaExtra.session_type) {
-				Drupal.ajax({url: getUrlPrefix() + 'gigya/extcookie'}).execute();
-            }
-        }
-    };
-
 	/* For Internet Explorer */
 	if (!String.prototype.startsWith) {
 		String.prototype.startsWith = function (searchString, position) {
@@ -268,6 +255,7 @@ var getUrlPrefix = function () {
 	 * @property gigya.accounts.showScreenSet
 	 * @property drupalSettings.gigya.raas.customScreenSets
 	 */
+
 	var initCustomScreenSet = function () {
 		if (drupalSettings.gigya.enableRaaS) {
 			var customScreenSets = drupalSettings.gigya.raas.customScreenSets;

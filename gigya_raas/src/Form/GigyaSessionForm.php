@@ -167,8 +167,7 @@ class GigyaSessionForm extends ConfigFormBase {
      *
      * @throws \Exception
      */
-    public
-    function validateForm( array &$form, FormStateInterface $form_state ) {
+    public function validateForm( array &$form, FormStateInterface $form_state ) {
       parent::validateForm( $form, $form_state );
 
       $session_time             = $form_state->getValue( 'session_time' );
@@ -180,8 +179,7 @@ class GigyaSessionForm extends ConfigFormBase {
       }
     }
 
-    public
-    function submitForm( array &$form, FormStateInterface $form_state ) {
+    public function submitForm( array &$form, FormStateInterface $form_state ) {
       $config = $this->config( 'gigya_raas.settings' );
       $config->set( 'gigya_raas.session_type', $this->getValue( $form_state, 'session_type' ) );
       $config->set( 'gigya_raas.session_time', $this->getValue( $form_state, 'session_time' ) );

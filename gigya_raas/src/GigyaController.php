@@ -156,13 +156,31 @@
         $signature = ($auth_mode == 'user_rsa') ? $id_token : $uid_sig;
         /** @var GigyaUser $gigyaUser */
         $gigyaUser = $this->helper->validateAndFetchRaasUser($guid, $signature, $sig_timestamp);
-        if ($gigyaUser) {
+        if ($gigyaUser) {/////////////** here */
           $userEmails = $gigyaUser->getAllVerifiedEmails();
-
 
 
           /* loginIDs.emails and emails.verified is missing in Gigya */
           if (empty($userEmails)) {
+//            if (Drupal::config('gigya.settings')->get('gigya.is_email_dummy')) {
+//             /// $fake_email          = getUserFakeEmail($gigyaUser->getUID());
+//              $cureent_email_in_db = Drupal::currentUser()->getEmail();
+//
+//              if ($cureent_email_in_db === NULL) {
+//                $drupal_user= Drupal::currentUser();
+//
+//
+//              }else if ($cureent_email_in_db !== $fake_email) {
+//                $err_msg        = $this->t(
+//                  'Oops! Something went wrong during your login/registration process. Please try to login/register again.'
+//                );
+//                $logger_message = [
+//                  'type'    => 'gigya_raas',
+//                  'message' => 'Email address is required by Drupal and is missing, The user asked to notice the admin.',
+//                ];
+//                  $response->addCommand(new AlertCommand($err_msg));
+//              }
+//            }else {
             if (!$is_session_validation_process) {
 
               $err_msg = $this->t(
@@ -183,8 +201,8 @@
 
               $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
             }
-
           }
+          //     }
           /* loginIDs.emails or emails.verified is found in Gigya */
           else {
 
@@ -362,7 +380,7 @@
           }
         }
         else { /* No valid Gigya user found */
-          if (!$is_session_validation_process) {
+          if (!$is_session_validation_process) {/////////////** here */
             $this->gigya_helper->saveUserLogoutCookie();
             $logger_message = ['type' => 'gigya_raas', 'message' => 'Invalid user. Guid: ' . $guid];
             $err_msg = $this->t(

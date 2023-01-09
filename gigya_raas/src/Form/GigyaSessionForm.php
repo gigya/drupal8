@@ -169,13 +169,11 @@ class GigyaSessionForm extends ConfigFormBase {
     $form['dummy_email_format'] = [
       '#type'          => 'textfield',
       '#title'         => $this->t( 'Dummy email Format' ),
-      '#description'   => $this->t( 'The format of the dummy email, \\n use ${loginId} for the user login ID' ),
-      '#default_value' => $config->get( 'gigya_raas.dummy_email_format' ),
+      '#description'   => $this->t( 'The format of the dummy email, \\n use ${loginID} for the user login ID' ),
+      '#default_value' => $config->get( 'gigya_raas.dummy_email_format' )? : '${loginID}@fake-Gigya-email.com',
       '#states'        => [
         'visible' => [
-          ':input[name="is_email_dummy"]' => [
-            [ 'value' => 'checked' ],
-          ],
+          ':input[name="is_email_dummy"]' =>[ 'checked' => True ],
         ],
       ],
     ];
@@ -189,8 +187,7 @@ class GigyaSessionForm extends ConfigFormBase {
      *
      * @throws \Exception
      */
-    public
-    function validateForm( array &$form, FormStateInterface $form_state ) {
+    public function validateForm( array &$form, FormStateInterface $form_state ) {
       parent::validateForm( $form, $form_state );
 
       $session_time             = $form_state->getValue( 'session_time' );
@@ -199,6 +196,15 @@ class GigyaSessionForm extends ConfigFormBase {
       $minimum_session_time = 61;
       if ( intval( $session_time ) < $minimum_session_time or intval( $remember_me_session_time ) < $minimum_session_time ) {
         $form_state->setErrorByName( 'gigya-raas-sessions', $this->t( 'Session durations should be at least ' . $minimum_session_time . ' seconds.' ) );
+      }
+
+      $dummy_email_format = $form_state->getValue('dummy_email_format');
+
+      if($this->getValue( $form_state, 'is_email_dummy' )
+         and ((str_contains($dummy_email_format, '${loginID}') === false) or str_contains($dummy_email_format, '@') === false)){
+
+        $form_state->setErrorByName( 'gigya-raas-dummy-email-format', $this->t( 'The dummy email format must contain the string "${loginID}" and "@".') );
+
       }
     }
 

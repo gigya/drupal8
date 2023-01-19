@@ -169,8 +169,8 @@ class GigyaSessionForm extends ConfigFormBase {
     $form['dummy_email_format'] = [
       '#type'          => 'textfield',
       '#title'         => $this->t( 'Dummy email Format' ),
-      '#description'   => $this->t( 'The format of the dummy email, \\n use ${loginID} for the user login ID' ),
-      '#default_value' => $config->get( 'gigya_raas.dummy_email_format' )? : '${loginID}@fake-Gigya-email.com',
+      '#description'   => $this->t( 'The format of the dummy email, use ${UID} for the user login ID' ),
+      '#default_value' => $config->get( 'gigya_raas.dummy_email_format' )? : '${UID}@fake-Gigya-email.com',
       '#states'        => [
         'visible' => [
           ':input[name="is_email_dummy"]' =>[ 'checked' => True ],
@@ -201,10 +201,9 @@ class GigyaSessionForm extends ConfigFormBase {
       $dummy_email_format = $form_state->getValue('dummy_email_format');
 
       if($this->getValue( $form_state, 'is_email_dummy' )
-         and ((str_contains($dummy_email_format, '${loginID}') === false) or str_contains($dummy_email_format, '@') === false)){
+         and ((str_contains($dummy_email_format, '${UID}') === false) or str_contains($dummy_email_format, '@') === false)){
 
-        $form_state->setErrorByName( 'gigya-raas-dummy-email-format', $this->t( 'The dummy email format must contain the string "${loginID}" and "@".') );
-
+        $form_state->setErrorByName( 'gigya-raas-dummy-email-format', $this->t( 'The dummy email format must contain the string "${UID}" and "@".') );
       }
     }
 

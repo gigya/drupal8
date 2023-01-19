@@ -117,6 +117,8 @@
 		 * @throws Drupal\Core\Entity\EntityStorageException
 		 */
 		public function gigyaRaasLoginAjax(Request $request) {
+
+      Drupal::logger("gigya test")->info("login ajax");
       $is_session_validation_process = $request->get('is_session_validation_process');
 
       if (Drupal::currentUser()->isAnonymous() || $is_session_validation_process) {
@@ -156,53 +158,211 @@
         $signature = ($auth_mode == 'user_rsa') ? $id_token : $uid_sig;
         /** @var GigyaUser $gigyaUser */
         $gigyaUser = $this->helper->validateAndFetchRaasUser($guid, $signature, $sig_timestamp);
-        if ($gigyaUser) {/////////////** here */
+        if ($gigyaUser) {
           $userEmails = $gigyaUser->getAllVerifiedEmails();
 
 
           /* loginIDs.emails and emails.verified is missing in Gigya */
           if (empty($userEmails)) {
-//            if (Drupal::config('gigya.settings')->get('gigya.is_email_dummy')) {
-//             /// $fake_email          = getUserFakeEmail($gigyaUser->getUID());
-//              $cureent_email_in_db = Drupal::currentUser()->getEmail();
-//
-//              if ($cureent_email_in_db === NULL) {
-//                $drupal_user= Drupal::currentUser();
-//
-//
-//              }else if ($cureent_email_in_db !== $fake_email) {
-//                $err_msg        = $this->t(
-//                  'Oops! Something went wrong during your login/registration process. Please try to login/register again.'
-//                );
-//                $logger_message = [
-//                  'type'    => 'gigya_raas',
-//                  'message' => 'Email address is required by Drupal and is missing, The user asked to notice the admin.',
-//                ];
-//                  $response->addCommand(new AlertCommand($err_msg));
-//              }
-//            }else {
-            if (!$is_session_validation_process) {
+            /*checking if the admin using fake email*/
+            if (Drupal::config('gigya.settings')->get('gigya.is_email_dummy')) {
+              $fake_email          = $this->getUserFakeEmail($gigyaUser->getUID());
+              $cureent_email_in_db = Drupal::currentUser()->getEmail();
 
-              $err_msg = $this->t(
-                'Email address is required by Drupal and is missing, please contact the site administrator.');
-              $logger_message = [
-                'type' => 'gigya_raas',
-                'message' => 'Email address is required by Drupal and is missing, The user asked to notice the admin.',
-              ];
-              $this->noticeUserAndAdminByLoginIssue($response, $logger_message, $err_msg);
+              $user = $this->helper->getDrupalUidByGigyaUid($gigyaUser->getUID());
+              if ($user) {
+                /* if a user has the a permission of bypass gigya raas (admin user)
+                 *  they can't login via gigya
+                 */
+                if ($user->hasPermission('bypass gigya raas')) {
 
-              $this->gigya_helper->saveUserLogoutCookie();
-            }else {
+                  if ($is_session_validation_process) {
+                    $logger_message = ['type'    => 'gigya_raas',
+                                       'message' => 'Apparently someone trying to steal permission of admin user. the user email: ' . $user->getEmail(),
+                    ];
 
-              $logger_message = [
-                'type' => 'gigya_raas',
-                'message' => 'Email address is required by Drupal and is missing,Probably the email has been deleted.'
-              ];
+                    $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
+                  }
+                  else {
 
-              $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
+                    $logger_message = [
+                      'type' => 'gigya_raas',
+                      'message' => 'User with email ' . $user->getEmail()
+                                   . 'that has "bypass gigya raas" permission tried to login via gigya',
+                    ];
+                    $err_msg = $this->t(
+                      'Oops! Something went wrong during your login/registration process. Please try to login/register again.'
+                    );
+                    $this->gigya_helper->saveUserLogoutCookie();
+                    $this->noticeUserAndAdminByLoginIssue($response, $logger_message, $err_msg);
+
+                  }
+                  return $response;
+
+                }
+                // Prevent login via gigya with fake email
+                if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, $user->id())) {
+
+                  if ($user->getEmail() == $unique_email) {
+                    $logger_message = ['type'    => 'gigya_raas',
+                                       'message' => 'Apparently someone trying to steal permission of admin user. the user email: ' . $user->getEmail(),
+                    ];
+
+                    $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
+
+                  }
+                }
+
+                /* Set global variable so we would know the user as logged in
+                   RaaS in other functions down the line.*/
+                $raas_login = TRUE;
+
+                /* Log the user in */
+                $this->helper->processFieldMapping($gigyaUser, $user);
+
+                $session_exp_type = Drupal::config('gigya_raas.settings')
+                                          ->get('gigya_raas.session_type');
+
+                if ($session_exp_type == 'until_browser_close') {/*Handle until browser close session*/
+
+                  $this->gigyaRaasCreateUbcCookie($request, $raas_login);
+
+                }
+                else if ($this->helper->shouldAddExtCookie($request, $raas_login)) { /*Handle dynamic session*/
+
+                  $this->helper->gigyaRaasExtCookieAjax($request, $raas_login);
+                }
+
+                $user->save();
+                user_login_finalize($user);
+
+                if (!$is_session_validation_process) {
+
+                  /* Set user session */
+                  $this->gigyaRaasSetLoginSession($session_type);
+                }
+
+              }
+              elseif (!$is_session_validation_process) /* User does not exist - register */ {
+                $username = '';
+                $uids = $this->helper->getUidByMails($userEmails);
+                if (!empty($uids)) {
+                  Drupal::logger('gigya_raas')->warning(
+                    "User with uid " . $guid . " that already exists tried to register via gigya"
+                  );
+                  $this->gigya_helper->saveUserLogoutCookie();
+                  $err_msg = $this->t(
+                    "Oops! Something went wrong during your login/registration process. Please try to login/register again."
+                  );
+                  $response->addCommand(new AlertCommand($err_msg));
+                  return $response;
+                }
+                $email_exists_in_drupal  = \Drupal::entityQuery('user')
+                                                  ->condition('mail', $fake_email)
+                                                  ->execute();
+                //the email already exist, there is need to make the email uniqe
+                if (!empty($email_exists_in_drupal)) {
+                  ////add the email a uniq parameter
+                }
+
+                $gigya_user_name = $gigyaUser->getProfile()->getUsername();
+                $uname = !empty($gigya_user_name) ? $gigyaUser->getProfile()->getUsername()
+                  : $gigyaUser->getProfile()->getFirstName();
+
+                if (!$this->helper->getUidByName($uname)) {
+                  $username = $uname;
+                }
+                else {
+                  /* If user name is taken use first name if it is not empty. */
+                  $gigya_firstname = $gigyaUser->getProfile()->getFirstName();
+                  if (!empty($gigya_firstname)
+                      && (!$this->helper->getUidByName(
+                      $gigyaUser->getProfile()->getFirstName()
+                    ))
+                  ) {
+                    $username = $gigyaUser->getProfile()->getFirstName();
+                  }
+                  else {
+                    /* When all fails add unique id  to the username so we could register the user. */
+                    $username = $uname . '_' . uniqid();
+                  }
+                }
+
+                $user = User::create(
+                  [
+                    'name' => $username,
+                    'pass' => Drupal::hasService('password_generator') ? Drupal::service('password_generator')->generate(32) : user_password(),
+                    'status' => 1,
+                    'mail' => $fake_email
+                  ]
+                );
+                $user->save();
+                $this->helper->processFieldMapping($gigyaUser, $user);
+
+                /* Allow other modules to modify the data before user is created in the Drupal database (create user hook). */
+                Drupal::moduleHandler()->alter('gigya_raas_create_user', $gigyaUser, $user);
+                try {
+                  $user->save();
+                  $raas_login = TRUE;
+                  $this->helper->gigyaRaasExtCookieAjax($request, $raas_login);
+                  user_login_finalize($user);
+
+                  if (!$is_session_validation_process) {
+                    /* Set user session */
+                    $this->gigyaRaasSetLoginSession($session_type);
+                  }
+                } catch (Exception $e) {
+                  if ($is_session_validation_process) {
+                    $logger_message = ['type' => 'gigya_raas', 'message' => 'can not save the user.'];
+                    $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
+                  }
+                  else {
+                    $logger_message = [
+                      'type' => 'gigya_raas',
+                      'message' => 'User with username: ' . $username . ' could not log in after registration. Exception: ' . $e->getMessage(),
+                    ];
+                    $err_msg = $this->t(
+                      "Oops! Something went wrong during your registration process. You are registered to the site but not logged-in. Please try to login again."
+                    );
+                    session_destroy();
+                    $this->noticeUserAndAdminByLoginIssue($response, $logger_message, $err_msg);
+                    $this->gigya_helper->saveUserLogoutCookie();
+
+                    /* Post-logout redirect hook */
+                    Drupal::moduleHandler()->alter('gigya_post_logout_redirect', $logout_redirect);
+                    $response->addCommand(new InvokeCommand(NULL, 'logoutRedirect', [$logout_redirect]));
+                  }
+                }
+              }
+              //else { /* Validation flow – user had already been validated, but suddenly isn't found in Drupal – possibly deleted */
+              //  $logger_message = ['type' => 'gigya_raas', 'message' => 'User had already been validate, probably this user was deleted.'];
+              //  $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
+              //}
+            }
+            else {
+              if (!$is_session_validation_process) {
+
+                $err_msg        = $this->t(
+                  'Email address is required by Drupal and is missing, please contact the site administrator.');
+                $logger_message = [
+                  'type'    => 'gigya_raas',
+                  'message' => 'Email address is required by Drupal and is missing, The user asked to notice the admin.',
+                ];
+                $this->noticeUserAndAdminByLoginIssue($response, $logger_message, $err_msg);
+
+                $this->gigya_helper->saveUserLogoutCookie();
+              }
+              else {
+
+                $logger_message = [
+                  'type'    => 'gigya_raas',
+                  'message' => 'Email address is required by Drupal and is missing,Probably the email has been deleted.',
+                ];
+
+                $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
+              }
             }
           }
-          //     }
           /* loginIDs.emails or emails.verified is found in Gigya */
           else {
 
@@ -215,12 +375,13 @@
               if ($user->hasPermission('bypass gigya raas')) {
 
                 if ($is_session_validation_process) {
-                  $logger_message = ['type' => 'gigya_raas', 'message' => 'Apparently someone trying to steal permission of admin user. the user email: '.$user->getEmail()];
+                  $logger_message = ['type'    => 'gigya_raas',
+                                     'message' => 'Apparently someone trying to steal permission of admin user. the user email: ' . $user->getEmail(),
+                  ];
 
                   $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
                 }
                 else {
-
 
                   $logger_message = [
                     'type' => 'gigya_raas',
@@ -282,7 +443,8 @@
                 $this->gigyaRaasSetLoginSession($session_type);
               }
 
-            }elseif (!$is_session_validation_process) /* User does not exist - register */ {
+            }
+            elseif (!$is_session_validation_process) /* User does not exist - register */ {
 
               $uids = $this->helper->getUidByMails($userEmails);
               if (!empty($uids)) {
@@ -380,7 +542,7 @@
           }
         }
         else { /* No valid Gigya user found */
-          if (!$is_session_validation_process) {/////////////** here */
+          if (!$is_session_validation_process) {
             $this->gigya_helper->saveUserLogoutCookie();
             $logger_message = ['type' => 'gigya_raas', 'message' => 'Invalid user. Guid: ' . $guid];
             $err_msg = $this->t(
@@ -526,6 +688,12 @@
       user_logout();
     }
 
+
+    protected function getUserFakeEmail($uid){
+     $email_format =  Drupal::config('gigya_raas.settings')->get('dummy_email_format');
+      str_replace('${loginID}',$uid, $email_format);
+      return $email_format;
+    }
 
   }
 

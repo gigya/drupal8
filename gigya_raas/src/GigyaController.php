@@ -159,10 +159,11 @@
         if ($gigyaUser) {
           $userEmails = $gigyaUser->getAllVerifiedEmails();
 
+          $is_dummy_email_used = Drupal::config('gigya.settings')->get('gigya.is_email_dummy');
 
 
           /* loginIDs.emails and emails.verified is missing in Gigya */
-          if (empty($userEmails)) {
+          if (empty($userEmails) and !$is_dummy_email_used) {
             if (!$is_session_validation_process) {
 
               $err_msg = $this->t(
@@ -187,6 +188,11 @@
           }
           /* loginIDs.emails or emails.verified is found in Gigya */
           else {
+            $is_dummy_email_used = Drupal::config('gigya.settings')->get('gigya.is_email_dummy');
+            if($is_dummy_email_used)
+            {
+              $fake_email          = $this->getUserFakeEmail($gigyaUser);
+            }
 
             /** @var UserInterface $user */
             $user = $this->helper->getDrupalUidByGigyaUid($gigyaUser->getUID());
@@ -203,7 +209,6 @@
                 }
                 else {
 
-
                   $logger_message = [
                     'type' => 'gigya_raas',
                     'message' => 'User with email ' . $user->getEmail()
@@ -219,8 +224,13 @@
                 return $response;
 
               }
+              $unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, $user->id());
+              // Prevent login via gigya with fake email
+              if ($is_dummy_email_used ) {
+                $user->setEmail($fake_email);
+                $user->save();
 
-              if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, $user->id())) {
+              }else if (!$is_dummy_email_used && $unique_email) {
 
                 if ($user->getEmail() !== $unique_email) {
                   $user->setEmail($unique_email);
@@ -228,7 +238,7 @@
 
                 }
               }
-              else {
+              else if(!$is_dummy_email_used && ! $unique_email) {
                 $this->gigya_helper->saveUserLogoutCookie();
                 $err_msg = $this->t("Email already exists");
                 $response->addCommand(new AlertCommand($err_msg));
@@ -277,8 +287,20 @@
                 );
                 $response->addCommand(new AlertCommand($err_msg));
                 return $response;
+
               }
-              if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, 0)) {
+              if ($is_dummy_email_used) {
+                $email_exists_in_drupal = \Drupal::entityQuery('user')
+                                                 ->condition('mail', $fake_email)
+                                                 ->execute();
+
+                //the email already exist, there is need to make the email uniqe
+                if (!empty($email_exists_in_drupal)) {
+                  $fake_email = uniqid() . '_' . $fake_email;
+                }
+                $email = $fake_email;
+              }
+              else if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, 0)) {
                 $email = $unique_email;
               }
               else {
@@ -288,7 +310,8 @@
                 return $response;
               }
               $gigya_user_name = $gigyaUser->getProfile()->getUsername();
-              $uname = !empty($gigya_user_name) ? $gigyaUser->getProfile()->getUsername()
+              $uname           = !empty($gigya_user_name) ? $gigyaUser->getProfile()
+                                                                      ->getUsername()
                 : $gigyaUser->getProfile()->getFirstName();
               if (!$this->helper->getUidByName($uname)) {
                 $username = $uname;
@@ -297,7 +320,7 @@
                 /* If user name is taken use first name if it is not empty. */
                 $gigya_firstname = $gigyaUser->getProfile()->getFirstName();
                 if (!empty($gigya_firstname)
-                  && (!$this->helper->getUidByName(
+                    && (!$this->helper->getUidByName(
                     $gigyaUser->getProfile()->getFirstName()
                   ))
                 ) {
@@ -311,10 +334,11 @@
 
               $user = User::create(
                 [
-                  'name' => $username,
-                  'pass' => Drupal::hasService('password_generator') ? Drupal::service('password_generator')->generate(32) : user_password(),
+                  'name'   => $username,
+                  'pass'   => Drupal::hasService('password_generator') ? Drupal::service('password_generator')
+                                                                               ->generate(32) : user_password(),
                   'status' => 1,
-                  'mail' => $email
+                  'mail'   => $email,
                 ]
               );
               $user->save();
@@ -613,6 +637,9 @@
       user_logout();
     }
 
-
+  protected function getUserFakeEmail($gigyaUser)
+    {
+      return Drupal::config('gigya.settings')->get('gigya.dummy_email_format');
+  }
   }
 

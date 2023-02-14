@@ -161,14 +161,14 @@ class GigyaSessionForm extends ConfigFormBase {
     $form['is_email_dummy'] = [
       '#type'          => 'checkbox',
       '#title'         => $this->t('Creating dummy email while using non email login'),
-      '#description'   => $this->t('a fake email will be create in case email doesn\'t exists.'),
+      '#description'   => $this->t('a fake email will be create in case email doesn\'t exists in Gigya.'),
       '#default_value' => $config->get('gigya_raas.is_email_dummy'),
     ];
 
     $form['dummy_email_format'] = [
       '#type'          => 'textfield',
-      '#title'         => $this->t('Dummy email Format'),
-      '#description'   => $this->t('The format of the dummy email, use ${UID} for the user login ID'),
+      '#title'         => $this->t('Dummy Email Format'),
+      '#description'   => $this->t('The format of the dummy email, use ${UID}, ${firstName}, ${lastName} or ${nickName}  to make the email unique (you can use all of them).'),
       '#default_value' => $config->get('gigya_raas.dummy_email_format') ?: '${UID}@fake-Gigya-email.com',
       '#states'        => [
         'visible' => [

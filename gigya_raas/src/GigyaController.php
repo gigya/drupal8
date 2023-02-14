@@ -159,7 +159,8 @@
         if ($gigyaUser) {
           $userEmails = $gigyaUser->getAllVerifiedEmails();
 
-          $is_dummy_email_used = Drupal::config('gigya.settings')->get('gigya.is_email_dummy');
+          $is_dummy_email_used = Drupal::config('gigya_raas.settings')->get('gigya_raas.is_email_dummy');
+
 
 
           /* loginIDs.emails and emails.verified is missing in Gigya */
@@ -186,9 +187,8 @@
             }
 
           }
-          /* loginIDs.emails or emails.verified is found in Gigya */
+          /* loginIDs.emails or emails.verified is found in Gigya or using dummy email for mobile login */
           else {
-            $is_dummy_email_used = Drupal::config('gigya.settings')->get('gigya.is_email_dummy');
             if($is_dummy_email_used)
             {
               $fake_email          = $this->getUserFakeEmail($gigyaUser);
@@ -275,32 +275,40 @@
               }
 
             }elseif (!$is_session_validation_process) /* User does not exist - register */ {
+              Drupal::logger('dummy email')->warning('elseif (!$is_session_validation_process) /*');
+             if(!$is_dummy_email_used) {
+               $uids = $this->helper->getUidByMails($userEmails);
+               if (!empty($uids)) {
+                 Drupal::logger('gigya_raas')->warning(
+                   "User with uid " . $guid . " that already exists tried to register via gigya"
+                 );
+                 $this->gigya_helper->saveUserLogoutCookie();
+                 $err_msg = $this->t(
+                   "Oops! Something went wrong during your login/registration process. Please try to login/register again."
+                 );
+                 $response->addCommand(new AlertCommand($err_msg));
+                 return $response;
 
-              $uids = $this->helper->getUidByMails($userEmails);
-              if (!empty($uids)) {
-                Drupal::logger('gigya_raas')->warning(
-                  "User with uid " . $guid . " that already exists tried to register via gigya"
-                );
-                $this->gigya_helper->saveUserLogoutCookie();
-                $err_msg = $this->t(
-                  "Oops! Something went wrong during your login/registration process. Please try to login/register again."
-                );
-                $response->addCommand(new AlertCommand($err_msg));
-                return $response;
-
-              }
+               }
+             }
               if ($is_dummy_email_used) {
+                Drupal::logger('dummy email')->warning('if ($is_dummy_email_used)*');
+
                 $email_exists_in_drupal = \Drupal::entityQuery('user')
                                                  ->condition('mail', $fake_email)
                                                  ->execute();
 
                 //the email already exist, there is need to make the email uniqe
                 if (!empty($email_exists_in_drupal)) {
+                  Drupal::logger('dummy email')->warning('f (!empty($email_exists_in_drupal)');
+
                   $fake_email = uniqid() . '_' . $fake_email;
                 }
                 $email = $fake_email;
               }
               else if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, 0)) {
+                Drupal::logger('dummy email')->warning('$unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, 0)');
+
                 $email = $unique_email;
               }
               else {
@@ -347,6 +355,8 @@
               /* Allow other modules to modify the data before user is created in the Drupal database (create user hook). */
               Drupal::moduleHandler()->alter('gigya_raas_create_user', $gigyaUser, $user);
               try {
+                Drupal::logger('dummy email')->warning(' try {'.$fake_email);
+
                 $user->save();
                 $raas_login = TRUE;
                 $this->helper->gigyaRaasExtCookie($request, $raas_login);
@@ -357,6 +367,8 @@
                   $this->gigyaRaasSetLoginSession($session_type);
                 }
               } catch (Exception $e) {
+                Drupal::logger('dummy email')->warning(' catch (Exception $e)');
+
                 if ($is_session_validation_process) {
                   $logger_message = ['type' => 'gigya_raas', 'message' => 'can not save the user.'];
                   $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
@@ -487,7 +499,112 @@
       Drupal::service('tempstore.private')->get('gigya_raas')->set('session_is_remember_me', $is_remember_me);
     }
 
+    /**
+     * Process gigya dynamic cookie request.
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     *   The incoming request object.
+     * @param boolean $login
+     *
+     * @return Drupal\Core\Ajax\AjaxResponse
+     *   The Ajax response
+     */
+    public function gigyaRaasExtCookieAjax(Request $request, $login = FALSE) {
+      if ($this->shouldAddExtCookie($request, $login)) {
+        /* Retrieve config from Drupal */
+        $helper = new GigyaHelper();
+        $gigya_conf = Drupal::config('gigya.settings');
+        $session_time = Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
+        $api_key = $gigya_conf->get('gigya.gigya_api_key');
+        $app_key = $gigya_conf->get('gigya.gigya_application_key');
+        $auth_mode = $gigya_conf->get('gigya.gigya_auth_mode');
+        $auth_key = $helper->decrypt(($auth_mode === 'user_rsa') ? $gigya_conf->get('gigya.gigya_rsa_private_key') : $gigya_conf->get('gigya.gigya_application_secret_key'));
 
+        $token = $this->getGigyaLoginToken($request);
+        $now = $_SERVER['REQUEST_TIME'];
+        $session_expiration = strval($now + $session_time);
+        $gltexp_cookie = $request->cookies->get('gltexp_' . $api_key);
+
+        if (!empty($gltexp_cookie)) {
+          if ($auth_mode === 'user_rsa') {
+            $claims = json_decode(JWT::urlsafeB64Decode(explode('.', $gltexp_cookie)[1]), TRUE, 512, JSON_BIGINT_AS_STRING);
+            if (!empty($claims) && !empty($claims['exp'])) {
+              $gltexp_cookie_timestamp = $claims['exp'];
+            }
+          }
+          else {
+            $gltexp_cookie_timestamp = explode('_', $gltexp_cookie)[0];
+          }
+        }
+
+        if (empty($gltexp_cookie_timestamp) or (time() < $gltexp_cookie_timestamp)) {
+          if (!empty($token)) {
+            if ($auth_mode === 'user_rsa') {
+              $session_sig = $this->calculateDynamicSessionSignatureJwtSigned($token, $session_expiration, $app_key, $auth_key);
+            }
+            else {
+              $session_sig = $this->getDynamicSessionSignatureUserSigned($token, $session_expiration, $app_key, $auth_key);
+            }
+            setrawcookie('gltexp_' . $api_key, rawurlencode($session_sig), time() + (10 * 365 * 24 * 60 * 60), '/', $request->getHost(), $request->isSecure());
+          }
+        }
+      }
+
+      return new AjaxResponse();
+    }
+
+    /**
+     * @param $request
+     * @param $login
+     *
+     * @return bool
+     */
+
+    private function shouldAddExtCookie($request, $login) {
+      if ("dynamic" != Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type')) {
+        return FALSE;
+      }
+
+      if ($login) {
+        return TRUE;
+      }
+
+      $current_user = Drupal::currentUser();
+      if ($current_user->isAuthenticated() && !$current_user->hasPermission('bypass gigya raas')) {
+        $gigya_conf = Drupal::config('gigya.settings');
+        $api_key = $gigya_conf->get('gigya.gigya_api_key');
+        $gltexp_cookie = $request->cookies->get('gltexp_' . $api_key);
+        return !empty($gltexp_cookie);
+      }
+
+      return TRUE;
+    }
+
+    private function getDynamicSessionSignatureUserSigned($token, $expiration, $userKey, $secret) {
+      $unsignedExpString = utf8_encode($token . "_" . $expiration . "_" . $userKey);
+      $rawHmac = hash_hmac("sha1", utf8_encode($unsignedExpString), base64_decode($secret), TRUE);
+      $sig = base64_encode($rawHmac);
+
+      return $expiration . '_' . $userKey . '_' . $sig;
+    }
+
+    protected function calculateDynamicSessionSignatureJwtSigned(string $loginToken, int $expiration, string $applicationKey, string $privateKey) {
+      $payload = [
+        'sub' => $loginToken,
+        'iat' => time(),
+        'exp' => intval($expiration),
+        'aud' => 'gltexp',
+      ];
+      return JWT::encode($payload, $privateKey, 'RS256', $applicationKey);
+    }
+
+    public function getGigyaLoginToken(Request $request) {
+
+      $gigya_conf = Drupal::config('gigya.settings');
+      $api_key = $gigya_conf->get('gigya.gigya_api_key');
+      $glt_cookie = $request->cookies->get('glt_' . $api_key);
+      return (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL;
+    }
 
     /**
      * @param \Symfony\Component\HttpFoundation\Request|null $request
@@ -532,9 +649,51 @@
       user_logout();
     }
 
-  protected function getUserFakeEmail($gigyaUser)
-    {
-      return Drupal::config('gigya.settings')->get('gigya.dummy_email_format');
-  }
+    protected function getUserFakeEmail($gigyaUser) {
+
+      $typesOfValues = [
+        "uid"       => '${UID}',
+        'firstName' => '${firstName}',
+        "lastName"  => '${lastName}',
+        "nickName" =>'${nickName}'
+      ];
+
+      $fake_email = Drupal::config('gigya_raas.settings')
+                          ->get('gigya_raas.dummy_email_format');
+
+      foreach ($typesOfValues as $key => $val) {
+        $fake_email = $this->findAndReplace($key, $val, $gigyaUser, $fake_email);
+      }
+
+      return $fake_email;
+
+    }
+
+    protected function findAndReplace($typeOfData, $stringToReplace, $gigyaUser, $email) {
+
+      Drupal::logger('dummy email')->warning('email: '.$email);
+      Drupal::logger('dummy email')->warning('$typeOfData: '.$typeOfData);
+      Drupal::logger('dummy email')->warning('$stringToReplace: '.$stringToReplace);
+
+      $dataToReplace = '';
+
+      switch ($typeOfData) {
+        case 'uid':
+          $dataToReplace = $gigyaUser->getUID();
+          break;
+        case 'firstName':
+          $dataToReplace = $gigyaUser->getProfile()->getFirstName();
+          break;
+        case 'lastName':
+          $dataToReplace = $gigyaUser->getProfile()->getLastName();
+          break;
+        case'nickName':
+          $dataToReplace = $gigyaUser->getProfile()->getNickname();
+          break;
+      }
+
+      return str_replace($stringToReplace, $dataToReplace, $email);
+    }
+
   }
 

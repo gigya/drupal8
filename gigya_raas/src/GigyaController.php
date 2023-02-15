@@ -341,7 +341,7 @@
                 [
                   'name'   => $username,
                   'pass'   => Drupal::hasService('password_generator') ? Drupal::service('password_generator')
-                                                                               ->generate(32) : user_password(),
+                                                                               ->generate(32) : \Drupal::service('password_generator')->generate(),
                   'status' => 1,
                   'mail'   => $email,
                 ]

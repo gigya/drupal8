@@ -199,6 +199,7 @@ class GigyaSessionForm extends ConfigFormBase {
 
     $dummy_email_format = $form_state->getValue('dummy_email_format');
 
+
     if ($this->getValue($form_state, 'is_email_dummy') and !preg_match("~(.+)@(.+)\.([a-zA-Z0-9]{2,})~", $dummy_email_format)) {
       $form_state->setErrorByName('gigya-raas-dummy-email-format', $this->t('The dummy email format is not valid.'));
     }
@@ -217,7 +218,12 @@ class GigyaSessionForm extends ConfigFormBase {
     $config->set('gigya_raas.login_redirect', $this->getValue($form_state, 'login_redirect'));
     $config->set('gigya_raas.logout_redirect', $this->getValue($form_state, 'logout_redirect'));
     $config->set('gigya_raas.is_email_dummy', $this->getValue($form_state, 'is_email_dummy'));
-    $config->set('gigya_raas.dummy_email_format', $this->getValue($form_state, 'dummy_email_format'));
+    if(!$this->getValue($form_state, 'is_email_dummy'))
+    {
+      $config->set('gigya_raas.dummy_email_format', '');
+    }else{
+      $config->set('gigya_raas.dummy_email_format', $this->getValue($form_state, 'dummy_email_format'));
+    }
     $config->save();
 
     parent::submitForm($form, $form_state);

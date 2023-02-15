@@ -72,6 +72,7 @@
      */
     public function gigyaRaasProfileAjax(Request $request) {
       $gigya_data = $request->get('gigyaData');
+      $is_dummy_email_used = Drupal::config('gigya_raas.settings')->get('gigya_raas.is_email_dummy');
 
       if (!empty($gigya_data['id_token']) && $this->auth_mode === 'user_rsa') {
         $signature = $gigya_data['id_token'];
@@ -83,7 +84,7 @@
       if ($gigyaUser) {
         if ($user = $this->helper->getDrupalUidByGigyaUid($gigyaUser->getUID())) {
           if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, $user->id())) {
-            if ($user->mail !== $unique_email) {
+            if ($unique_email !== $user->mail ) {
               $user->setEmail($unique_email);
               $user->save();
             }
@@ -91,6 +92,13 @@
           $this->helper->processFieldMapping($gigyaUser, $user);
           Drupal::moduleHandler()->alter('gigya_profile_update', $gigyaUser, $user);
           $user->save();
+
+         if(!$this->helper->checkEmailsUniqueness($gigyaUser, $user->id()) and $is_dummy_email_used){
+            $dummy_mail = $this->getDummyEmail($gigyaUser);
+            if( empty($user->mail) )
+              $user->setEmail($dummy_mail);
+            $user->save();
+          }
         }
       }
 
@@ -118,7 +126,6 @@
 		 */
 		public function gigyaRaasLoginAjax(Request $request) {
       $is_session_validation_process = $request->get('is_session_validation_process');
-      $fake_email ='';
       if (Drupal::currentUser()->isAnonymous() || $is_session_validation_process) {
 
 				global $raas_login;
@@ -194,11 +201,7 @@
             /** @var UserInterface $user */
             $user = $this->helper->getDrupalUidByGigyaUid($gigyaUser->getUID());
 
-            Drupal::logger('dummy email')->warning(' $user: ');
             if($user){
-
-              Drupal::logger('dummy email')->warning('   if($user): ');
-
               /* if a user has the a permission of bypass gigya raas (admin user)
                *  they can't login via gigya
                */
@@ -226,31 +229,21 @@
                 return $response;
 
               }
-              Drupal::logger('dummy email')->warning(' after has permissions ');
-
               if(empty($userEmails) and $is_dummy_email_used)
               {
-                Drupal::logger('dummy email')->warning(' empty($userEmails) and ');
-
-                $unique_email = $this->getUserFakeEmail($gigyaUser);
+                $unique_email = $this->getDummyEmail($gigyaUser);
               }else {
-                Drupal::logger('dummy email')->warning(' !(empty($userEmails) and $is_dummy_email_used) ');
-
                 $unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, $user->id());
               }
 
-              // Prevent login via gigya with fake email
               if (!$is_dummy_email_used && !$unique_email) {
-                Drupal::logger('dummy email')->warning('  if (!$is_dummy_email_used && !$unique_email) ');
-
                 $this->gigya_helper->saveUserLogoutCookie();
                 $err_msg = $this->t("Email already exists");
                 $response->addCommand(new AlertCommand($err_msg));
                 return $response;
 
+                //There is no need to check if dummy email used because the uniqe mail will be create in case of dummy email
               }else if ($unique_email) {
-                Drupal::logger('dummy email')->warning(' else if ($unique_email) ');
-
                 if ($user->getEmail() !== $unique_email) {
                   $user->setEmail($unique_email);
                   $user->save();
@@ -279,9 +272,6 @@
 
               $user->save();
               user_login_finalize($user);
-              Drupal::logger('dummy email')->warning(' after user_login_finalize  ');
-
-
               if (!$is_session_validation_process) {
 
                 /* Set user session */
@@ -291,7 +281,6 @@
             }elseif (!$is_session_validation_process) /* User does not exist - register */ {
 
               $uids = '';
-              Drupal::logger('dummy email')->warning('elseif (!$is_session_validation_process) /*');
               if(!empty($userEmails)) {
                 $uids = $this->helper->getUidByMails($userEmails);
               }
@@ -319,7 +308,7 @@
                   return $response;
 
                 }else if($unique_email === false) {
-                  $email = $this->getUserFakeEmail($gigyaUser);
+                  $email = $this->getDummyEmail($gigyaUser);
                 }
 
               $gigya_user_name = $gigyaUser->getProfile()->getUsername();
@@ -363,7 +352,6 @@
               /* Allow other modules to modify the data before user is created in the Drupal database (create user hook). */
               Drupal::moduleHandler()->alter('gigya_raas_create_user', $gigyaUser, $user);
               try {
-                Drupal::logger('dummy email')->warning(' try {'.$fake_email);
 
                 $user->save();
                 $raas_login = TRUE;
@@ -375,8 +363,6 @@
                   $this->gigyaRaasSetLoginSession($session_type);
                 }
               } catch (Exception $e) {
-                Drupal::logger('dummy email')->warning(' catch (Exception $e)');
-
                 if ($is_session_validation_process) {
                   $logger_message = ['type' => 'gigya_raas', 'message' => 'can not save the user.'];
                   $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
@@ -657,7 +643,7 @@
       user_logout();
     }
 
-    protected function getUserFakeEmail($gigyaUser) {
+    protected function getDummyEmail($gigyaUser) {
 
       $typesOfValues = [
         "uid"       => '${UID}',
@@ -666,23 +652,18 @@
         "nickName" =>'${nickName}'
       ];
 
-      $fake_email = Drupal::config('gigya_raas.settings')
+      $dummy_email = Drupal::config('gigya_raas.settings')
                           ->get('gigya_raas.dummy_email_format');
 
       foreach ($typesOfValues as $key => $val) {
-        $fake_email = $this->findAndReplace($key, $val, $gigyaUser, $fake_email);
+        $dummy_email = $this->findAndReplace($key, $val, $gigyaUser, $dummy_email);
       }
 
-      return $fake_email;
+      return $dummy_email;
 
     }
 
     protected function findAndReplace($typeOfData, $stringToReplace, $gigyaUser, $email) {
-
-      Drupal::logger('dummy email')->warning('email: '.$email);
-      Drupal::logger('dummy email')->warning('$typeOfData: '.$typeOfData);
-      Drupal::logger('dummy email')->warning('$stringToReplace: '.$stringToReplace);
-
       $dataToReplace = '';
 
       switch ($typeOfData) {

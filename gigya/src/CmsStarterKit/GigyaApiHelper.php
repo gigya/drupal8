@@ -382,12 +382,13 @@ class GigyaApiHelper
 		}
 		$iv    = openssl_random_pseudo_bytes(self::IV_SIZE);
 
-        $encryptParams = [
-            'data' => $str,
-            'cipher_algo' => 'AES-256-CBC',
-            'passphrase' => $key,
-            'iv' => $iv,
-        ];
+                $encryptParams = [
+                    'data' => $str,
+                    'cipher_algo' => 'AES-256-CBC',
+                    'passphrase' => $key,
+                    'iv' => $iv,
+                ];
+		
 		$crypt = openssl_encrypt(...$encryptParams);
 
 		return trim(base64_encode($iv . $crypt));

@@ -186,8 +186,8 @@ class GigyaSessionForm extends ConfigFormBase {
      *
      * @throws \Exception
      */
-    public function validateForm( array &$form, FormStateInterface $form_state ) {
-      parent::validateForm( $form, $form_state );
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
 
     $session_time             = $form_state->getValue('session_time');
     $remember_me_session_time = $form_state->getValue('remember_me_session_time');

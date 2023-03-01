@@ -381,15 +381,7 @@ class GigyaApiHelper
 			$key = getenv("KEK");
 		}
 		$iv    = openssl_random_pseudo_bytes(self::IV_SIZE);
-
-                $encryptParams = [
-                    'data' => $str,
-                    'cipher_algo' => 'AES-256-CBC',
-                    'passphrase' => $key,
-                    'iv' => $iv,
-                ];
-		
-		$crypt = openssl_encrypt(...$encryptParams);
+		$crypt = openssl_encrypt($str, 'AES-256-CBC', $key, 0, $iv);
 
 		return trim(base64_encode($iv . $crypt));
 	}

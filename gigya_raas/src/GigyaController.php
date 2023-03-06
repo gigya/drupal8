@@ -179,7 +179,6 @@
 
           /* loginIDs.emails and emails.verified is missing in Gigya */
           if (empty($userEmails) and !$is_dummy_email_used) {
-
             if (!$is_session_validation_process) {
 
               $err_msg        = $this->t(
@@ -325,12 +324,15 @@
               $gigya_user_name = $gigyaUser->getProfile()->getUsername();
 
               $uname = !empty($gigya_user_name) ? $gigyaUser->getProfile()
-                                                            ->getUsername()
+                ->getUsername()
                 : $gigyaUser->getProfile()->getFirstName();
+
+              if (empty($uname)) {
+                $uname = $this->editPHoneNumber($gigyaUser->getPhoneNumber());
+              }
 
               if (!$this->helper->getUidByName($uname)) {
                 $username = $uname;
-
               }
               else {
                 /* If user name is taken use first name if it is not empty. */
@@ -338,12 +340,11 @@
 
                 if (!empty($gigya_firstname)
                     && (!$this->helper->getUidByName(
-                    $gigyaUser->getProfile()->getFirstName()
-                  ))
-                ) {
-                  $username = $gigyaUser->getProfile()->getFirstName();
-                }
+                    $gigyaUser->getProfile()->getFirstName()))) {
 
+                  $username = $gigyaUser->getProfile()->getFirstName();
+
+                }
                 else {
                   /* When all fails add unique id  to the username so we could register the user. */
                   $username = $uname . '_' . uniqid();
@@ -354,7 +355,8 @@
                 [
                   'name'   => $username,
                   'pass'   => Drupal::hasService('password_generator') ? Drupal::service('password_generator')
-                                                                               ->generate(32) : \Drupal::service('password_generator')->generate(),
+                                                                               ->generate(32) : \Drupal::service('password_generator')
+                                                                                                       ->generate(),
                   'status' => 1,
                   'mail'   => $email,
                 ]
@@ -679,6 +681,7 @@
         'firstName' => '${firstName}',
         "lastName"  => '${lastName}',
         "nickName"  => '${nickName}',
+        "phoneNumber"=> '${phoneNumber}'
       ];
 
       $dummy_email = Drupal::config('gigya_raas.settings')
@@ -708,9 +711,18 @@
         case'nickName':
           $dataToReplace = $gigyaUser->getProfile()->getNickname();
           break;
+        case 'phoneNumber':
+          $dataToReplace = $this->editPHoneNumber($gigyaUser->getPhoneNumber());
+          break;
       }
 
       return str_replace($stringToReplace, $dataToReplace, $email);
+    }
+
+    private function editPHoneNumber(string $phoneNumber) {
+
+      if(!empty($phoneNumber))
+      return str_replace(['+', '-'],'', $phoneNumber);
     }
 
   }

@@ -168,13 +168,18 @@ class GigyaSessionForm extends ConfigFormBase {
     $form['dummy_email_format'] = [
       '#type'          => 'textfield',
       '#title'         => $this->t('Dummy Email Format'),
-      '#description'   => $this->t('The format of the dummy email, use ${UID}, ${firstName}, ${lastName} or ${nickName}  to make the email unique (you can use both).'),
-      '#default_value' => $config->get('gigya_raas.dummy_email_format') ?: '${UID}@fake-Gigya-email.com',
+      '#description'   => $this->t('The format of the dummy email, use ${UID}, ${firstName}, ${lastName}, ${phoneNumber}} or ${nickName}  to make the email unique (you can use both).'),
+      '#default_value' => $config->get('gigya_raas.dummy_email_format') ?: '',
       '#states'        => [
         'visible' => [
           ':input[name="is_email_dummy"]' => ['checked' => TRUE],
         ],
       ],
+      "#attributes"    => [
+        'placeHolder' => '${UID}@Fake-Gigya-Email.com',
+      ],
+
+
     ];
 
     return $form;
@@ -202,6 +207,14 @@ class GigyaSessionForm extends ConfigFormBase {
 
     if ($this->getValue($form_state, 'is_email_dummy') and !preg_match("~(.+)@(.+)\.([a-zA-Z0-9]{2,})~", $dummy_email_format)) {
       $form_state->setErrorByName('gigya-raas-dummy-email-format', $this->t('The dummy email format is not valid.'));
+    }
+    if ($this->getValue($form_state, 'is_email_dummy') and !(str_contains('${UID}', $dummy_email_format) or
+                                                             str_contains('${phoneNumber}', $dummy_email_format) or
+                                                             str_contains('${firstName}', $dummy_email_format) or
+                                                             str_contains('${lastName}', $dummy_email_format) or
+                                                             str_contains('${nickName}', $dummy_email_format))) {
+      $messenger = Drupal::service('messenger');
+      $messenger->addWarning($this->t('Recommendation: using uniq ID for the dummy email such as ${UID}, ${phoneNumber} etc.'));
     }
   }
 

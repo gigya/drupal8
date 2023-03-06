@@ -546,6 +546,10 @@ class GigyaUser extends GigyaJsonObject {
     return $this->phoneNumber;
   }
 
+  public function setPhoneNumber($phoneNumber) {
+    return $this->phoneNumber = $phoneNumber;
+  }
+
   public function __toString() {
     return json_encode(get_object_vars($this));
   }

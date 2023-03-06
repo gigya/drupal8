@@ -237,13 +237,13 @@
 
               }
               if (empty($userEmails) and $is_dummy_email_used) {
-                $unique_email = $this->getDummyEmail($gigyaUser);
+                $unique_email = $user->getEmail();
               }
               else {
                 $unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, $user->id());
               }
 
-              if (!$is_dummy_email_used && !$unique_email) {
+              if (!$is_dummy_email_used and !$unique_email) {
                 $this->gigya_helper->saveUserLogoutCookie();
                 $err_msg = $this->t("Email already exists");
                 $response->addCommand(new AlertCommand($err_msg));

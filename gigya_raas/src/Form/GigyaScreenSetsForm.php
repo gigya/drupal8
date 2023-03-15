@@ -175,6 +175,18 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 			];
 		}
 
+    $form['general_settings'] = [
+      '#type'  => 'details',
+      '#title' => $this->t('General Settings'),
+      '#open'  => TRUE,
+    ];
+
+    $form['general_settings']['gigya_using_menu_link_pop_up_login'] = [
+      '#type'          => 'checkbox',
+      '#title'         => $this->t('Using Gigya pop-up login screen when clicking on the secondary menu'),
+      '#default_value' => $config->get('gigya.using_menu_link_pop_up_login'),
+    ];
+
 		return parent::buildForm($form, $form_state);
 	}
 
@@ -291,6 +303,7 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 		$config->set('gigya.login_screenset_mobile', $form_state->getValue('gigya_login_screenset_mobile'));
 		$config->set('gigya.profile_screenset', $form_state->getValue('gigya_profile_screenset_desktop'));
 		$config->set('gigya.profile_screenset_mobile', $form_state->getValue('gigya_profile_screenset_mobile'));
+    $config->set('gigya.using_menu_link_pop_up_login', $form_state->getValue('gigya_using_menu_link_pop_up_login'));
 		$config->set('gigya.custom_screensets', json_encode($custom_screensets, JSON_FORCE_OBJECT));
 
 		$config->save();

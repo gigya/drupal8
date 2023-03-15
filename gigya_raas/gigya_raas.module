@@ -296,6 +296,8 @@ function gigya_preprocess_page( &$variables ) {
 
 
   $variables['#attached']['drupalSettings']['gigya']['shouldValidateSession'] = ( $validation_result['errorCode'] === 1 );
+  $variables['#attached']['drupalSettings']['gigya']['using_pop_up_login_screen'] = Drupal::config('gigya_raas.screensets')
+                                                                                          ->get('gigya.using_menu_link_pop_up_login') == 1;
 }
 
 

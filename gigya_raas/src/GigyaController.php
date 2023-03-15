@@ -732,7 +732,7 @@
       return str_ireplace($stringToReplace, $dataToReplace, $email);
     }
 
-    private function editPHoneNumber(string $phoneNumber) {
+    private function editPhoneNumber(string $phoneNumber) {
 
       if (!empty($phoneNumber)) {
         return str_replace(['+', '-'], '', $phoneNumber);

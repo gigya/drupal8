@@ -176,7 +176,7 @@ class GigyaSessionForm extends ConfigFormBase {
     $form['dummy_email_format'] = [
       '#type'          => 'textfield',
       '#title'         => $this->t('The format of the dummy email. To make the email unique, use ${UID}, ${firstName}, ${lastName}, ${phoneNumber}} or ${nickName}, or any combination of these.'),
-      '#description'   => $this->t('To create a unique dummy email, specify its format using $(UID), $(firstName), $(lastName), $(nickName), $(phoneNumber), or any combination of these.  '),
+      '#description'   => $this->t('To create a unique dummy email, specify its format using $(UID), $(firstName), $(lastName), $(nickName), $(phoneNumber), or any combination of these. Only UID is always unique and present'),
       '#default_value' => $config->get('gigya_raas.dummy_email_format') ?: '',
       '#states'        => [
         'visible' => [

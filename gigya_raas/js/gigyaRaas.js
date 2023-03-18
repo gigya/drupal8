@@ -294,28 +294,35 @@ var getUrlPrefix = function () {
   /**
    @property drupalSettings.gigya.using_pop_up_login_screen
    */
+
+  var showMenuLinkLoginScreenSet = function() {
+    if ($(location).attr('hash') === '#gigya-login') {
+      if (typeof gigya !== "undefined") {
+        gigya.accounts.showScreenSet({
+          'include': 'id_token',
+          'mobileScreenSet': 'Default-RegistrationLogin',
+          'screenSet': 'Default-RegistrationLogin',
+        });
+
+        drupalSettings.gigya.raas.linkId = $(this).attr('id');
+      } else {
+        setTimeout(showTestScreenSet, 200);
+      }
+    }
+  }
+
+  showMenuLinkLoginScreenSet();
+
+  addEventListener('hashchange', showMenuLinkLoginScreenSet);
+
   $('.menu a').click(function () {
-    location.reload();
+    if ($(this).attr('href').includes('#gigya-login')) {
+      if (drupalSettings.gigya.using_pop_up_login_screen) {
+        showMenuLinkLoginScreenSet();
+      }
+    }
   });
-  var showMenuScreenSet = function () {
-    if (typeof gigya !== "undefined") {
-      gigya.accounts.showScreenSet({
-        'include': 'id_token',
-        'mobileScreenSet': 'Default-RegistrationLogin',
-        'screenSet': 'Default-RegistrationLogin',
-      });
-      drupalSettings.gigya.raas.linkId = $(this).attr('id');
-    } else {
-      setTimeout(showMenuScreenSet, 200);
-    }
-  }
 
-
-  if (window.location.href.indexOf("#gigya-login") > -1) {
-    if (drupalSettings.gigya.using_pop_up_login_screen) {
-      showMenuScreenSet();
-    }
-  }
 	var processFieldMapping = function (data) {
 		var gigyaData = {
 			UID: data.response.UID,

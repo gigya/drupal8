@@ -183,7 +183,7 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 
     $form['general_settings']['gigya_using_menu_link_pop_up_login'] = [
       '#type'          => 'checkbox',
-      '#title'         => $this->t('Using Gigya pop-up login screen when clicking on the secondary menu'),
+      '#title'         => $this->t('When checked, clicking on the secondary menu link make Gigya login screen popping-up.'),
       '#default_value' => $config->get('gigya.using_menu_link_pop_up_login'),
     ];
 

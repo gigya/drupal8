@@ -184,7 +184,7 @@ class GigyaSessionForm extends ConfigFormBase {
         ],
       ],
       "#attributes"    => [
-        'placeHolder' => 'x-${UID}-${firstName}-y@test.com',
+        'placeHolder' => '${UID}@my-uniq-domain.com',
       ],
 
 
@@ -217,7 +217,7 @@ class GigyaSessionForm extends ConfigFormBase {
     if ($this->getValue($form_state, 'is_email_dummy') and !filter_var($this->replaceAllVariableToChar($insensitive_dummy_email), FILTER_VALIDATE_EMAIL)) {
       $form_state->setErrorByName('gigya-raas-dummy-email-format', $this->t('The dummy email format is not valid.'));
     }
-    if ($this->getValue($form_state, 'is_email_dummy') and !$this->isEmailUnique($insensitive_dummy_email)) {
+    else if ($this->getValue($form_state, 'is_email_dummy') and !$this->isEmailUnique($insensitive_dummy_email)) {
       $messenger = Drupal::service('messenger');
       $messenger->addWarning($this->t('Please notice: the email: \'' . $dummy_email_format . '\' is not contain any unique identifier,we recommand to use ${UID} or ${phoneNumber} etc to make the dummy email more unique.'));
     }

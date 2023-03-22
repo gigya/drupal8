@@ -169,14 +169,14 @@ class GigyaSessionForm extends ConfigFormBase {
     $form['is_email_dummy'] = [
       '#type'          => 'checkbox',
       '#title'         => $this->t('Create a dummy email to be used for non-email login'),
-      '#description'   => $this->t('A dummy email will be created in case the email doesn\'t exists in Gigya.'),
+      '#description'   => $this->t('A dummy email will be created in case the email doesn\'t exist in Gigya.'),
       '#default_value' => $config->get('gigya_raas.is_email_dummy'),
     ];
 
     $form['dummy_email_format'] = [
       '#type'          => 'textfield',
-      '#title'         => $this->t('The format of the dummy email. To make the email unique, use ${UID}, ${firstName}, ${lastName}, ${phoneNumber}} or ${nickName}, or any combination of these.'),
-      '#description'   => $this->t('To create a unique dummy email, specify its format using $(UID), $(firstName), $(lastName), $(nickName), $(phoneNumber), or any combination of these. Only UID is always unique and present'),
+      '#title'         => $this->t('Dummy email format'),
+      '#description'   => $this->t('To create a unique dummy email, specify its format using $(UID), $(firstName), $(lastName), $(nickName), $(phoneNumber), or any combination of these. The UID is guaranteed to be unique and available for all user accounts.'),
       '#default_value' => $config->get('gigya_raas.dummy_email_format') ?: '',
       '#states'        => [
         'visible' => [
@@ -184,10 +184,8 @@ class GigyaSessionForm extends ConfigFormBase {
         ],
       ],
       "#attributes"    => [
-        'placeHolder' => '${UID}@my-uniq-domain.com',
+        'placeHolder' => '${UID}@my-domain.com',
       ],
-
-
     ];
 
     return $form;
@@ -213,20 +211,18 @@ class GigyaSessionForm extends ConfigFormBase {
     $dummy_email_format      = $form_state->getValue('dummy_email_format');
     $insensitive_dummy_email = strtolower($dummy_email_format);
 
-
     if ($this->getValue($form_state, 'is_email_dummy') and !filter_var($this->replaceAllVariableToChar($insensitive_dummy_email), FILTER_VALIDATE_EMAIL)) {
       $form_state->setErrorByName('gigya-raas-dummy-email-format', $this->t('The dummy email format is not valid.'));
     }
-    else if ($this->getValue($form_state, 'is_email_dummy') and !$this->isEmailUnique($insensitive_dummy_email)) {
-      $messenger = Drupal::service('messenger');
-      $messenger->addWarning($this->t('Please notice: the email: \'' . $dummy_email_format . '\' is not contain any unique identifier,we recommand to use ${UID} or ${phoneNumber} etc to make the dummy email more unique.'));
+    else {
+      if ($this->getValue($form_state, 'is_email_dummy') and !$this->isEmailUnique($insensitive_dummy_email)) {
+        $messenger = Drupal::service('messenger');
+        $messenger->addWarning($this->t('Note: the email format \'' . $dummy_email_format . '\' does not contain a unique identifier. It is recommended to use ${UID} or ${phoneNumber}, if applicable, to make the dummy email unique to each user.'));
+      }
     }
   }
 
-  public
-  function submitForm(
-    array &$form, FormStateInterface $form_state
-  ) {
+  public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('gigya_raas.settings');
     $config->set('gigya_raas.session_type', $this->getValue($form_state, 'session_type'));
     $config->set('gigya_raas.session_time', $this->getValue($form_state, 'session_time'));
@@ -236,12 +232,14 @@ class GigyaSessionForm extends ConfigFormBase {
     $config->set('gigya_raas.login_redirect', $this->getValue($form_state, 'login_redirect'));
     $config->set('gigya_raas.logout_redirect', $this->getValue($form_state, 'logout_redirect'));
     $config->set('gigya_raas.is_email_dummy', $this->getValue($form_state, 'is_email_dummy'));
-    if(!$this->getValue($form_state, 'is_email_dummy'))
-    {
+
+    if (!$this->getValue($form_state, 'is_email_dummy')) {
       $config->set('gigya_raas.dummy_email_format', '');
-    }else{
+    }
+    else {
       $config->set('gigya_raas.dummy_email_format', $this->getValue($form_state, 'dummy_email_format'));
     }
+
     $config->save();
 
     parent::submitForm($form, $form_state);
@@ -257,6 +255,7 @@ class GigyaSessionForm extends ConfigFormBase {
         return TRUE;
       }
     }
+
     return FALSE;
   }
 

@@ -57,6 +57,7 @@ class GigyaSessionForm extends ConfigFormBase {
   /**
    * @param array $form
    * @param \Drupal\Core\Form\FormStateInterface $form_state
+   * @param \Drupal\gigya\Helper\GigyaHelperInterface|null $helper
    *
    * @return    array
    */
@@ -245,11 +246,11 @@ class GigyaSessionForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
   }
 
-  function replaceAllVariableToChar($dummy_email): string {
+  function replaceAllVariableToChar($dummy_email) {
     return str_ireplace(array_values($this->dummy_email_uniqeness_options), 'a', $dummy_email);
   }
 
-  function isEmailUnique($email): bool {
+  function isEmailUnique($email) {
     foreach ($this->dummy_email_uniqeness_options as $key => $value) {
       if (str_contains($email, strtolower($value))) {
         return TRUE;

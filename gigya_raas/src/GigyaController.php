@@ -73,7 +73,7 @@
     public function gigyaRaasProfileAjax(Request $request) {
       $gigya_data          = $request->get('gigyaData');
       $is_dummy_email_used = Drupal::config('gigya_raas.settings')
-                                   ->get('gigya_raas.is_email_dummy');
+                                   ->get('gigya_raas.should_use_dummy_email');
 
       if (!empty($gigya_data['id_token']) && $this->auth_mode === 'user_rsa') {
         $signature = $gigya_data['id_token'];
@@ -174,7 +174,7 @@
           $userEmails = $gigyaUser->getAllVerifiedEmails();
 
           $is_dummy_email_used = Drupal::config('gigya_raas.settings')
-                                       ->get('gigya_raas.is_email_dummy');
+                                       ->get('gigya_raas.should_use_dummy_email');
 
 
           /* loginIDs.emails and emails.verified is missing in Gigya */

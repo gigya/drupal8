@@ -192,12 +192,12 @@ class GigyaSessionForm extends ConfigFormBase {
     return $form;
   }
 
-    /**
-     * @param array $form
-     * @param \Drupal\Core\Form\FormStateInterface $form_state
-     *
-     * @throws \Exception
-     */
+  /**
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @throws \Exception
+   */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
 

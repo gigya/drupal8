@@ -292,6 +292,31 @@ var getUrlPrefix = function () {
 		}
 	};
 
+  var showMenuLinkLoginScreenSet = function(e, hashLink = '#gigya-login') {
+    if ($(location).attr('hash') === hashLink) {
+      if (typeof gigya !== 'undefined') {
+        gigya.accounts.showScreenSet({
+          'include': 'id_token',
+          'mobileScreenSet': 'Default-RegistrationLogin',
+          'screenSet': 'Default-RegistrationLogin',
+        });
+
+        drupalSettings.gigya.raas.linkId = $(this).attr('id');
+      } else {
+        setTimeout(showMenuLinkLoginScreenSet, 200);
+      }
+    }
+  }
+
+  var hashLink = '#gigya-login';
+  showMenuLinkLoginScreenSet();
+  addEventListener('hashchange', showMenuLinkLoginScreenSet);
+  $('.menu a').click(function () {
+    if ($(this).attr('href').includes(hashLink)) {
+      showMenuLinkLoginScreenSet();
+    }
+  });
+
 	var processFieldMapping = function (data) {
 		var gigyaData = {
 			UID: data.response.UID,

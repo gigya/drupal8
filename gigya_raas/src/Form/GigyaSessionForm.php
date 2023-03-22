@@ -167,8 +167,8 @@ class GigyaSessionForm extends ConfigFormBase {
 
     $form['dummy_email_format'] = [
       '#type'          => 'textfield',
-      '#title'         => $this->t('The format of the dummy email. To make the email unique, use ${UID}, ${firstName}, ${lastName}, ${phoneNumber}} or ${nickName}, or any combination of these.'),
-      '#description'   => $this->t('To create a unique dummy email, specify its format using $(UID), $(firstName), $(lastName), $(nickName), $(phoneNumber), or any combination of these.  '),      '#default_value' => $config->get('gigya_raas.dummy_email_format') ?: '',
+      '#title'         => $this->t('Dummy Email Format'),
+      '#description'   => $this->t('To create a unique dummy email, specify its format using ${UID}, ${firstName}, ${lastName}, ${nickName}, ${phoneNumber} or any combination of these.'),      '#default_value' => $config->get('gigya_raas.dummy_email_format') ?: '',
       '#states'        => [
         'visible' => [
           ':input[name="is_email_dummy"]' => ['checked' => TRUE],
@@ -213,7 +213,7 @@ class GigyaSessionForm extends ConfigFormBase {
                                                              str_contains('${lastName}', $dummy_email_format) or
                                                              str_contains('${nickName}', $dummy_email_format))) {
       $messenger = Drupal::service('messenger');
-      $messenger->addWarning($this->t('Recommendation: Use a unique ID for the dummy email, such as ${UID} or ${phoneNumber}.'));
+      $messenger->addWarning($this->t('Recommendation: using uniq ID for the dummy email such as ${UID}, ${phoneNumber} etc.'));
     }
   }
 

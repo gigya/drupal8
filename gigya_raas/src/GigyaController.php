@@ -120,7 +120,7 @@
       return $this->gigyaRaasProfileAjax($request);
     }
 
-		/**
+    /**
      * @param Request $request The incoming request object.
      *
      * @return bool|AjaxResponse    The Ajax response
@@ -208,21 +208,23 @@
             /** @var UserInterface $user */
             $user = $this->helper->getDrupalUidByGigyaUid($gigyaUser->getUID());
 
-            if($user){
+            if ($user) {
               /* if a user has the a permission of bypass gigya raas (admin user)
                *  they can't login via gigya
                */
               if ($user->hasPermission('bypass gigya raas')) {
 
                 if ($is_session_validation_process) {
-                  $logger_message = ['type' => 'gigya_raas', 'message' => 'Apparently someone trying to steal permission of admin user. the user email: '.$user->getEmail()];
+                  $logger_message = ['type'    => 'gigya_raas',
+                                     'message' => 'Apparently someone trying to steal permission of admin user. the user email: ' . $user->getEmail(),
+                  ];
 
                   $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
                 }
                 else {
 
                   $logger_message = [
-                    'type' => 'gigya_raas',
+                    'type'    => 'gigya_raas',
                     'message' => 'User with email ' . $user->getEmail()
                                  . 'that has "bypass gigya raas" permission tried to login via gigya',
                   ];
@@ -249,8 +251,9 @@
                 $response->addCommand(new AlertCommand($err_msg));
                 return $response;
 
-                //There is no need to check if dummy email used because the uniqe mail will be create in case of dummy email
-              }else if ($unique_email) {
+                /* There is no need to check if a dummy email is used because the unique email will be created in case of dummy email */
+              }
+              else if ($unique_email) {
                 if ($user->getEmail() !== $unique_email) {
                   $user->setEmail($unique_email);
                   $user->save();
@@ -324,7 +327,7 @@
               $gigya_user_name = $gigyaUser->getProfile()->getUsername();
 
               $uname = !empty($gigya_user_name) ? $gigyaUser->getProfile()
-                ->getUsername()
+                                                            ->getUsername()
                 : $gigyaUser->getProfile()->getFirstName();
 
               if (empty($uname)) {
@@ -353,9 +356,9 @@
 
               $user = User::create(
                 [
-                  'name'   => $username,
-                  'pass'   => Drupal::hasService('password_generator') ? Drupal::service('password_generator')
-                                                                               ->generate(32) : \Drupal::service('password_generator')
+                  'name' => $username,
+                  'pass' => Drupal::hasService('password_generator') ? Drupal::service('password_generator')
+                                                                             ->generate(32) : \Drupal::service('password_generator')
                                                                                                        ->generate(),
                   'status' => 1,
                   'mail'   => $email,
@@ -365,7 +368,8 @@
               $this->helper->processFieldMapping($gigyaUser, $user);
 
               /* Allow other modules to modify the data before user is created in the Drupal database (create user hook). */
-              Drupal::moduleHandler()->alter('gigya_raas_create_user', $gigyaUser, $user);
+              Drupal::moduleHandler()
+                    ->alter('gigya_raas_create_user', $gigyaUser, $user);
               try {
 
                 $user->save();
@@ -379,15 +383,17 @@
                 }
               } catch (Exception $e) {
                 if ($is_session_validation_process) {
-                  $logger_message = ['type' => 'gigya_raas', 'message' => 'can not save the user.'];
+                  $logger_message = ['type'    => 'gigya_raas',
+                                     'message' => 'can not save the user.',
+                  ];
                   $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
                 }
                 else {
                   $logger_message = [
-                    'type' => 'gigya_raas',
+                    'type'    => 'gigya_raas',
                     'message' => 'User with username: ' . $username . ' could not log in after registration. Exception: ' . $e->getMessage(),
                   ];
-                  $err_msg = $this->t(
+                  $err_msg        = $this->t(
                     "Oops! Something went wrong during your registration process. You are registered to the site but not logged-in. Please try to login again."
                   );
                   session_destroy();
@@ -395,13 +401,16 @@
                   $this->gigya_helper->saveUserLogoutCookie();
 
                   /* Post-logout redirect hook */
-                  Drupal::moduleHandler()->alter('gigya_post_logout_redirect', $logout_redirect);
+                  Drupal::moduleHandler()
+                        ->alter('gigya_post_logout_redirect', $logout_redirect);
                   $response->addCommand(new InvokeCommand(NULL, 'logoutRedirect', [$logout_redirect]));
                 }
               }
             }
             else { /* Validation flow – user had already been validated, but suddenly isn't found in Drupal – possibly deleted */
-              $logger_message = ['type' => 'gigya_raas', 'message' => 'User had already been validate, probably this user was deleted.'];
+              $logger_message = ['type'    => 'gigya_raas',
+                                 'message' => 'User had already been validate, probably this user was deleted.',
+              ];
               $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
             }
           }
@@ -409,14 +418,18 @@
         else { /* No valid Gigya user found */
           if (!$is_session_validation_process) {
             $this->gigya_helper->saveUserLogoutCookie();
-            $logger_message = ['type' => 'gigya_raas', 'message' => 'Invalid user. Guid: ' . $guid];
-            $err_msg = $this->t(
+            $logger_message = ['type'    => 'gigya_raas',
+                               'message' => 'Invalid user. Guid: ' . $guid,
+            ];
+            $err_msg        = $this->t(
               "Oops! Something went wrong during your login/registration process. Please try to login/register again."
             );
             $this->noticeUserAndAdminByLoginIssue($response, $logger_message, $err_msg);
           }
           else {
-            $logger_message = ['type' => 'gigya_raas', 'message' => 'Invalid user try to get session.'];
+            $logger_message = ['type'    => 'gigya_raas',
+                               'message' => 'Invalid user try to get session.',
+            ];
             $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
           }
         }
@@ -677,11 +690,11 @@
     protected function getDummyEmail($gigyaUser) {
 
       $typesOfValues = [
-        "uid"       => '${UID}',
-        'firstName' => '${firstName}',
-        "lastName"  => '${lastName}',
-        "nickName"  => '${nickName}',
-        "phoneNumber"=> '${phoneNumber}'
+        "uid"         => '${UID}',
+        'firstName'   => '${firstName}',
+        "lastName"    => '${lastName}',
+        "nickName"    => '${nickName}',
+        "phoneNumber" => '${phoneNumber}',
       ];
 
       $dummy_email = Drupal::config('gigya_raas.settings')
@@ -708,7 +721,7 @@
         case 'lastName':
           $dataToReplace = $gigyaUser->getProfile()->getLastName();
           break;
-        case'nickName':
+        case 'nickName':
           $dataToReplace = $gigyaUser->getProfile()->getNickname();
           break;
         case 'phoneNumber':
@@ -716,13 +729,14 @@
           break;
       }
 
-      return str_replace($stringToReplace, $dataToReplace, $email);
+      return str_ireplace($stringToReplace, $dataToReplace, $email);
     }
 
-    private function editPHoneNumber(string $phoneNumber) {
+    private function editPhoneNumber(string $phoneNumber) {
 
-      if(!empty($phoneNumber))
-      return str_replace(['+', '-'],'', $phoneNumber);
+      if (!empty($phoneNumber)) {
+        return str_replace(['+', '-'], '', $phoneNumber);
+      }
     }
 
   }

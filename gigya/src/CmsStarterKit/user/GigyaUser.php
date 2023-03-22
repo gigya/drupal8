@@ -99,7 +99,7 @@ class GigyaUser extends GigyaJsonObject {
   /**
    * @var string
    */
-  private  $phoneNumber;
+  private $phoneNumber;
 
   /**
    * @var GigyaProfile

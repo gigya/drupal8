@@ -97,6 +97,11 @@ class GigyaUser extends GigyaJsonObject {
   private $loginIDs;
 
   /**
+   * @var string
+   */
+  private $phoneNumber;
+
+  /**
    * @var GigyaProfile
    */
   private $profile;
@@ -534,7 +539,21 @@ class GigyaUser extends GigyaJsonObject {
     $this->isVerified = $isVerified;
   }
 
+  /**
+   * @return string
+   */
+  public function getPhoneNumber(): string {
+    return $this->phoneNumber;
+  }
+
+  public function setPhoneNumber($phoneNumber) {
+    return $this->phoneNumber = $phoneNumber;
+  }
+
   public function __toString() {
     return json_encode(get_object_vars($this));
   }
+
+
+
 }

@@ -251,7 +251,7 @@
                 $response->addCommand(new AlertCommand($err_msg));
                 return $response;
 
-                //There is no need to check if dummy email used because the uniqe mail will be create in case of dummy email
+                /* There is no need to check if a dummy email is used because the unique email will be created in case of dummy email */
               }
               else if ($unique_email) {
                 if ($user->getEmail() !== $unique_email) {
@@ -721,7 +721,7 @@
         case 'lastName':
           $dataToReplace = $gigyaUser->getProfile()->getLastName();
           break;
-        case'nickName':
+        case 'nickName':
           $dataToReplace = $gigyaUser->getProfile()->getNickname();
           break;
         case 'phoneNumber':

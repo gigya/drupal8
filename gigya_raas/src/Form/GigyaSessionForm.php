@@ -19,7 +19,7 @@ class GigyaSessionForm extends ConfigFormBase {
 
   public  $helper = FALSE;
 
-  public array $dummy_email_uniqeness_options = [
+  public array $dummy_email_uniqueness_options = [
     'uid'         => '${UID}',
     'phoneNumber' => '${phoneNumber}',
     'firstName'   => '${firstName}',
@@ -247,11 +247,11 @@ class GigyaSessionForm extends ConfigFormBase {
   }
 
   function replaceAllVariableToChar($dummy_email) {
-    return str_ireplace(array_values($this->dummy_email_uniqeness_options), 'a', $dummy_email);
+    return str_ireplace(array_values($this->dummy_email_uniqueness_options), 'a', $dummy_email);
   }
 
   function isEmailUnique($email) {
-    foreach ($this->dummy_email_uniqeness_options as $key => $value) {
+    foreach ($this->dummy_email_uniqueness_options as $key => $value) {
       if (str_contains($email, strtolower($value))) {
         return TRUE;
       }

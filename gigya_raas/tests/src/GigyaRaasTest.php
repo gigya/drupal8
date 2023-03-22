@@ -25,7 +25,7 @@
 	 *
 	 * @group gigya
 	 */
-	class GigyaTest extends BrowserTestBase
+	class GigyaRaasTest extends BrowserTestBase
 	{
 		private $key = "24c370c0d169a482ae1c5db1932b4b29";
 		private $trueKey = "24c370c0d169a482ae1c5db1932b4b29";
@@ -67,6 +67,11 @@
 		 * @var    GigyaUser $gigyaUser
 		 */
 		protected $gigyaUser;
+
+    /**
+    * {@inheritdoc}
+    */
+    protected $defaultTheme = 'classy';
 
 		/**
 		 * {@inheritdoc}

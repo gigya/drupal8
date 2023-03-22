@@ -480,7 +480,7 @@
 
     /**
      * Sets the user $_SESSION with the expiration timestamp, derived from the
-     * session time in the RaaS configuration. This is only step 1 of the
+     * session time in the RaaS configuration. This is only step one of the
      * process; in GigyaRaasEventSubscriber, it is supposed to take the
      * $_SESSION and put it in the DB.
      *

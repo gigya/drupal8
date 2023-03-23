@@ -251,7 +251,7 @@
       $form_state->setValues($values);
 
       \Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaSessionForm', $form_state, $this->helperMock);
-      $msg = drupal_get_messages();
+      $msg = \Drupal::messenger()->all();
       $this->assertArrayNotHasKey('error', $msg);
       $this->drupalLogout();
     }

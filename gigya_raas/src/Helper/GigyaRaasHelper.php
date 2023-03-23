@@ -12,6 +12,7 @@ use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Exception;
+use Firebase\JWT\JWT;
 use Gigya\PHP\GSException;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Request;
@@ -464,17 +465,19 @@ class GigyaRaasHelper {
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The incoming request object.
-   * @param boolean $login
    *
-   * @return Drupal\Core\Ajax\AjaxResponse
+   * @return Drupal\Core\Ajax\AjaxResponse | NULL
    *   The Ajax response
    */
-
   public function getGigyaLoginToken(Request $request) {
-
     $gigya_conf = Drupal::config('gigya.settings');
     $api_key    = $gigya_conf->get('gigya.gigya_api_key');
     $glt_cookie = $request->cookies->get('glt_' . $api_key);
+
+    if (empty($glt_cookie)) {
+      return NULL;
+    }
+
     return (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL;
   }
 

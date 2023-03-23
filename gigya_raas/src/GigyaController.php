@@ -551,7 +551,7 @@
         $auth_mode    = $gigya_conf->get('gigya.gigya_auth_mode');
         $auth_key     = $helper->decrypt(($auth_mode === 'user_rsa') ? $gigya_conf->get('gigya.gigya_rsa_private_key') : $gigya_conf->get('gigya.gigya_application_secret_key'));
 
-        $token              = $this->getGigyaLoginToken($request);
+        $token              = $this->helper->getGigyaLoginToken($request);
         $now                = $_SERVER['REQUEST_TIME'];
         $session_expiration = strval($now + $session_time);
         $gltexp_cookie      = $request->cookies->get('gltexp_' . $api_key);
@@ -628,14 +628,6 @@
         'aud' => 'gltexp',
       ];
       return JWT::encode($payload, $privateKey, 'RS256', $applicationKey);
-    }
-
-    public function getGigyaLoginToken(Request $request) {
-
-      $gigya_conf = Drupal::config('gigya.settings');
-      $api_key    = $gigya_conf->get('gigya.gigya_api_key');
-      $glt_cookie = $request->cookies->get('glt_' . $api_key);
-      return (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL;
     }
 
     /**
@@ -727,10 +719,11 @@
     }
 
     private function editPhoneNumber(string $phoneNumber) {
-
       if (!empty($phoneNumber)) {
         return str_replace(['+', '-'], '', $phoneNumber);
       }
+
+      return $phoneNumber;
     }
 
   }

@@ -1,16 +1,14 @@
 <?php
-	/* Requires setting include path to the package's src directory */
-	include_once 'GigyaApiHelper.php';
+use Drupal\gigya\CmsStarterKit\GigyaApiHelper;
+use PHPUnit\Framework\TestCase;
 
-	use Drupal\gigya\CmsStarterKit\GigyaApiHelper;
-
-	/**
+/**
 	 * Created by PhpStorm.
 	 * User: Yaniv Aran-Shamir
 	 * Date: 4/7/16
 	 * Time: 8:47 PM
 	 */
-	class TestEncryption extends PHPUnit_Framework_TestCase
+	class TestEncryption extends TestCase
 	{
 		private $key;
 
@@ -21,7 +19,7 @@
 			$this->assertEquals($toEnc, trim($decStr));
 		}
 
-		protected function setUp() {
+		protected function setUp(): void {
 			$this->key = GigyaApiHelper::genKeyFromString("testGenKey");
 		}
 	}

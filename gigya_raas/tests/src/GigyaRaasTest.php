@@ -216,7 +216,7 @@
 		/**
 		 * Tests encrypt.
 		 */
-		public function testEncrypt() {
+		public function testSuccessfulLogin() {
       //  Set email with required field and register
       //  Expected:
       //  1.Registration succeed, user appears in Drupal users list

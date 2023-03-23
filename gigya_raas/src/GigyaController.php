@@ -211,7 +211,6 @@
                *  they can't login via gigya
                */
               if ($user->hasPermission('bypass gigya raas')) {
-
                 if ($is_session_validation_process) {
                   $logger_message = ['type'    => 'gigya_raas',
                                      'message' => 'Apparently someone trying to steal permission of admin user. the user email: ' . $user->getEmail(),
@@ -220,7 +219,6 @@
                   $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
                 }
                 else {
-
                   $logger_message = [
                     'type'    => 'gigya_raas',
                     'message' => 'User with email ' . $user->getEmail()
@@ -229,13 +227,14 @@
                   $err_msg        = $this->t(
                     'Oops! Something went wrong during your login/registration process. Please try to login/register again.'
                   );
+
                   $this->gigya_helper->saveUserLogoutCookie();
                   $this->notifyUserAndAdminAboutLoginIssue($response, $logger_message, $err_msg);
-
                 }
-                return $response;
 
+                return $response;
               }
+
               if (empty($userEmails) and $is_dummy_email_used) {
                 $unique_email = $user->getEmail();
               }

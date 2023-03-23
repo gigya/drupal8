@@ -57,11 +57,15 @@ class GigyaRaasHelper {
 			return ($auth_mode == 'user_rsa')
 				? $this->gigya_helper->getGigyaApiHelper()->validateJwtAuth($uid, $signature, NULL, NULL, $params)
 				: $this->gigya_helper->getGigyaApiHelper()->validateUid($uid, $signature, $sig_timestamp, NULL, NULL, $params);
-		} catch (GSApiException $e) {
-			Drupal::logger('gigya')->error("Gigya API call error: @error, Call ID: @callId", array('@callId' => $e->getCallId(), '@error' => $e->getMessage()));
-			return false;
-		}
-		catch (Exception $e) {
+    } catch (GSApiException $e) {
+      Drupal::logger('gigya')
+        ->error("Gigya API call error: @errorCode: @error, Call ID: @callId", [
+          '@callId' => $e->getCallId(),
+          '@error' => $e->getMessage(),
+          '@errorCode' => $e->getCode() ?? -1,
+        ]);
+      return FALSE;
+    } catch (Exception $e) {
 			Drupal::logger('gigya')->error("General error validating gigya UID: " . $e->getMessage());
 			return false;
 		}
@@ -117,7 +121,7 @@ class GigyaRaasHelper {
 	 * @param GigyaUser $gigyaUser
 	 * @param integer   $uid
 	 *
-	 * @return bool
+	 * @return string | false
 	 */
 	public function checkEmailsUniqueness($gigyaUser, $uid) {
 		if ($this->checkProfileEmail($gigyaUser->getProfile()->getEmail(), $gigyaUser->getLoginIDs()['emails'])) {

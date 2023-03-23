@@ -45,13 +45,15 @@
      * Construct method.
      *
      * @param bool $helper
+     * @param bool $raas_helper
      */
-    public function __construct($helper = FALSE) {
-      if ($helper === FALSE) {
+    public function __construct($helper = FALSE, $raas_helper = FALSE) {
+      if ($helper === FALSE and $raas_helper === FALSE) {
         $this->helper = new GigyaRaasHelper();
         $this->gigya_helper = new GigyaHelper();
       }
       else {
+        $this->helper = $raas_helper;
         $this->gigya_helper = $helper;
       }
 
@@ -176,23 +178,20 @@
           $is_dummy_email_used = Drupal::config('gigya_raas.settings')
                                        ->get('gigya_raas.should_use_dummy_email');
 
-
           /* loginIDs.emails and emails.verified is missing in Gigya */
           if (empty($userEmails) and !$is_dummy_email_used) {
             if (!$is_session_validation_process) {
-
               $err_msg        = $this->t(
                 'Email address is required by Drupal and is missing, please contact the site administrator.');
               $logger_message = [
                 'type'    => 'gigya_raas',
-                'message' => 'Email address is required by Drupal and is missing, The user asked to notice the admin.',
+                'message' => 'Email address is required by Drupal and is missing, the user asked to notify the admin.',
               ];
-              $this->noticeUserAndAdminByLoginIssue($response, $logger_message, $err_msg);
+              $this->notifyUserAndAdminAboutLoginIssue($response, $logger_message, $err_msg);
 
               $this->gigya_helper->saveUserLogoutCookie();
             }
             else {
-
               $logger_message = [
                 'type'    => 'gigya_raas',
                 'message' => 'Email address is required by Drupal and is missing,Probably the email has been deleted.',
@@ -201,7 +200,6 @@
               $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
             }
           }
-
           /* loginIDs.emails or emails.verified is found in Gigya or using dummy email for mobile login */
           else {
 
@@ -232,7 +230,7 @@
                     'Oops! Something went wrong during your login/registration process. Please try to login/register again.'
                   );
                   $this->gigya_helper->saveUserLogoutCookie();
-                  $this->noticeUserAndAdminByLoginIssue($response, $logger_message, $err_msg);
+                  $this->notifyUserAndAdminAboutLoginIssue($response, $logger_message, $err_msg);
 
                 }
                 return $response;
@@ -397,7 +395,7 @@
                     "Oops! Something went wrong during your registration process. You are registered to the site but not logged-in. Please try to login again."
                   );
                   session_destroy();
-                  $this->noticeUserAndAdminByLoginIssue($response, $logger_message, $err_msg);
+                  $this->notifyUserAndAdminAboutLoginIssue($response, $logger_message, $err_msg);
                   $this->gigya_helper->saveUserLogoutCookie();
 
                   /* Post-logout redirect hook */
@@ -424,7 +422,7 @@
             $err_msg        = $this->t(
               "Oops! Something went wrong during your login/registration process. Please try to login/register again."
             );
-            $this->noticeUserAndAdminByLoginIssue($response, $logger_message, $err_msg);
+            $this->notifyUserAndAdminAboutLoginIssue($response, $logger_message, $err_msg);
           }
           else {
             $logger_message = ['type'    => 'gigya_raas',
@@ -672,9 +670,7 @@
     }
 
 
-    protected function noticeUserAndAdminByLoginIssue($response, $logger_message, $err_msg) {
-
-
+    protected function notifyUserAndAdminAboutLoginIssue($response, $logger_message, $err_msg) {
       Drupal::logger($logger_message['type'])
             ->notice($logger_message['message']);
       $response->addCommand(new AlertCommand($err_msg));

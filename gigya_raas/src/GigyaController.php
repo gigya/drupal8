@@ -45,13 +45,15 @@
      * Construct method.
      *
      * @param bool $helper
+     * @param bool $raas_helper
      */
-    public function __construct($helper = FALSE) {
-      if ($helper === FALSE) {
+    public function __construct($helper = FALSE, $raas_helper = FALSE) {
+      if ($helper === FALSE and $raas_helper === FALSE) {
         $this->helper = new GigyaRaasHelper();
         $this->gigya_helper = new GigyaHelper();
       }
       else {
+        $this->helper = $raas_helper;
         $this->gigya_helper = $helper;
       }
 
@@ -176,23 +178,20 @@
           $is_dummy_email_used = Drupal::config('gigya_raas.settings')
                                        ->get('gigya_raas.should_use_dummy_email');
 
-
           /* loginIDs.emails and emails.verified is missing in Gigya */
           if (empty($userEmails) and !$is_dummy_email_used) {
             if (!$is_session_validation_process) {
-
               $err_msg        = $this->t(
                 'Email address is required by Drupal and is missing, please contact the site administrator.');
               $logger_message = [
                 'type'    => 'gigya_raas',
-                'message' => 'Email address is required by Drupal and is missing, The user asked to notice the admin.',
+                'message' => 'Email address is required by Drupal and is missing, the user asked to notify the admin.',
               ];
-              $this->noticeUserAndAdminByLoginIssue($response, $logger_message, $err_msg);
+              $this->notifyUserAndAdminAboutLoginIssue($response, $logger_message, $err_msg);
 
               $this->gigya_helper->saveUserLogoutCookie();
             }
             else {
-
               $logger_message = [
                 'type'    => 'gigya_raas',
                 'message' => 'Email address is required by Drupal and is missing,Probably the email has been deleted.',
@@ -201,19 +200,16 @@
               $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
             }
           }
-
           /* loginIDs.emails or emails.verified is found in Gigya or using dummy email for mobile login */
           else {
-
             /** @var UserInterface $user */
             $user = $this->helper->getDrupalUidByGigyaUid($gigyaUser->getUID());
 
             if ($user) {
-              /* if a user has the a permission of bypass gigya raas (admin user)
-               *  they can't login via gigya
+              /* if a user has the permission of bypass gigya raas (admin user)
+               *  they can't log in via gigya
                */
               if ($user->hasPermission('bypass gigya raas')) {
-
                 if ($is_session_validation_process) {
                   $logger_message = ['type'    => 'gigya_raas',
                                      'message' => 'Apparently someone trying to steal permission of admin user. the user email: ' . $user->getEmail(),
@@ -222,7 +218,6 @@
                   $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
                 }
                 else {
-
                   $logger_message = [
                     'type'    => 'gigya_raas',
                     'message' => 'User with email ' . $user->getEmail()
@@ -231,13 +226,14 @@
                   $err_msg        = $this->t(
                     'Oops! Something went wrong during your login/registration process. Please try to login/register again.'
                   );
+
                   $this->gigya_helper->saveUserLogoutCookie();
-                  $this->noticeUserAndAdminByLoginIssue($response, $logger_message, $err_msg);
-
+                  $this->notifyUserAndAdminAboutLoginIssue($response, $logger_message, $err_msg);
                 }
-                return $response;
 
+                return $response;
               }
+
               if (empty($userEmails) and $is_dummy_email_used) {
                 $unique_email = $user->getEmail();
               }
@@ -260,8 +256,8 @@
                 }
               }
 
-              /* Set global variable so we would know the user as logged in
-                 RaaS in other functions down the line.*/
+              /* Set global variable, so we would know the user as logged in
+                 RaaS in other functions down the line. */
               $raas_login = TRUE;
 
               /* Log the user in */
@@ -290,13 +286,13 @@
 
             }
             elseif (!$is_session_validation_process) /* User does not exist - register */ {
-
               $uids = '';
+
               if (!empty($userEmails)) {
                 $uids = $this->helper->getUidByMails($userEmails);
               }
-              if (!empty($uids)) {
 
+              if (!empty($uids)) {
                 Drupal::logger('gigya_raas')->warning(
                   "User with uid " . $guid . " that already exists tried to register via gigya"
                 );
@@ -305,22 +301,22 @@
                   "Oops! Something went wrong during your login/registration process. Please try to login/register again."
                 );
                 $response->addCommand(new AlertCommand($err_msg));
+
                 return $response;
               }
+
               $email = '';
               if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, 0)) {
                 $email = $unique_email;
               }
-              else if (!$is_dummy_email_used) {
-
+              elseif (!$is_dummy_email_used) {
                 $this->gigya_helper->saveUserLogoutCookie();
                 $err_msg = $this->t("Email already exists");
                 $response->addCommand(new AlertCommand($err_msg));
 
                 return $response;
-
               }
-              else if ($unique_email === FALSE) {
+              elseif ($unique_email === FALSE) {
                 $email = $this->getDummyEmail($gigyaUser);
               }
 
@@ -338,7 +334,7 @@
                 $username = $uname;
               }
               else {
-                /* If user name is taken use first name if it is not empty. */
+                /* If username is taken use first name if it is not empty. */
                 $gigya_firstname = $gigyaUser->getProfile()->getFirstName();
 
                 if (!empty($gigya_firstname)
@@ -397,7 +393,7 @@
                     "Oops! Something went wrong during your registration process. You are registered to the site but not logged-in. Please try to login again."
                   );
                   session_destroy();
-                  $this->noticeUserAndAdminByLoginIssue($response, $logger_message, $err_msg);
+                  $this->notifyUserAndAdminAboutLoginIssue($response, $logger_message, $err_msg);
                   $this->gigya_helper->saveUserLogoutCookie();
 
                   /* Post-logout redirect hook */
@@ -424,7 +420,7 @@
             $err_msg        = $this->t(
               "Oops! Something went wrong during your login/registration process. Please try to login/register again."
             );
-            $this->noticeUserAndAdminByLoginIssue($response, $logger_message, $err_msg);
+            $this->notifyUserAndAdminAboutLoginIssue($response, $logger_message, $err_msg);
           }
           else {
             $logger_message = ['type'    => 'gigya_raas',
@@ -480,7 +476,7 @@
 
     /**
      * Sets the user $_SESSION with the expiration timestamp, derived from the
-     * session time in the RaaS configuration. This is only step 1 of the
+     * session time in the RaaS configuration. This is only step one of the
      * process; in GigyaRaasEventSubscriber, it is supposed to take the
      * $_SESSION and put it in the DB.
      *
@@ -555,7 +551,7 @@
         $auth_mode    = $gigya_conf->get('gigya.gigya_auth_mode');
         $auth_key     = $helper->decrypt(($auth_mode === 'user_rsa') ? $gigya_conf->get('gigya.gigya_rsa_private_key') : $gigya_conf->get('gigya.gigya_application_secret_key'));
 
-        $token              = $this->getGigyaLoginToken($request);
+        $token              = $this->helper->getGigyaLoginToken($request);
         $now                = $_SERVER['REQUEST_TIME'];
         $session_expiration = strval($now + $session_time);
         $gltexp_cookie      = $request->cookies->get('gltexp_' . $api_key);
@@ -634,14 +630,6 @@
       return JWT::encode($payload, $privateKey, 'RS256', $applicationKey);
     }
 
-    public function getGigyaLoginToken(Request $request) {
-
-      $gigya_conf = Drupal::config('gigya.settings');
-      $api_key    = $gigya_conf->get('gigya.gigya_api_key');
-      $glt_cookie = $request->cookies->get('glt_' . $api_key);
-      return (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL;
-    }
-
     /**
      * @param \Symfony\Component\HttpFoundation\Request|null $request
      * @param false $login
@@ -672,9 +660,7 @@
     }
 
 
-    protected function noticeUserAndAdminByLoginIssue($response, $logger_message, $err_msg) {
-
-
+    protected function notifyUserAndAdminAboutLoginIssue($response, $logger_message, $err_msg) {
       Drupal::logger($logger_message['type'])
             ->notice($logger_message['message']);
       $response->addCommand(new AlertCommand($err_msg));
@@ -733,10 +719,11 @@
     }
 
     private function editPhoneNumber(string $phoneNumber) {
-
       if (!empty($phoneNumber)) {
         return str_replace(['+', '-'], '', $phoneNumber);
       }
+
+      return $phoneNumber;
     }
 
   }

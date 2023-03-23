@@ -12,6 +12,7 @@ use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Exception;
+use Firebase\JWT\JWT;
 use Gigya\PHP\GSException;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Request;
@@ -57,11 +58,15 @@ class GigyaRaasHelper {
 			return ($auth_mode == 'user_rsa')
 				? $this->gigya_helper->getGigyaApiHelper()->validateJwtAuth($uid, $signature, NULL, NULL, $params)
 				: $this->gigya_helper->getGigyaApiHelper()->validateUid($uid, $signature, $sig_timestamp, NULL, NULL, $params);
-		} catch (GSApiException $e) {
-			Drupal::logger('gigya')->error("Gigya API call error: @error, Call ID: @callId", array('@callId' => $e->getCallId(), '@error' => $e->getMessage()));
-			return false;
-		}
-		catch (Exception $e) {
+    } catch (GSApiException $e) {
+      Drupal::logger('gigya')
+        ->error("Gigya API call error: @errorCode: @error, Call ID: @callId", [
+          '@callId' => $e->getCallId(),
+          '@error' => $e->getMessage(),
+          '@errorCode' => $e->getCode() ?? -1,
+        ]);
+      return FALSE;
+    } catch (Exception $e) {
 			Drupal::logger('gigya')->error("General error validating gigya UID: " . $e->getMessage());
 			return false;
 		}
@@ -69,12 +74,14 @@ class GigyaRaasHelper {
 
 	public function getUidByMail($mail) {
 		return Drupal::entityQuery('user')
+      ->accessCheck()
 			->condition('mail',  $mail)
 			->execute();
 	}
 
 	public function getUidByMails($mails) {
 		return Drupal::entityQuery('user')
+      ->accessCheck()
 			->condition('mail',  $mails, 'IN')
 			->execute();
 	}
@@ -95,6 +102,7 @@ class GigyaRaasHelper {
 		}
 		else {
 			$ids = Drupal::entityQuery('user')
+        ->accessCheck()
 				->condition($uuid_field, $uuid)
 				->execute();
 			$users = User::loadMultiple($ids);
@@ -109,6 +117,7 @@ class GigyaRaasHelper {
 
 	public function getUidByName($name) {
 		return Drupal::entityQuery('user')
+      ->accessCheck()
 			->condition('name',  Database::getConnection()->escapeLike($name), 'LIKE')
 			->execute();
 	}
@@ -117,7 +126,7 @@ class GigyaRaasHelper {
 	 * @param GigyaUser $gigyaUser
 	 * @param integer   $uid
 	 *
-	 * @return bool
+	 * @return string | false
 	 */
 	public function checkEmailsUniqueness($gigyaUser, $uid) {
 		if ($this->checkProfileEmail($gigyaUser->getProfile()->getEmail(), $gigyaUser->getLoginIDs()['emails'])) {
@@ -152,7 +161,7 @@ class GigyaRaasHelper {
 	 */
 	public function getFieldMappingConfig() {
 		$config = json_decode(Drupal::config('gigya_raas.fieldmapping')
-			->get('gigya.fieldmapping_config'));
+			->get('gigya.fieldmapping_config') ?? '');
 		if (empty($config)) {
 			$config = (object)Drupal::config('gigya.global')->get('gigya.fieldMapping');
 		}
@@ -456,17 +465,19 @@ class GigyaRaasHelper {
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The incoming request object.
-   * @param boolean $login
    *
-   * @return Drupal\Core\Ajax\AjaxResponse
+   * @return Drupal\Core\Ajax\AjaxResponse | NULL
    *   The Ajax response
    */
-
   public function getGigyaLoginToken(Request $request) {
-
     $gigya_conf = Drupal::config('gigya.settings');
     $api_key    = $gigya_conf->get('gigya.gigya_api_key');
     $glt_cookie = $request->cookies->get('glt_' . $api_key);
+
+    if (empty($glt_cookie)) {
+      return NULL;
+    }
+
     return (!empty(explode('|', $glt_cookie)[0])) ? explode('|', $glt_cookie)[0] : NULL;
   }
 

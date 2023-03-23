@@ -202,13 +202,12 @@
           }
           /* loginIDs.emails or emails.verified is found in Gigya or using dummy email for mobile login */
           else {
-
             /** @var UserInterface $user */
             $user = $this->helper->getDrupalUidByGigyaUid($gigyaUser->getUID());
 
             if ($user) {
-              /* if a user has the a permission of bypass gigya raas (admin user)
-               *  they can't login via gigya
+              /* if a user has the permission of bypass gigya raas (admin user)
+               *  they can't log in via gigya
                */
               if ($user->hasPermission('bypass gigya raas')) {
                 if ($is_session_validation_process) {
@@ -257,8 +256,8 @@
                 }
               }
 
-              /* Set global variable so we would know the user as logged in
-                 RaaS in other functions down the line.*/
+              /* Set global variable, so we would know the user as logged in
+                 RaaS in other functions down the line. */
               $raas_login = TRUE;
 
               /* Log the user in */
@@ -287,13 +286,13 @@
 
             }
             elseif (!$is_session_validation_process) /* User does not exist - register */ {
-
               $uids = '';
+
               if (!empty($userEmails)) {
                 $uids = $this->helper->getUidByMails($userEmails);
               }
-              if (!empty($uids)) {
 
+              if (!empty($uids)) {
                 Drupal::logger('gigya_raas')->warning(
                   "User with uid " . $guid . " that already exists tried to register via gigya"
                 );
@@ -302,22 +301,22 @@
                   "Oops! Something went wrong during your login/registration process. Please try to login/register again."
                 );
                 $response->addCommand(new AlertCommand($err_msg));
+
                 return $response;
               }
+
               $email = '';
               if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, 0)) {
                 $email = $unique_email;
               }
-              else if (!$is_dummy_email_used) {
-
+              elseif (!$is_dummy_email_used) {
                 $this->gigya_helper->saveUserLogoutCookie();
                 $err_msg = $this->t("Email already exists");
                 $response->addCommand(new AlertCommand($err_msg));
 
                 return $response;
-
               }
-              else if ($unique_email === FALSE) {
+              elseif ($unique_email === FALSE) {
                 $email = $this->getDummyEmail($gigyaUser);
               }
 
@@ -335,7 +334,7 @@
                 $username = $uname;
               }
               else {
-                /* If user name is taken use first name if it is not empty. */
+                /* If username is taken use first name if it is not empty. */
                 $gigya_firstname = $gigyaUser->getProfile()->getFirstName();
 
                 if (!empty($gigya_firstname)

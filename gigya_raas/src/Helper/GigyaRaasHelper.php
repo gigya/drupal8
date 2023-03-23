@@ -73,12 +73,14 @@ class GigyaRaasHelper {
 
 	public function getUidByMail($mail) {
 		return Drupal::entityQuery('user')
+      ->accessCheck()
 			->condition('mail',  $mail)
 			->execute();
 	}
 
 	public function getUidByMails($mails) {
 		return Drupal::entityQuery('user')
+      ->accessCheck()
 			->condition('mail',  $mails, 'IN')
 			->execute();
 	}
@@ -99,6 +101,7 @@ class GigyaRaasHelper {
 		}
 		else {
 			$ids = Drupal::entityQuery('user')
+        ->accessCheck()
 				->condition($uuid_field, $uuid)
 				->execute();
 			$users = User::loadMultiple($ids);
@@ -113,6 +116,7 @@ class GigyaRaasHelper {
 
 	public function getUidByName($name) {
 		return Drupal::entityQuery('user')
+      ->accessCheck()
 			->condition('name',  Database::getConnection()->escapeLike($name), 'LIKE')
 			->execute();
 	}

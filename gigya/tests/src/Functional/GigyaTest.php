@@ -398,7 +398,7 @@
 			$form_state->setValue('gigya_application_secret_key', '*********');
 			\Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state);
 //			\Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state, $this->helperMock);
-			$msg = drupal_get_messages();
+      $msg = \Drupal::messenger()->all();
 			$this->assertArrayHasKey('error', $msg);
 			$this->assertArrayHasKey('0', $msg['error']);
 			$this->assertStringStartsWith('Gigya API error', $msg['error'][0]);
@@ -436,7 +436,7 @@
 
 			/** @noinspection PhpMethodParametersCountMismatchInspection */
 			\Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state, $this->helperMock);
-			$msg = drupal_get_messages();
+      $msg = \Drupal::messenger()->all();
 			$this->assertArrayNotHasKey('error', $msg);
 
 			$this->drupalLogout();

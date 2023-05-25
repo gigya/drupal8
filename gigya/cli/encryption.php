@@ -1,8 +1,17 @@
 <?php
+
+/**
+ * @file
+ */
+?>
+
+<?php
 include_once __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "src/CmsStarterKit" . DIRECTORY_SEPARATOR . "GigyaApiHelper.php";
 
 set_error_handler('exceptions_error_handler');
-
+/**
+ *
+ */
 function get_available_commands() {
   return [
     [
@@ -54,6 +63,9 @@ function exceptions_error_handler($severity, $message, $filename, $lineno) {
   }
 }
 
+/**
+ *
+ */
 function help() {
   $available_commands = get_available_commands();
 
@@ -102,7 +114,8 @@ function perform_key_operation_from_cli($cli_args) {
 
 try {
   echo perform_key_operation_from_cli($argv) . PHP_EOL;
-} catch (Error $e) {
+}
+catch (Error $e) {
   $stderr = fopen('php://stderr', 'w');
   fwrite($stderr, 'Error: ' . $e->getMessage() . PHP_EOL . 'Key not generated.');
   fclose($stderr);

@@ -4,6 +4,9 @@ namespace Drupal\gigya\CmsStarterKit\user;
 
 use Drupal\gigya\CmsStarterKit\GigyaJsonObject;
 
+/**
+ *
+ */
 class GigyaUser extends GigyaJsonObject {
 
   /**
@@ -17,17 +20,17 @@ class GigyaUser extends GigyaJsonObject {
   private $UIDSignature;
 
   /**
-   * @var boolean
+   * @var bool
    */
   private $isSiteUser;
 
   /**
-   * @var boolean
+   * @var bool
    */
   private $isTempUser;
 
   /**
-   * @var boolean
+   * @var bool
    */
   private $isSiteUID;
 
@@ -86,10 +89,10 @@ class GigyaUser extends GigyaJsonObject {
    */
   private $isActive;
 
-	/**
-	 * @var array
-	 */
-	private $emails;
+  /**
+   * @var array
+   */
+  private $emails;
 
   /**
    * @var array
@@ -122,7 +125,7 @@ class GigyaUser extends GigyaJsonObject {
   private $subscriptions;
 
   /**
-   * @var boolean
+   * @var bool
    */
   private $isVerified;
 
@@ -155,42 +158,42 @@ class GigyaUser extends GigyaJsonObject {
   }
 
   /**
-   * @return boolean
+   * @return bool
    */
   public function isIsSiteUser() {
     return $this->isSiteUser;
   }
 
   /**
-   * @param boolean $isSiteUser
+   * @param bool $isSiteUser
    */
   public function setIsSiteUser($isSiteUser) {
     $this->isSiteUser = $isSiteUser;
   }
 
   /**
-   * @return boolean
+   * @return bool
    */
   public function isIsTempUser() {
     return $this->isTempUser;
   }
 
   /**
-   * @param boolean $isTempUser
+   * @param bool $isTempUser
    */
   public function setIsTempUser($isTempUser) {
     $this->isTempUser = $isTempUser;
   }
 
   /**
-   * @return boolean
+   * @return bool
    */
   public function isIsSiteUID() {
     return $this->isSiteUID;
   }
 
   /**
-   * @param boolean $isSiteUID
+   * @param bool $isSiteUID
    */
   public function setIsSiteUID($isSiteUID) {
     $this->isSiteUID = $isSiteUID;
@@ -350,19 +353,19 @@ class GigyaUser extends GigyaJsonObject {
     $this->isActive = $isActive;
   }
 
-	/**
-	 * @return array
-	 */
-	public function getEmails() {
-		return $this->emails;
-	}
+  /**
+   * @return array
+   */
+  public function getEmails() {
+    return $this->emails;
+  }
 
-	/**
-	 * @param array $emails
-	 */
-	public function setEmails(array $emails) {
-		$this->emails = $emails;
-	}
+  /**
+   * @param array $emails
+   */
+  public function setEmails(array $emails) {
+    $this->emails = $emails;
+  }
 
   /**
    * @return array
@@ -443,15 +446,16 @@ class GigyaUser extends GigyaJsonObject {
     return $emailLoginId;
   }
 
-	/**
-	 * @return array All verified emails
-	 */
-	public function getAllVerifiedEmails() {
-		return array_merge($this->emails['verified'], $this->loginIDs['emails']);
-	}
+  /**
+   * @return array All verified emails
+   */
+  public function getAllVerifiedEmails() {
+    return array_merge($this->emails['verified'], $this->loginIDs['emails']);
+  }
 
   /**
-   * @param $path : . (dot) separated string
+   * @param $path
+   *   : . (dot) separated string
    *
    * @return GigyaUser|string
    */
@@ -465,7 +469,8 @@ class GigyaUser extends GigyaJsonObject {
       elseif (is_array($accData) and isset($accData[$key])) {
         $accData = $accData[$key];
       }
-      elseif (is_null($accData) || !isset($accData[$key])) { // there is no such key
+      // There is no such key.
+      elseif (is_null($accData) || !isset($accData[$key])) {
         return NULL;
       }
     }
@@ -484,7 +489,8 @@ class GigyaUser extends GigyaJsonObject {
   }
 
   /**
-   * @param array $subscriptions array of subscription
+   * @param array $subscriptions
+   *   array of subscription.
    *
    * @see GigyaSubscriptionContainer
    */
@@ -493,8 +499,10 @@ class GigyaUser extends GigyaJsonObject {
   }
 
   /**
-   * @param int $id subscription ID
-   * @param GigyaSubscription $subscription subscription data (isSubscribed,
+   * @param int $id
+   *   subscription ID.
+   * @param GigyaSubscription $subscription
+   *   subscription data (isSubscribed,
    *   tags, lastUpdatedSubscriptionState, doubleOptIn)
    *
    * @see GigyaSubscription
@@ -507,7 +515,8 @@ class GigyaUser extends GigyaJsonObject {
   }
 
   /**
-   * @param int $id subscription ID
+   * @param int $id
+   *   subscription ID.
    *
    * @return GigyaSubscription|null
    */
@@ -546,14 +555,18 @@ class GigyaUser extends GigyaJsonObject {
     return $this->phoneNumber;
   }
 
+  /**
+   *
+   */
   public function setPhoneNumber($phoneNumber) {
     return $this->phoneNumber = $phoneNumber;
   }
 
+  /**
+   *
+   */
   public function __toString() {
     return json_encode(get_object_vars($this));
   }
-
-
 
 }

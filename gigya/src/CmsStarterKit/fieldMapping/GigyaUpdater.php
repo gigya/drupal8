@@ -2,10 +2,9 @@
 
 namespace Drupal\gigya\CmsStarterKit\fieldMapping;
 
-use DateTime;
-use Drupal\gigya\CmsStarterKit\GigyaApiHelper;
-use Exception;
-
+/**
+ *
+ */
 abstract class GigyaUpdater {
 
   /**
@@ -39,7 +38,7 @@ abstract class GigyaUpdater {
   private $gigyaArray;
 
   /**
-   * @var GigyaApiHelper
+   * @var \Drupal\gigya\CmsStarterKit\GigyaApiHelper
    */
   private $apiHelper;
 
@@ -59,21 +58,21 @@ abstract class GigyaUpdater {
     $this->apiHelper = $apiHelper;
   }
 
-	/**
-	 * @throws FieldMappingException
-	 *
-	 * @throws Exception
-	 * @throws \Drupal\gigya\CmsStarterKit\GSApiException
-	 */
-	public function updateGigya() {
-		$this->retrieveFieldMappings();
-		$this->callCmsHook();
-		$this->gigyaArray = $this->createGigyaArray();
-		$this->callSetAccountInfo();
-	}
+  /**
+   * @throws FieldMappingException
+   *
+   * @throws \Exception
+   * @throws \Drupal\gigya\CmsStarterKit\GSApiException
+   */
+  public function updateGigya() {
+    $this->retrieveFieldMappings();
+    $this->callCmsHook();
+    $this->gigyaArray = $this->createGigyaArray();
+    $this->callSetAccountInfo();
+  }
 
   /**
-   * @return boolean
+   * @return bool
    */
   public function isMapped() {
     return $this->mapped;
@@ -145,11 +144,11 @@ abstract class GigyaUpdater {
    */
   abstract protected function getMappingFromCache();
 
-	/**
-	 * @throws FieldMappingException
-	 *
-	 * @throws Exception
-	 */
+  /**
+   * @throws FieldMappingException
+   *
+   * @throws \Exception
+   */
   protected function retrieveFieldMappings() {
     $conf = $this->getMappingFromCache();
     if (FALSE === $conf) {
@@ -157,7 +156,7 @@ abstract class GigyaUpdater {
       if (FALSE === $mappingJson) {
         $err = error_get_last();
         $message = "Could not retrieve field mapping configuration file. message was:" . $err['message'];
-        throw new Exception($message);
+        throw new \Exception($message);
       }
       $conf = new Conf($mappingJson);
       $this->setMappingCache($conf);
@@ -165,10 +164,10 @@ abstract class GigyaUpdater {
     $this->cmsMappings = $conf->getCmsKeyed();
   }
 
-	/**
-	 * @return array
-	 * @throws Exception
-	 */
+  /**
+   * @return array
+   * @throws \Exception
+   */
   protected function createGigyaArray() {
     $gigyaArray = [];
     foreach ($this->cmsArray as $key => $value) {
@@ -186,51 +185,58 @@ abstract class GigyaUpdater {
   }
 
   /**
-   * @throws Exception
+   * @throws \Exception
    * @throws \Drupal\gigya\CmsStarterKit\GSApiException
-	 */
+   */
   protected function callSetAccountInfo() {
     $this->apiHelper->updateGigyaAccount($this->gigyaUid, $this->gigyaArray);
   }
 
-	/**
-	 * @param mixed    $val
-	 * @param ConfItem $conf
-	 *
-	 * @return mixed $val;
-	 *
-	 * @throws Exception
-	 */
+  /**
+   * @param mixed $val
+   * @param ConfItem $conf
+   *
+   * @return mixed $val;
+   *
+   * @throws \Exception
+   */
   private function castVal($val, $conf) {
     switch ($conf->getGigyaType()) {
       case "string":
         return (string) $val;
-        break;
+
+      break;
       case "long";
       case "int":
         return (int) $val;
-        break;
+
+      break;
       case "boolean":
       case "bool":
         if (is_string($val)) {
           $val = strtolower($val);
         }
         return filter_var($val, FILTER_VALIDATE_BOOLEAN);
-        break;
+
+      break;
       case 'date':
         if (!preg_match('/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|([+\-])\d{2}(:?\d{2})?)/', $val)) {
-          $datetime = new DateTime($val);
+          $datetime = new \DateTime($val);
           // Return date in format ISO 8601 (https://en.wikipedia.org/wiki/ISO_8601)
           $val = $datetime->format('c');
         }
         return $val;
-        break;
+
+      break;
       default:
         return $val;
-        break;
+      break;
     }
   }
 
+  /**
+   *
+   */
   private function assignArrayByPath(&$arr, $path, $value, $separator = '.') {
     $keys = explode($separator, $path);
 
@@ -244,4 +250,5 @@ abstract class GigyaUpdater {
 
     $arr = $value;
   }
+
 }

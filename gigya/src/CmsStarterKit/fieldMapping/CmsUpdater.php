@@ -2,13 +2,21 @@
 
 namespace Drupal\gigya\CmsStarterKit\fieldMapping;
 
+use Drupal\gigya\CmsStarterKit\User\GigyaUser as GigyaUserAlias;
+
+/**
+ *
+ */
 abstract class CmsUpdater {
 
   /**
-   * @var \Drupal\gigya\CmsStarterKit\user\GigyaUser
+   * @var \Drupal\gigya\CmsStarterKit\User\GigyaUser
    */
   private $gigyaUser;
 
+  /**
+   * @var
+   */
   private $gigyaMapping;
 
   /**
@@ -19,12 +27,12 @@ abstract class CmsUpdater {
   private $path;
 
   /**
-   * CmsUpdater constructor
+   * CmsUpdater constructor.
    *
    * @param \Drupal\gigya\CmsStarterKit\User\GigyaUser $gigyaAccount
    * @param string $mappingFilePath
    */
-  public function __construct($gigyaAccount, $mappingFilePath) {
+  public function __construct(GigyaUserAlias $gigyaAccount, string $mappingFilePath) {
     $this->gigyaUser = $gigyaAccount;
     $this->path = (string) $mappingFilePath;
     $this->mapped = !empty($this->path);
@@ -36,7 +44,7 @@ abstract class CmsUpdater {
    *
    * @throws \Drupal\gigya\CmsStarterKit\fieldMapping\CmsUpdaterException
    */
-  public function updateCmsAccount(&$cmsAccount, $cmsAccountSaver = NULL) {
+  public function updateCmsAccount(mixed &$cmsAccount, $cmsAccountSaver = NULL) {
     if (!isset($this->gigyaMapping)) {
       $this->retrieveFieldMappings();
     }
@@ -49,14 +57,20 @@ abstract class CmsUpdater {
   }
 
   /**
-   * @return boolean
+   * @return bool
    */
   public function isMapped() {
     return $this->mapped;
   }
 
+  /**
+   *
+   */
   abstract protected function callCmsHook();
 
+  /**
+   *
+   */
   abstract protected function saveCmsAccount(&$cmsAccount, $cmsAccountSaver);
 
   /**
@@ -86,7 +100,7 @@ abstract class CmsUpdater {
   /**
    * @param $path
    *
-   * @return \Drupal\gigya\CmsStarterKit\user\GigyaUser|null|string
+   * @return \Drupal\gigya\CmsStarterKit\User\GigyaUser|null|string
    */
   public function getValueFromGigyaAccount($path) {
     $userData = $this->getGigyaUser();
@@ -105,15 +119,19 @@ abstract class CmsUpdater {
       case "decimal":
         $value = (float) $value;
         break;
+
       case "int":
         $value = (int) $value;
         break;
+
       case "text":
         $value = (string) $value;
         break;
+
       case "varchar":
         $value = (string) $value;
         break;
+
       case "bool":
         $value = boolval($value); /* PHP 5.5+ */
         break;
@@ -137,7 +155,7 @@ abstract class CmsUpdater {
   }
 
   /**
-   * @return \Drupal\gigya\CmsStarterKit\user\GigyaUser
+   * @return \Drupal\gigya\CmsStarterKit\User\GigyaUser
    */
   public function getGigyaUser() {
     return $this->gigyaUser;
@@ -163,4 +181,5 @@ abstract class CmsUpdater {
   public function setGigyaMapping($gigyaMapping) {
     $this->gigyaMapping = $gigyaMapping;
   }
+
 }

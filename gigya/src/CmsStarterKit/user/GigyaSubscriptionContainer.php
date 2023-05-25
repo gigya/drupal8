@@ -4,6 +4,9 @@ namespace Drupal\gigya\CmsStarterKit\user;
 
 use Drupal\gigya\CmsStarterKit\GigyaJsonObject;
 
+/**
+ *
+ */
 class GigyaSubscriptionContainer extends GigyaJsonObject {
 
   /**
@@ -37,4 +40,5 @@ class GigyaSubscriptionContainer extends GigyaJsonObject {
 
     return $result;
   }
+
 }

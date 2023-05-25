@@ -4,10 +4,13 @@ namespace Drupal\gigya\CmsStarterKit\user;
 
 use Drupal\gigya\CmsStarterKit\GigyaJsonObject;
 
+/**
+ *
+ */
 class GigyaSubscription extends GigyaJsonObject {
 
   /**
-   * @var boolean
+   * @var bool
    */
   private $isSubscribed;
 
@@ -27,14 +30,14 @@ class GigyaSubscription extends GigyaJsonObject {
   private $doubleOptIn;
 
   /**
-   * @return boolean
+   * @return bool
    */
   public function getIsSubscribed() {
     return $this->isSubscribed;
   }
 
   /**
-   * @param boolean $isSubscribed
+   * @param bool $isSubscribed
    */
   public function setIsSubscribed($isSubscribed) {
     $this->isSubscribed = $isSubscribed;
@@ -51,7 +54,7 @@ class GigyaSubscription extends GigyaJsonObject {
    * @param string|array $tags
    */
   public function setTags($tags) {
-    if (is_string($tags)) {
+    if ($tags !== NULL and is_string($tags)) {
       $tags = json_decode($tags);
     }
     $this->tags = $tags;
@@ -123,4 +126,5 @@ class GigyaSubscription extends GigyaJsonObject {
       'doubleOptIn' => $this->getDoubleOptInAsArray(),
     ];
   }
+
 }

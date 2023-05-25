@@ -39,7 +39,7 @@ function gigya_ds_get_data($uid) {
   $fields_map = _gigya_ds_get_map_keys($mapping);
   $res = _gigya_ds_create_query($fields_map, $uid);
 
-  \Drupal::moduleHandler()->alter('gigya_ds_data', $res);
+  Drupal::moduleHandler()->alter('gigya_ds_data', $res);
   return $res;
 
 
@@ -96,14 +96,14 @@ function _gigya_ds_get_map_keys($array) {
 
 function gigya_ds_retrieve_field_mappings() {
   try {
-    $mappingJson = \Drupal::config('gigya_ds.settings')->get('gigya_ds.gigya_ds_mapping');
+    $mappingJson = Drupal::config('gigya_ds.settings')->get('gigya_ds.gigya_ds_mapping');
     if ('' == $mappingJson) {
-        \Drupal::logger('gigya_ds')->error('No mapping found');
+        Drupal::logger('gigya_ds')->error('No mapping found');
       return FALSE;
     }
     return (_gigya_ds_process_mapping($mappingJson));
   } catch (Exception $e) {
-      \Drupal::logger('gigya_ds')->error('No mapping file found');
+      Drupal::logger('gigya_ds')->error('No mapping file found');
     return FALSE;
   }
 }
@@ -137,7 +137,7 @@ function _gigya_ds_create_query($gigya_keyed, $uid) {
     }
   }
 
-  if (\Drupal::config('gigya_ds.settings')->get('gigya_ds.gigya_ds_use_search')) {
+  if (Drupal::config('gigya_ds.settings')->get('gigya_ds.gigya_ds_use_search')) {
     $res = _gigya_ds_do_ds_search($types, $dsFields, $uid);
   }
   else {

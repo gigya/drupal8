@@ -1,4 +1,9 @@
 <?php
+
+namespace Drupal\gigya_raas\Plugin\Block;
+
+use Drupal\Core\Block\BlockBase;
+
 /**
  * Provides a 'Gigya RaaS Register' Block
  *
@@ -9,20 +14,17 @@
  * )
  */
 
-namespace Drupal\gigya_raas\Plugin\Block;
-
-use Drupal\Core\Block\BlockBase;
-
-
 class GigyaRaasRegister extends BlockBase {
+
   /**
    * {@inheritdoc}
    */
   public function build() {
-    $build['block'] = array(
+    $build['block'] = [
       '#theme' => 'gigya_raas_register_block',
       '#showDiv' => \Drupal::currentUser()->isAnonymous()
-    );
+    ];
     return $build;
   }
+
 }

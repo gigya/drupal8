@@ -4,6 +4,9 @@ namespace Drupal\gigya\CmsStarterKit\user;
 
 use Drupal\gigya\CmsStarterKit\GigyaJsonObject;
 
+/**
+ *
+ */
 class GigyaSubscriptionDoubleOptIn extends GigyaJsonObject {
 
   /**
@@ -73,4 +76,5 @@ class GigyaSubscriptionDoubleOptIn extends GigyaJsonObject {
       'status' => $this->getStatus(),
     ];
   }
+
 }

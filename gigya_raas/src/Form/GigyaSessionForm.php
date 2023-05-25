@@ -1,4 +1,5 @@
 <?php
+
 namespace Drupal\gigya_raas\Form;
 
 use Drupal;
@@ -7,6 +8,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\gigya\Helper\GigyaHelperInterface;
 
+/**
+ *
+ */
 class GigyaSessionForm extends ConfigFormBase {
 
   /**
@@ -17,9 +21,9 @@ class GigyaSessionForm extends ConfigFormBase {
    * @return string
    */
 
-  public  $helper = FALSE;
+  public $helper = FALSE;
 
-  public array $dummy_email_uniqueness_options = [
+  private array $dummy_email_uniqueness_options = [
     'uid'         => '${UID}',
     'phoneNumber' => '${phoneNumber}',
     'firstName'   => '${firstName}',
@@ -27,6 +31,9 @@ class GigyaSessionForm extends ConfigFormBase {
     'nickName'    => '${nickName}',
   ];
 
+  /**
+   *
+   */
   private function getValue($form_state, $prop_name) {
     return trim($form_state->getValue($prop_name));
   }
@@ -63,15 +70,10 @@ class GigyaSessionForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL) {
 
-    if ($helper == NULL) {
-      $this->helper = new GigyaHelper();
-    }
-    else {
-      $this->helper = $helper;
-    }
+    $this->helper = $helper == NULL ? new GigyaHelper() : $helper;
 
     if (!$this->helper->checkEncryptKey()) {
-      $messenger = Drupal::service('messenger');
+      $messenger = \Drupal::service('messenger');
       $messenger->addWarning($this->t('Define Gigya\'s encryption key: Go to Gigya\'s general settings, copy the key below and place it in the setting.php file as "gigya_encryption_key".'));
     }
 
@@ -222,12 +224,15 @@ class GigyaSessionForm extends ConfigFormBase {
     }
     else {
       if ($this->getValue($form_state, 'should_use_dummy_email') and !$this->isEmailUnique($insensitive_dummy_email)) {
-        $messenger = Drupal::service('messenger');
+        $messenger = \Drupal::service('messenger');
         $messenger->addWarning($this->t('Note: the email format \'' . $dummy_email_format . '\' does not contain a unique identifier. It is recommended to use ${UID} or ${phoneNumber}, if applicable, to make the dummy email unique to each user.'));
       }
     }
   }
 
+  /**
+   *
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('gigya_raas.settings');
     $config->set('gigya_raas.session_type', $this->getValue($form_state, 'session_type'));
@@ -251,11 +256,17 @@ class GigyaSessionForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
   }
 
-  function replaceAllVariableToChar($dummy_email) {
+  /**
+   *
+   */
+  public function replaceAllVariableToChar($dummy_email) {
     return str_ireplace(array_values($this->dummy_email_uniqueness_options), 'a', $dummy_email);
   }
 
-  function isEmailUnique($email) {
+  /**
+   *
+   */
+  public function isEmailUnique($email) {
     foreach ($this->dummy_email_uniqueness_options as $key => $value) {
       if (str_contains($email, strtolower($value))) {
         return TRUE;

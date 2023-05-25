@@ -2,16 +2,21 @@
 
 namespace Drupal\gigya\CmsStarterKit\user;
 
-use Drupal\gigya\CmsStarterKit\user\GigyaProfile;
-use Drupal\gigya\CmsStarterKit\user\GigyaSubscriptionContainer;
-use Drupal\gigya\CmsStarterKit\user\GigyaSubscription;
-
+/**
+ *
+ */
 class GigyaUserFactory {
 
+  /**
+   *
+   */
   public static function createGigyaUserFromJson($json) {
     return new GigyaUser($json);
   }
 
+  /**
+   *
+   */
   public static function createGigyaUserFromArray($array) {
     $gigyaUser = new GigyaUser(NULL);
     foreach ($array as $key => $value) {
@@ -33,12 +38,23 @@ class GigyaUserFactory {
     return $gigyaUser;
   }
 
+  /**
+   *
+   */
   public static function createGigyaProfileFromJson($json) {
-    $gigyaArray = json_decode($json);
+    if ($json !== NULL) {
+      $gigyaArray = json_decode($json);
+    }
+    else {
+      $gigyaArray = [];
+    }
 
     return self::createGigyaProfileFromArray($gigyaArray);
   }
 
+  /**
+   *
+   */
   public static function createGigyaProfileFromArray($array) {
     $gigyaProfile = new GigyaProfile(NULL);
     foreach ($array as $key => $value) {
@@ -49,7 +65,8 @@ class GigyaUserFactory {
   }
 
   /**
-   * @param array $array subscriptions data
+   * @param array $array
+   *   subscriptions data.
    *
    * @return array
    */
@@ -76,4 +93,5 @@ class GigyaUserFactory {
 
     return $gigyaSubscriptions;
   }
+
 }

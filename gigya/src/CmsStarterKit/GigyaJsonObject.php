@@ -2,9 +2,8 @@
 
 namespace Drupal\gigya\CmsStarterKit;
 
-/**
- *
- */
+
+#[\AllowDynamicProperties]
 abstract class GigyaJsonObject {
 
   /**

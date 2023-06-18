@@ -2,7 +2,10 @@
 
 namespace Drupal\gigya\CmsStarterKit;
 
+use Exception;
 use Gigya\PHP\GSException;
+use Gigya\PHP\GSObject;
+use Gigya\PHP\GSResponse;
 use Gigya\PHP\JWTUtils;
 use Gigya\PHP\SigUtils;
 use Drupal\gigya\CmsStarterKit\user\GigyaUserFactory;
@@ -11,11 +14,11 @@ use Drupal\gigya\CmsStarterKit\user\GigyaUserFactory;
  *
  */
 class GigyaApiHelper {
-  private $userKey;
-  private $authKey;
-  private $authMode;
-  private $apiKey;
-  private $dataCenter;
+  private string $userKey;
+  private string $authKey;
+  private string $authMode;
+  private string $apiKey;
+  private string $dataCenter;
   private $defConfigFilePath;
 
   const IV_SIZE = 16;
@@ -34,7 +37,7 @@ class GigyaApiHelper {
    * @param string $authMode
    *   Authentication method: user_secret or user_rsa.
    */
-  public function __construct($apiKey, $userKey, $authKey, $dataCenter, $authMode = 'user_secret') {
+  public function __construct(string $apiKey, string $userKey, string $authKey, string $dataCenter, string $authMode = 'user_secret') {
     $this->defConfigFilePath = ".." . DIRECTORY_SEPARATOR . "configuration/DefaultConfiguration.json";
     $defaultConf             = @file_get_contents($this->defConfigFilePath);
     if (!$defaultConf) {
@@ -43,37 +46,37 @@ class GigyaApiHelper {
     else {
       $confArray = json_decode(file_get_contents($this->defConfigFilePath) !== NULL ? : '');
     }
-    $this->userKey  = !empty($userKey) ? $userKey : $confArray['appKey'];
+    $this->userKey  = ($userKey ?? $confArray['appKey']) ?? '';
     $this->authMode = $authMode;
     if ($authMode === 'user_secret') {
-      $this->authKey = !empty($authKey) ? $authKey : self::decrypt($confArray['appSecret']);
+      $this->authKey = $authKey ?? ((!empty($confArray['appSecret'])) ? self::decrypt($confArray['appSecret']) : '');
     }
     else {
       $this->authKey = $authKey;
     }
 
-    $this->apiKey     = !empty($apiKey) ? $apiKey : $confArray['apiKey'];
-    $this->dataCenter = !empty($dataCenter) ? $dataCenter : $confArray['dataCenter'];
+    $this->apiKey     = ($apiKey ?? $confArray['apiKey']) ?? '';
+    $this->dataCenter = ($dataCenter ?? $confArray['dataCenter']) ?? '';
   }
 
   /**
-   * @param string $method
+   * @param string         $method
    * @param array|GSObject $params
    *
-   * @return \Gigya\PHP\GSResponse
+   * @return GSResponse
    *
    * @throws GSApiException
-   * @throws \Gigya\PHP\GSException
-   * @throws \Exception
+   * @throws GSException
+   * @throws Exception
    */
-  public function sendApiCall($method, $params) {
+  public function sendApiCall(string $method, $params): GSResponse {
     if ($this->authMode === 'user_rsa') {
       $req = GSFactory::createGSRequestPrivateKey($this->apiKey, $this->userKey, $this->authKey, $method,
-      GSFactory::createGSObjectFromArray($params), $this->dataCenter);
+        GSFactory::createGSObjectFromArray($params), $this->dataCenter);
     }
     else {
       $req = GSFactory::createGSRequestAppKey($this->apiKey, $this->userKey, $this->authKey, $method,
-      GSFactory::createGSObjectFromArray($params), $this->dataCenter);
+        GSFactory::createGSObjectFromArray($params), $this->dataCenter);
     }
 
     return $req->send();
@@ -91,10 +94,10 @@ class GigyaApiHelper {
    *
    * @return \Drupal\gigya\CmsStarterKit\user\GigyaUser|false
    *
-   * @throws \Exception
+   * @throws Exception
    * @throws GSApiException
    */
-  public function validateUid($uid, $uidSignature, $signatureTimestamp, $include = NULL, $extraProfileFields = NULL, $orgParams = []) {
+  public function validateUid(string $uid, string $uidSignature, $signatureTimestamp, $include = NULL, $extraProfileFields = NULL, array $orgParams = []) {
     $params                       = $orgParams;
     $params['UID']                = $uid;
     $params['UIDSignature']       = $uidSignature;
@@ -113,18 +116,18 @@ class GigyaApiHelper {
   }
 
   /**
-   * @param string $uid
-   * @param string $idToken
+   * @param string      $uid
+   * @param string      $idToken
    *
-   * @param string|null $include
+   * @param string|NULL $include
    * @param             $extraProfileFields
    * @param             $orgParams
    *
    * @return \Drupal\gigya\CmsStarterKit\user\GigyaUser|false
    *
-   * @throws \Exception|GSApiException
+   * @throws Exception|GSApiException
    */
-  public function validateJwtAuth($uid, $idToken, $include = NULL, $extraProfileFields = NULL, $orgParams = NULL) {
+  public function validateJwtAuth(string $uid, string $idToken, string $include = NULL, $extraProfileFields = NULL, $orgParams = NULL) {
     $jwt = JWTUtils::validateSignature($idToken, $this->apiKey, $this->dataCenter);
 
     if ($jwt && !empty($jwt->sub) && $jwt->sub === $uid) {
@@ -147,7 +150,7 @@ class GigyaApiHelper {
    *
    * @return \Drupal\gigya\CmsStarterKit\user\GigyaUser
    *
-   * @throws \Exception
+   * @throws Exception
    * @throws GSApiException
    */
   public function fetchGigyaAccount($uid, $include = NULL, $extraProfileFields = NULL, $params = []) {
@@ -187,7 +190,7 @@ class GigyaApiHelper {
    * @return \Drupal\gigya\CmsStarterKit\user\GigyaUser[]
    *
    * @throws GSApiException
-   * @throws \Gigya\PHP\GSException
+   * @throws GSException
    */
   public function searchGigyaUsers($query, $useCursor = FALSE) {
     $gigyaUsers = [];
@@ -263,7 +266,7 @@ class GigyaApiHelper {
    * @param array $data
    *   data.
    *
-   * @throws \Exception
+   * @throws Exception
    * @throws \InvalidArgumentException
    * @throws GSApiException
    */
@@ -294,7 +297,7 @@ class GigyaApiHelper {
   }
 
   /**
-   * @throws \Exception
+   * @throws Exception
    * @throws GSApiException
    */
   public function getSiteSchema() {
@@ -309,8 +312,8 @@ class GigyaApiHelper {
    *
    * @return bool
    *
-   * @throws \Exception
-   * @throws \Gigya\PHP\GSException
+   * @throws Exception
+   * @throws GSException
    */
   public function isRaasEnabled($apiKey = NULL) {
     if (NULL === $apiKey) {
@@ -356,7 +359,7 @@ class GigyaApiHelper {
    *
    * @return string
    */
-  public static function decrypt($str, $key = NULL) {
+  public static function decrypt(string $str, $key = NULL): string {
     if (NULL == $key) {
       $key = getenv("KEK");
     }
@@ -378,7 +381,7 @@ class GigyaApiHelper {
    *
    * @return string
    */
-  public static function enc($str, $key = NULL) {
+  public static function enc(string $str, $key = NULL): string {
     if (NULL == $key) {
       $key = getenv("KEK");
     }

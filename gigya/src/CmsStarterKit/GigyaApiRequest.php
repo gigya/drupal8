@@ -4,6 +4,7 @@ namespace Drupal\gigya\CmsStarterKit;
 
 use Gigya\PHP\GSException;
 use Gigya\PHP\GSRequest;
+use Gigya\PHP\GSResponse;
 
 /**
  *
@@ -13,12 +14,12 @@ class GigyaApiRequest extends GSRequest {
   /**
    * @param null $timeout
    *
-   * @return \Gigya\PHP\GSResponse
+   * @return GSResponse
    *
-   * @throws \Gigya\PHP\GSException
+   * @throws GSException
    * @throws GSApiException
    */
-  public function send($timeout = NULL) {
+  public function send($timeout = NULL): GSResponse {
     $res = parent::send($timeout);
     if ($res->getErrorCode() == 0) {
       return $res;

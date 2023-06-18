@@ -213,7 +213,7 @@ class GigyaKeysForm extends ConfigFormBase {
 
     $config = $this->config('gigya.settings');
 
-    // API key was changed ?
+    /* API key was changed ? */
     if ($this->getValue($form_state, 'gigya_api_key') != $config->get('gigya.gigya_api_key')) {
       $_gigya_api_key = $this->getValue($form_state, 'gigya_api_key');
     }
@@ -221,7 +221,7 @@ class GigyaKeysForm extends ConfigFormBase {
       $_gigya_api_key = $config->get('gigya.gigya_api_key');
     }
 
-    // APP key was changed ?
+    /* App/user key was changed ? */
     if ($this->getValue($form_state, 'gigya_application_key') != $config->get('gigya.gigya_application_key')) {
       $_gigya_application_key = $this->getValue($form_state, 'gigya_application_key');
     }
@@ -229,18 +229,18 @@ class GigyaKeysForm extends ConfigFormBase {
       $_gigya_application_key = $config->get('gigya.gigya_application_key');
     }
 
-    // APP secret key was changed ?
+    /* App/user secret key was changed ? */
     $_gigya_auth_mode = $this->getValue($form_state, 'gigya_auth_mode');
     $temp_access_key = ($_gigya_auth_mode === 'user_rsa')
-    ? $this->getValue($form_state, 'gigya_rsa_private_key')
-    : $this->getValue($form_state, 'gigya_application_secret_key');
-    if (!empty($temp_access_key) && $temp_access_key !== "*********") {/* Auth key just entered */
+      ? $this->getValue($form_state, 'gigya_rsa_private_key')
+      : $this->getValue($form_state, 'gigya_application_secret_key');
+    if (!empty($temp_access_key) && $temp_access_key !== "*********") { /* Auth key just entered */
       $_gigya_auth_key = $temp_access_key;
     }
-    else {/* Auth key not yet entered or is already found in the system */
+    else { /* Auth key not yet entered or is already found in the system */
       $key = ($_gigya_auth_mode === 'user_rsa')
-      ? $config->get('gigya.gigya_rsa_private_key')
-      : $config->get('gigya.gigya_application_secret_key');
+        ? $config->get('gigya.gigya_rsa_private_key')
+        : $config->get('gigya.gigya_application_secret_key');
       if (!empty($key)) {
         $_gigya_auth_key = $this->helper->decrypt($key);
       }
@@ -274,16 +274,22 @@ class GigyaKeysForm extends ConfigFormBase {
     $params->put('filter', 'full');
 
     $valid = FALSE;
-    try {
-      $res = $this->helper->sendApiCall('socialize.getProvidersConfig', $params, $access_params);
-      if ($res->getErrorCode() == 0) {
-        $valid = TRUE;
+    if ($_gigya_auth_mode !== 'user_rsa' || openssl_pkey_get_private($access_params['auth_key']) !== FALSE) {
+      try {
+        $res = $this->helper->sendApiCall('socialize.getProvidersConfig', $params, $access_params);
+        if ($res->getErrorCode() == 0) {
+          $valid = TRUE;
+        }
+      } catch (\Exception $e) {
+        $code = $e->getCode();
+        $msg = $e->getMessage();
+        $error_message = new TranslatableMarkup('Gigya error: @code – @msg', [
+          '@code' => $code,
+          '@message' => $msg,
+        ]);
       }
-    }
-    catch (\Exception $e) {
-      $code = $e->getCode();
-      $msg = $e->getMessage();
-      $error_message = new TranslatableMarkup('Gigya error: @code – @msg', ['@code' => $code, '@message' => $msg]);
+    } else {
+      $form_state->setErrorByName('gigya_api_key', $this->t('Invalid private key format. Please re-acquire a Gigya private key, or try a different authentication method.'));
     }
 
     if ($valid !== TRUE) {

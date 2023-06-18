@@ -5,10 +5,12 @@ namespace Drupal\gigya\CmsStarterKit;
 /**
  *
  */
-class GSApiException extends \Exception {
+
+use Exception;
+
+class GSApiException extends Exception {
 
   private $longMessage;
-
   private $callId;
 
   /**
@@ -16,8 +18,8 @@ class GSApiException extends \Exception {
    *
    * @param string $message
    * @param int $errorCode
-   * @param string|null $longMessage
-   * @param string|null $callId
+   * @param string|NULL $longMessage
+   * @param string|NULL $callId
    */
   public function __construct(string $message, $errorCode, string $longMessage = NULL, string $callId = NULL) {
     parent::__construct($message, $errorCode);
@@ -26,23 +28,23 @@ class GSApiException extends \Exception {
   }
 
   /**
-   * @return int
+   * @return string|null
    */
-  public function getErrorCode() {
+  public function getErrorCode(): string {
     return $this->getCode();
   }
 
   /**
-   * @return null
+   * @return string|null
    */
-  public function getLongMessage() {
+  public function getLongMessage(): ?string {
     return $this->longMessage;
   }
 
   /**
-   * @return null
+   * @return string|null
    */
-  public function getCallId() {
+  public function getCallId(): ?string {
     return $this->callId;
   }
 

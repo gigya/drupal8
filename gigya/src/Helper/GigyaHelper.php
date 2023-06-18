@@ -13,6 +13,7 @@ use Drupal\gigya\CmsStarterKit\user\GigyaUser;
 use Drupal\gigya\CmsStarterKit\ds\DsQueryObject;
 use Gigya\PHP\GSException;
 use Gigya\PHP\GSObject;
+use Gigya\PHP\GSResponse;
 
 /**
  *
@@ -137,7 +138,7 @@ class GigyaHelper implements GigyaHelperInterface {
    * @throws \Drupal\gigya\CmsStarterKit\GSApiException
    * @throws \Gigya\PHP\GSException
    */
-  public function sendApiCall(string $method, $params = NULL, $access_params = FALSE) {
+  public function sendApiCall(string $method, $params = NULL, $access_params = FALSE): GSResponse {
     try {
       if (!$access_params) {
         $access_params = $this->getAccessParams();
@@ -156,7 +157,7 @@ class GigyaHelper implements GigyaHelperInterface {
       }
 
       $result = $request->send();
-      if (\Drupal::config('gigya.global')->get('gigya.gigyaDebugMode') == TRUE) {
+      if (\Drupal::config('gigya.global')->get('gigya.gigyaDebugMode')) {
         /* On first module load, API & secret are empty, so no values in response */
         \Drupal::logger('gigya')
           ->debug('Response from Gigya:<br /><pre>Call ID: @callId, API call: @method</pre>',
@@ -167,11 +168,7 @@ class GigyaHelper implements GigyaHelperInterface {
       }
 
       return $result;
-    }
-    catch (GSException $e) {
-      throw $e;
-    }
-    catch (GSApiException $e) {
+    } catch (GSApiException $e) {
       /* Always write error to log */
       \Drupal::logger('gigya')
         ->error('Gigya API error. Error code: @code<br />Response from Gigya:<br /><pre>Call ID: @callId, API call: @method, Error: @message</pre>',

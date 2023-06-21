@@ -1,3 +1,7 @@
+.gig-share-bar-container td iframe {
+  vertical-align: bottom;
+}
+
 .gigya-login {
   margin-bottom: 15px;
 }

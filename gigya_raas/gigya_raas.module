@@ -110,7 +110,7 @@ function gigya_raas_page_attachments(array &$attachments) {
       $custom_screensets = [];
       /** @var \Drupal\block\BlockInterface[] $blocks; */
       $blocks = Block::loadMultiple();
-      //var_dump($blocks); exit();////
+      // var_dump($blocks); exit();////
       foreach ($blocks as $key => $block) {
         $settings = $block->get('settings');
         if ($settings['id'] == 'gigya_raas_custom_screenset') {
@@ -123,8 +123,10 @@ function gigya_raas_page_attachments(array &$attachments) {
           unset($screenset->remove);
         }
         $screenset = (array) $screenset;
-        $screenset_config[$screenset['desktop']] = $screenset;
-        unset($screenset_config[$key]);
+        if (array_key_exists('desktop', $screenset)) {
+          $screenset_config[$screenset['desktop']] = $screenset;
+          unset($screenset_config[$key]);
+        }
       }
       foreach ($custom_screensets as $key => $screenset) {
         if (!empty($screenset_config[$screenset['desktop_screenset']])) {

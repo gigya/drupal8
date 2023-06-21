@@ -14,3 +14,10 @@
   color: green;
   font-weight: bold;
 }
+
+.gigya-screen-dialog input[type="checkbox"] {
+  appearance: checkbox;
+}
+.gigya-screen-dialog input[type="radio"] {
+  appearance: radio;
+}

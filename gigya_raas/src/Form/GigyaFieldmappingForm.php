@@ -138,7 +138,7 @@ class GigyaFieldmappingForm extends ConfigFormBase {
     if (!empty($fieldmapping_config) and $fieldmapping_config !== '{}') {
 
       if ($this->jsonFormValidation($fieldmapping_config) !== TRUE) {
-        $form_state->setErrorByName('fieldmapping', $this->t(jsonFormValidation($fieldmapping_config)));
+        $form_state->setErrorByName('fieldmapping', $this->t($this->jsonFormValidation($fieldmapping_config)));
       }
 
       /* Offline sync */
@@ -163,6 +163,14 @@ class GigyaFieldmappingForm extends ConfigFormBase {
           }
         }
       }
+    }
+  }
+  private function jsonFormValidation($json_text) {
+    $after_decode_json = json_decode($json_text);
+    if ($after_decode_json === NULL && json_last_error() !== JSON_ERROR_NONE) {
+      return 'Invalid field mapping configuration: ' . json_last_error_msg();
+    }else {
+      return TRUE;
     }
   }
 

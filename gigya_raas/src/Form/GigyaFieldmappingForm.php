@@ -47,7 +47,7 @@ class GigyaFieldmappingForm extends ConfigFormBase {
    * @return array
    */
   public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL) {
-    $config = $this->config('gigya_raas.fieldmapping');
+    $config              = $this->config('gigya_raas.fieldmapping');
     $fieldmapping_config = json_encode($this->raas_helper->getFieldMappingConfig(), JSON_PRETTY_PRINT);
 
     if ($helper == NULL) {
@@ -63,49 +63,49 @@ class GigyaFieldmappingForm extends ConfigFormBase {
     }
 
     $form['gigya_fieldmapping_config'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Field Mapping Configuration'),
-      '#open' => TRUE,
-      '#rows' => max(5, substr_count($fieldmapping_config, "\n") + 1),
+      '#type'          => 'textarea',
+      '#title'         => $this->t('Field Mapping Configuration'),
+      '#open'          => TRUE,
+      '#rows'          => max(5, substr_count($fieldmapping_config, "\n") + 1),
       '#default_value' => $fieldmapping_config,
     ];
 
     $form['uid_mapping'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('UID mapping (advanced)'),
+      '#type'          => 'textfield',
+      '#title'         => $this->t('UID mapping (advanced)'),
       '#default_value' => $config->get('gigya.uid_mapping'),
-      '#description' => $this->t('Change this to map Gigya\'s UID to a different user field in Drupal (not recommended).'),
+      '#description'   => $this->t('Change this to map Gigya\'s UID to a different user field in Drupal (not recommended).'),
     ];
 
     $form['gigya_offline_sync'] = [
-      '#type' => 'label',
-      '#title' => $this->t('Offline Sync Settings'),
+      '#type'       => 'label',
+      '#title'      => $this->t('Offline Sync Settings'),
       '#attributes' => [
         'class' => ['gigya-label-custom'],
       ],
     ];
 
     $form['offline_sync']['enable_job_label'] = [
-      '#type' => 'label',
-      '#title' => $this->t('Enable'),
+      '#type'       => 'label',
+      '#title'      => $this->t('Enable'),
       "#attributes" => [
         'class' => ['gigya-label-cb'],
       ],
     ];
-    $form['offline_sync']['enable_job'] = [
-      '#type' => 'checkbox',
+    $form['offline_sync']['enable_job']       = [
+      '#type'          => 'checkbox',
       '#default_value' => $config->get('gigya.offline_sync.enable_job'),
     ];
 
     $form['offline_sync']['email_on_success'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Email on success'),
+      '#type'          => 'textfield',
+      '#title'         => $this->t('Email on success'),
       '#default_value' => $config->get('gigya.offline_sync.email_on_success'),
     ];
 
     $form['offline_sync']['email_on_failure'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Email on failure'),
+      '#type'          => 'textfield',
+      '#title'         => $this->t('Email on failure'),
       '#default_value' => $config->get('gigya.offline_sync.email_on_failure'),
     ];
 
@@ -136,30 +136,31 @@ class GigyaFieldmappingForm extends ConfigFormBase {
     $fieldmapping_config = $form_state->getValue('gigya_fieldmapping_config');
 
     if (!empty($fieldmapping_config) and $fieldmapping_config !== '{}') {
-      if (empty(json_decode($fieldmapping_config!== null ? :''))) {
-        $form_state->setErrorByName('fieldmapping', $this->t('Invalid field mapping configuration'));
+
+      if ($this->jsonFormValidation($fieldmapping_config) !== TRUE) {
+        $form_state->setErrorByName('fieldmapping', $this->t(jsonFormValidation($fieldmapping_config)));
       }
-    }
 
-    /* Offline sync */
+      /* Offline sync */
 
-    $enable_job = $form_state->getValue('enable_job');
+      $enable_job = $form_state->getValue('enable_job');
 
-    if ($enable_job) {
-      $email_on_success = $form_state->getValue('email_on_success');
-      $email_on_failure = $form_state->getValue('email_on_failure');
+      if ($enable_job) {
+        $email_on_success = $form_state->getValue('email_on_success');
+        $email_on_failure = $form_state->getValue('email_on_failure');
 
-      foreach (explode(',', $email_on_success) as $email) {
-        if ($email !== '' and !\Drupal::service('email.validator')
-          ->isValid(trim($email))) {
-          $form_state->setErrorByName('fieldmapping', $this->t('Invalid email address provided in email on success'));
+        foreach (explode(',', $email_on_success) as $email) {
+          if ($email !== '' and !\Drupal::service('email.validator')
+                                        ->isValid(trim($email))) {
+            $form_state->setErrorByName('fieldmapping', $this->t('Invalid email address provided in email on success'));
+          }
         }
-      }
 
-      foreach (explode(',', $email_on_failure) as $email) {
-        if ($email !== '' and !\Drupal::service('email.validator')
-          ->isValid(trim($email))) {
-          $form_state->setErrorByName('fieldmapping', $this->t('Invalid email address provided in email on failure'));
+        foreach (explode(',', $email_on_failure) as $email) {
+          if ($email !== '' and !\Drupal::service('email.validator')
+                                        ->isValid(trim($email))) {
+            $form_state->setErrorByName('fieldmapping', $this->t('Invalid email address provided in email on failure'));
+          }
         }
       }
     }
@@ -183,5 +184,4 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 
     parent::submitForm($form, $form_state);
   }
-
 }

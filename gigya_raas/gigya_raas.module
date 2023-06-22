@@ -107,7 +107,6 @@ function gigya_raas_page_attachments(array &$attachments) {
       $custom_screensets = [];
       /** @var \Drupal\block\BlockInterface[] $blocks; */
       $blocks = Block::loadMultiple();
-      // var_dump($blocks); exit();////
       foreach ($blocks as $key => $block) {
         $settings = $block->get('settings');
         if ($settings['id'] == 'gigya_raas_custom_screenset') {

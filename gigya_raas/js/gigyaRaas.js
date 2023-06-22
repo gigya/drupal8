@@ -102,7 +102,7 @@ var getUrlPrefix = function () {
    * @property res.groupContext
    */
   var onLoginHandler = function (res) {
-    console.log("res =" + res);
+
     var remember = getRememberMeStatus(res);
     /* Propagate Remember Me status to the SSO group */
     gigya.setGroupContext({

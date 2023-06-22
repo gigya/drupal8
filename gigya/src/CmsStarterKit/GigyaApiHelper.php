@@ -331,16 +331,10 @@ class GigyaApiHelper {
     }
   }
 
-  /**
-   *
-   */
   public function queryDs($uid, $table, $fields) {
 
   }
 
-  /**
-   *
-   */
   public function userObjFromArray($user_arr) {
     $obj = GigyaUserFactory::createGigyaUserFromArray($user_arr);
 

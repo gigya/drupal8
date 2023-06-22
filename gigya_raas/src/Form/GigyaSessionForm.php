@@ -21,9 +21,6 @@ class GigyaSessionForm extends ConfigFormBase {
     'nickName'    => '${nickName}',
   ];
 
-  /**
-   *
-   */
   private function getValue($form_state, $prop_name) {
     return trim($form_state->getValue($prop_name));
   }
@@ -220,9 +217,6 @@ class GigyaSessionForm extends ConfigFormBase {
     }
   }
 
-  /**
-   *
-   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('gigya_raas.settings');
     $config->set('gigya_raas.session_type', $this->getValue($form_state, 'session_type'));
@@ -246,16 +240,10 @@ class GigyaSessionForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
   }
 
-  /**
-   *
-   */
   public function replaceAllVariableToChar($dummy_email) {
     return str_ireplace(array_values($this->dummy_email_uniqueness_options), 'a', $dummy_email);
   }
 
-  /**
-   *
-   */
   public function isEmailUnique($email) {
     foreach ($this->dummy_email_uniqueness_options as $key => $value) {
       if (str_contains($email, strtolower($value))) {

@@ -235,9 +235,6 @@ class GigyaCronForm extends ConfigFormBase {
     return 'gigya_job_params';
   }
 
-  /**
-   *
-   */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     /* Check if the form has errors, if true we do not need to validate the user input because it has errors already. */
     parent::validateForm($form, $form_state);
@@ -348,9 +345,6 @@ class GigyaCronForm extends ConfigFormBase {
     }
   }
 
-  /**
-   *
-   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('gigya_user_deletion.job');
     $config->set('gigya_user_deletion.enableJob', $this->getValue($form_state, 'enableJob'));

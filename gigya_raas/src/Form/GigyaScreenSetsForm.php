@@ -26,9 +26,6 @@ class GigyaScreenSetsForm extends ConfigFormBase {
 
   public $helper = FALSE;
 
-  /**
-   *
-   */
   protected function getEditableConfigNames() {
     return [
       'gigya_raas.screensets',
@@ -214,16 +211,10 @@ class GigyaScreenSetsForm extends ConfigFormBase {
     return $messenger->all();
   }
 
-  /**
-   *
-   */
   public static function addScreensetRowCallback(array &$form, FormStateInterface $form_state) {
     return $form['gigya_custom_screensets']['screensets'];
   }
 
-  /**
-   *
-   */
   public static function removeScreensetRow(array &$form, FormStateInterface $form_state) {
     $key_remove                = $form_state->getTriggeringElement()['#attributes']['data-screenset-row-serial'];
     $existing_field_keys_array = $form_state->get('existing_field_keys');
@@ -245,9 +236,6 @@ class GigyaScreenSetsForm extends ConfigFormBase {
     return $messenger->all();
   }
 
-  /**
-   *
-   */
   public static function removeScreensetRowCallback(array &$form, FormStateInterface $form_state) {
     return $form['gigya_custom_screensets']['screensets'];
   }

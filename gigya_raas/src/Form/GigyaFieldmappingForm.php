@@ -16,9 +16,6 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 
   public $api_helper = FALSE;
 
-  /**
-   *
-   */
   public function __construct(ConfigFactoryInterface $config_factory) {
     parent::__construct($config_factory);
 

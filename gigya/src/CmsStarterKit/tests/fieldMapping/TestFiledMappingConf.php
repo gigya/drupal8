@@ -11,9 +11,6 @@ class TestFiledMappingConf extends \PHPUnit_Framework_TestCase {
    */
   private $conf;
 
-  /**
-   *
-   */
   public function testGigyaKeyed() {
     $gigyaKeyed = $this->conf->getGigyaKeyed();
     $this->assertArrayHasKey("profile.gender", $gigyaKeyed);
@@ -21,18 +18,14 @@ class TestFiledMappingConf extends \PHPUnit_Framework_TestCase {
     $this->assertArrayHasKey("ds.table1.test", $gigyaKeyed);
   }
 
-  /**
-   *
-   */
+
   public function testCmsKeyed() {
     $cmsKeyed = $this->conf->getCmsKeyed();
     $this->assertArrayHasKey("gender", $cmsKeyed);
     $this->assertArrayHasKey("custom2", $cmsKeyed);
   }
 
-  /**
-   *
-   */
+
   public function testConfItem() {
     $gigyaKeyed = $this->conf->getGigyaKeyed();
     $this->assertCount(1, $gigyaKeyed['ds.table1.test'], "Test only one mapping for this field");
@@ -48,9 +41,7 @@ class TestFiledMappingConf extends \PHPUnit_Framework_TestCase {
     $this->assertEquals($expectedArray, $confItem->getCustom(), "test custom configuration");
   }
 
-  /**
-   *
-   */
+
   protected function setUp() {
     $json       = file_get_contents(
           __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "resources" . DIRECTORY_SEPARATOR

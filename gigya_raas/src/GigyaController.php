@@ -323,7 +323,7 @@ class GigyaController extends ControllerBase {
               : $gigyaUser->getProfile()->getFirstName();
 
             if (empty($uname)) {
-              $uname = $this->editPHoneNumber($gigyaUser->getPhoneNumber());
+              $uname = $this->editPhoneNumber($gigyaUser->getPhoneNumber());
             }
 
             if (!$this->helper->getUidByName($uname)) {
@@ -618,9 +618,6 @@ class GigyaController extends ControllerBase {
     return TRUE;
   }
 
-  /**
-   *
-   */
   private function getDynamicSessionSignatureUserSigned($token, $expiration, $userKey, $secret) {
     $unsignedExpString = mb_convert_encoding($token . "_" . $expiration . "_" . $userKey, 'UTF-8', 'ISO-8859-1');
     $rawHmac           = hash_hmac("sha1", mb_convert_encoding($unsignedExpString, 'UTF-8', 'ISO-8859-1'), base64_decode($secret), TRUE);
@@ -629,9 +626,6 @@ class GigyaController extends ControllerBase {
     return $expiration . '_' . $userKey . '_' . $sig;
   }
 
-  /**
-   *
-   */
   protected function calculateDynamicSessionSignatureJwtSigned(string $loginToken, int $expiration, string $applicationKey, string $privateKey) {
     $payload = [
       'sub' => $loginToken,
@@ -671,9 +665,6 @@ class GigyaController extends ControllerBase {
     return new AjaxResponse();
   }
 
-  /**
-   *
-   */
   protected function notifyUserAndAdminAboutLoginIssue($response, $logger_message, $err_msg) {
     \Drupal::logger($logger_message['type'])
       ->notice($logger_message['message']);
@@ -681,18 +672,12 @@ class GigyaController extends ControllerBase {
 
   }
 
-  /**
-   *
-   */
   protected function writeErrorValidationMessageToLoggerAndLogout($logger_message) {
     \Drupal::logger($logger_message['type'])
       ->warning($logger_message['message']);
     user_logout();
   }
 
-  /**
-   *
-   */
   protected function getDummyEmail($gigyaUser) {
 
     $typesOfValues = [
@@ -714,9 +699,6 @@ class GigyaController extends ControllerBase {
 
   }
 
-  /**
-   *
-   */
   protected function findAndReplace($typeOfData, $stringToReplace, $gigyaUser, $email) {
     $dataToReplace = '';
 
@@ -745,10 +727,7 @@ class GigyaController extends ControllerBase {
     return str_ireplace($stringToReplace, $dataToReplace, $email);
   }
 
-  /**
-   *
-   */
-  protected function editPhoneNumber(string $phoneNumber) {
+  protected function editPhoneNumber($phoneNumber) {
     if (!empty($phoneNumber)) {
       return str_replace(['+', '-'], '', $phoneNumber);
     }

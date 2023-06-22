@@ -546,9 +546,9 @@ class GigyaUser extends GigyaJsonObject {
   }
 
   /**
-   * @return string
+   * @return string|null
    */
-  public function getPhoneNumber(): string {
+  public function getPhoneNumber() {
     return $this->phoneNumber;
   }
 

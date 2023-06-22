@@ -64,9 +64,6 @@ class GigyaUserDeletionUnitTest extends UnitTestCase {
    */
   private $awsFileContents = '';
 
-  /**
-   *
-   */
   public function setUp(): void {
     /* Service mocks */
     $this->config = $this->getMockBuilder('\Drupal\Core\Config\ImmutableConfig')
@@ -104,9 +101,6 @@ class GigyaUserDeletionUnitTest extends UnitTestCase {
     }));
   }
 
-  /**
-   *
-   */
   public function testGetRegion() {
     $userDeletionHelper = new GigyaUserDeletionHelper($this->coreModuleHelperMock);
 
@@ -120,9 +114,6 @@ class GigyaUserDeletionUnitTest extends UnitTestCase {
     }
   }
 
-  /**
-   *
-   */
   public function testLoadFileFromServer() {
     $userDeletionHelper = new GigyaUserDeletionHelper($this->coreModuleHelperMock);
 
@@ -136,9 +127,6 @@ class GigyaUserDeletionUnitTest extends UnitTestCase {
     }
   }
 
-  /**
-   *
-   */
   private function uid_csv_parse($csv_file_string) {
     $csv_lines = explode("\n", $csv_file_string);
     array_shift($csv_lines);
@@ -148,9 +136,6 @@ class GigyaUserDeletionUnitTest extends UnitTestCase {
     return $csv_lines;
   }
 
-  /**
-   *
-   */
   public function testGetUsers() {
     $userDeletionHelper = new GigyaUserDeletionHelper($this->coreModuleHelperMock);
 
@@ -164,9 +149,6 @@ class GigyaUserDeletionUnitTest extends UnitTestCase {
     }
   }
 
-  /**
-   *
-   */
   public function testGetFileList() {
     $userDeletionHelper = new GigyaUserDeletionHelper($this->coreModuleHelperMock);
 

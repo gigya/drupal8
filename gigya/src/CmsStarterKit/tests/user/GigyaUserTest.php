@@ -11,9 +11,7 @@ use Gigya\PHP\GSObject;
 
 class GigyaUserTest extends PHPUnit_Framework_TestCase {
 
-  /**
-   *
-   */
+
   public function testCreateGigyaUserFromJson() {
     $json      = file_get_contents(
       __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR
@@ -45,9 +43,6 @@ class GigyaUserTest extends PHPUnit_Framework_TestCase {
 
   }
 
-  /**
-   *
-   */
   public function testGetNestedValue() {
     $json      = file_get_contents(
       __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR
@@ -69,9 +64,7 @@ class GigyaUserTest extends PHPUnit_Framework_TestCase {
     );
   }
 
-  /**
-   *
-   */
+
   public function testAgeGetter() {
     $json      = file_get_contents(
       __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR
@@ -82,9 +75,6 @@ class GigyaUserTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals(33, $profile->getAge());
   }
 
-  /**
-   *
-   */
   public function testMagicGetterAndSetters() {
     $json      = file_get_contents(
       __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR
@@ -98,9 +88,6 @@ class GigyaUserTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($randVal, $gigyaUser->$key);
   }
 
-  /**
-   *
-   */
   public function testMagicGetterAndSettersOnProfile() {
     $json      = file_get_contents(
       __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR
@@ -115,9 +102,6 @@ class GigyaUserTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($randVal, $profile->$key);
   }
 
-  /**
-   *
-   */
   public function testNonExistentProperty() {
     $json      = file_get_contents(
       __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR
@@ -129,9 +113,6 @@ class GigyaUserTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals(NULL, $gigyaUser->$key);
   }
 
-  /**
-   *
-   */
   private function generateRandomString($length = 10) {
     return substr(
       str_shuffle(

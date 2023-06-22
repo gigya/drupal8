@@ -48,9 +48,6 @@ interface GigyaHelperInterface {
    */
   public function getEnvString();
 
-  /**
-   *
-   */
   public function sendEmail($subject, $body, $to);
 
 }

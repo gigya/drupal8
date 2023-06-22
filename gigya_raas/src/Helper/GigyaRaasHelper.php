@@ -146,9 +146,6 @@ class GigyaRaasHelper {
     return FALSE;
   }
 
-  /**
-   *
-   */
   public function checkProfileEmail($profile_email, $loginIds) {
     $exists = FALSE;
     foreach ($loginIds as $id) {
@@ -181,7 +178,6 @@ class GigyaRaasHelper {
   public function processFieldMapping(GigyaUser $gigya_data, UserInterface $drupal_user) {
     try {
       $field_map = $this->getFieldMappingConfig();
-
       try {
         \Drupal::moduleHandler()
           ->alter('gigya_raas_map_data', $gigya_data, $drupal_user, $field_map);
@@ -275,16 +271,10 @@ class GigyaRaasHelper {
     return $api_helper->searchGigyaUsers($query, $use_cursor);
   }
 
-  /**
-   *
-   */
   public function getGigyaUserFromArray($data) {
     return GigyaUserFactory::createGigyaProfileFromArray($data);
   }
 
-  /**
-   *
-   */
   public function sendCronEmail($job_type, $job_status, $to, $processed_items = NULL, $failed_items = NULL, $custom_email_body = '') {
     $email_body = $custom_email_body;
     if ($job_status == 'succeeded' or $job_status == 'completed with errors') {
@@ -458,9 +448,6 @@ class GigyaRaasHelper {
     return TRUE;
   }
 
-  /**
-   *
-   */
   private function getDynamicSessionSignatureUserSigned($token, $expiration, $userKey, $secret) {
     $unsignedExpString = mb_convert_encoding($token . "_" . $expiration . "_" . $userKey, 'UTF-8', 'ISO-8859-1');
     $rawHmac           = hash_hmac("sha1", mb_convert_encoding($unsignedExpString, 'UTF-8', 'ISO-8859-1'), base64_decode($secret), TRUE);
@@ -469,9 +456,6 @@ class GigyaRaasHelper {
     return $expiration . '_' . $userKey . '_' . $sig;
   }
 
-  /**
-   *
-   */
   protected function calculateDynamicSessionSignatureJwtSigned(string $loginToken, int $expiration, string $applicationKey, string $privateKey) {
     $payload = [
       'sub' => $loginToken,

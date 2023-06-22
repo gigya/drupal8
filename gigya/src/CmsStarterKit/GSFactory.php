@@ -5,9 +5,6 @@ namespace Drupal\gigya\CmsStarterKit;
 use Gigya\PHP\GSException;
 use Gigya\PHP\GSObject;
 
-/**
- *
- */
 class GSFactory {
 
   /**

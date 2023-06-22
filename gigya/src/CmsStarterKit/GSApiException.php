@@ -2,10 +2,6 @@
 
 namespace Drupal\gigya\CmsStarterKit;
 
-/**
- *
- */
-
 use Exception;
 
 class GSApiException extends Exception {
@@ -27,24 +23,14 @@ class GSApiException extends Exception {
     $this->callId = $callId;
   }
 
-  /**
-   * @return string|null
-   */
-  public function getErrorCode(): string {
+  public function getErrorCode() {
     return $this->getCode();
   }
 
-  /**
-   * @return string|null
-   */
-  public function getLongMessage(): ?string {
+  public function getLongMessage(){
     return $this->longMessage;
   }
-
-  /**
-   * @return string|null
-   */
-  public function getCallId(): ?string {
+  public function getCallId(){
     return $this->callId;
   }
 

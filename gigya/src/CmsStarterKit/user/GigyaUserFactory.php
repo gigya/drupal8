@@ -2,21 +2,12 @@
 
 namespace Drupal\gigya\CmsStarterKit\user;
 
-/**
- *
- */
 class GigyaUserFactory {
 
-  /**
-   *
-   */
   public static function createGigyaUserFromJson($json) {
     return new GigyaUser($json);
   }
 
-  /**
-   *
-   */
   public static function createGigyaUserFromArray($array) {
     $gigyaUser = new GigyaUser(NULL);
     foreach ($array as $key => $value) {
@@ -38,9 +29,6 @@ class GigyaUserFactory {
     return $gigyaUser;
   }
 
-  /**
-   *
-   */
   public static function createGigyaProfileFromJson($json) {
     if ($json !== NULL) {
       $gigyaArray = json_decode($json);
@@ -52,10 +40,7 @@ class GigyaUserFactory {
     return self::createGigyaProfileFromArray($gigyaArray);
   }
 
-  /**
-   *
-   */
-  public static function createGigyaProfileFromArray($array) {
+ public static function createGigyaProfileFromArray($array) {
     $gigyaProfile = new GigyaProfile(NULL);
     foreach ($array as $key => $value) {
       $gigyaProfile->__set($key, $value);

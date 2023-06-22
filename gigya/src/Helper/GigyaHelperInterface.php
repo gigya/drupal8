@@ -2,39 +2,19 @@
 
 namespace Drupal\gigya\Helper;
 
-/**
- *
- */
+
 interface GigyaHelperInterface {
 
-  /**
-   *
-   */
   public function getNestedValue($obj, $keys);
 
-  /**
-   *
-   */
-  public function enc($str);
+ public function enc($str);
 
-  /**
-   *
-   */
   public function decrypt($str);
 
-  /**
-   *
-   */
-  public function checkEncryptKey();
+ public function checkEncryptKey();
 
-  /**
-   *
-   */
   public function getEncryptKey();
 
-  /**
-   *
-   */
   public function getAccessParams();
 
   /**
@@ -48,39 +28,18 @@ interface GigyaHelperInterface {
    */
   public function sendApiCall(string $method, $params = NULL, $access_params = FALSE);
 
-  /**
-   *
-   */
   public function getGigyaApiHelper();
 
-  /**
-   *
-   */
   public function getGigyaDsQuery();
 
-  /**
-   *
-   */
   public function setDsData($uid, $type, $oid, $data);
 
-  /**
-   *
-   */
-  public function doSingleDsGet($type, $oid, $fields, $uid);
+ public function doSingleDsGet($type, $oid, $fields, $uid);
 
-  /**
-   *
-   */
-  public function doSingleDsSearch($type, $oid, $fields, $uid);
+ public function doSingleDsSearch($type, $oid, $fields, $uid);
 
-  /**
-   *
-   */
-  public function saveUserLogoutCookie();
+ public function saveUserLogoutCookie();
 
-  /**
-   *
-   */
   public function getGigyaLanguages();
 
   /**

@@ -10,9 +10,6 @@ use Gigya\PHP\JWTUtils;
 use Gigya\PHP\SigUtils;
 use Drupal\gigya\CmsStarterKit\user\GigyaUserFactory;
 
-/**
- *
- */
 class GigyaApiHelper {
   private string $userKey;
   private string $authKey;

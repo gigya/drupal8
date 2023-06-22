@@ -6,9 +6,6 @@ use Gigya\PHP\GSException;
 use Gigya\PHP\GSRequest;
 use Gigya\PHP\GSResponse;
 
-/**
- *
- */
 class GigyaAuthRequest extends GSRequest {
 
   /**

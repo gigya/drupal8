@@ -9,9 +9,7 @@ use Drupal\gigya_raas\Helper\GigyaRaasHelper;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-/**
- *
- */
+
 class GigyaRaasEventSubscriber implements EventSubscriberInterface {
 
   protected $helper;
@@ -167,9 +165,7 @@ class GigyaRaasEventSubscriber implements EventSubscriberInterface {
     }
   }
 
-  /**
-   *
-   */
+
   public function handleUntilBrowserCloseSession() {
 
     $gigya_raas_helper = new GigyaRaasHelper();

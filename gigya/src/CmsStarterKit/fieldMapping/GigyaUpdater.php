@@ -2,9 +2,6 @@
 
 namespace Drupal\gigya\CmsStarterKit\fieldMapping;
 
-/**
- *
- */
 abstract class GigyaUpdater {
 
   /**
@@ -234,9 +231,6 @@ abstract class GigyaUpdater {
     }
   }
 
-  /**
-   *
-   */
   private function assignArrayByPath(&$arr, $path, $value, $separator = '.') {
     $keys = explode($separator, $path);
 

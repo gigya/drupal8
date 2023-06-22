@@ -14,15 +14,9 @@ abstract class CmsUpdater {
    */
   private $gigyaUser;
 
-  /**
-   * @var
-   */
-  private $gigyaMapping;
+private $gigyaMapping;
 
-  /**
-   * @var bool
-   */
-  private $mapped = FALSE;
+ private $mapped = FALSE;
 
   private $path;
 
@@ -63,15 +57,9 @@ abstract class CmsUpdater {
     return $this->mapped;
   }
 
-  /**
-   *
-   */
-  abstract protected function callCmsHook();
+ abstract protected function callCmsHook();
 
-  /**
-   *
-   */
-  abstract protected function saveCmsAccount(&$cmsAccount, $cmsAccountSaver);
+ abstract protected function saveCmsAccount(&$cmsAccount, $cmsAccountSaver);
 
   /**
    * @throws \Drupal\gigya\CmsStarterKit\fieldMapping\CmsUpdaterException

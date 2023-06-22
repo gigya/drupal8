@@ -4,9 +4,6 @@ namespace Drupal\gigya\CmsStarterKit\user;
 
 use Drupal\gigya\CmsStarterKit\GigyaJsonObject;
 
-/**
- *
- */
 class GigyaProfile extends GigyaJsonObject {
 
   /**
@@ -750,9 +747,6 @@ class GigyaProfile extends GigyaJsonObject {
     $this->publications = $publications;
   }
 
-  /**
-   *
-   */
   public function __toString() {
     return json_encode(get_object_vars($this));
   }

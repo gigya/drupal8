@@ -13,15 +13,7 @@ use Drupal\gigya\Helper\GigyaHelperInterface;
  */
 class GigyaSessionForm extends ConfigFormBase {
 
-  /**
-   * @param $form_state
-   * @param $prop_name
-   * @param $helper
-   *
-   * @return string
-   */
-
-  public $helper = FALSE;
+ public $helper = FALSE;
 
   private array $dummy_email_uniqueness_options = [
     'uid'         => '${UID}',

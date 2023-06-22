@@ -15,9 +15,6 @@ use Gigya\PHP\GSException;
 use Gigya\PHP\GSObject;
 use Gigya\PHP\GSResponse;
 
-/**
- *
- */
 class GigyaHelper implements GigyaHelperInterface {
 
 
@@ -55,30 +52,19 @@ class GigyaHelper implements GigyaHelperInterface {
     return $obj;
   }
 
-  /**
-   *
-   */
+
   public function enc($str) {
     return GigyaApiHelper::enc($str, $this->getEncryptKey());
   }
 
-  /**
-   *
-   */
   public function decrypt($str) {
     return GigyaApiHelper::decrypt($str, $this->getEncryptKey());
   }
 
-  /**
-   *
-   */
   public function checkEncryptKey() {
     return $this->getEncryptKey() !== FALSE;
   }
 
-  /**
-   *
-   */
   public function getEncryptKey() {
     $path = \Drupal::config('gigya.global')->get('gigya.keyPath');
     $keypath = $this->getEncKeyFile($path);
@@ -110,9 +96,6 @@ class GigyaHelper implements GigyaHelperInterface {
     }
   }
 
-  /**
-   *
-   */
   public function getAccessParams() {
     $access_params = [];
     $key = $this->getEncryptKey();
@@ -183,18 +166,12 @@ class GigyaHelper implements GigyaHelperInterface {
     }
   }
 
-  /**
-   *
-   */
   public function getGigyaApiHelper() {
     $access_params = $this->getAccessParams();
     return new GigyaApiHelper($access_params['api_key'], $access_params['app_key'], $access_params['auth_key'], $access_params['data_center'], $access_params['auth_mode']);
   }
 
-  /**
-   *
-   */
-  public function getGigyaDsQuery() {
+ public function getGigyaDsQuery() {
     return new DsQueryObject($this->getGigyaApiHelper());
   }
 
@@ -259,17 +236,11 @@ class GigyaHelper implements GigyaHelperInterface {
     return $this->dsProcessSearch($res);
   }
 
-  /**
-   *
-   */
-  public function saveUserLogoutCookie() {
+ public function saveUserLogoutCookie() {
     setrawcookie('Drupal.visitor.gigya', rawurlencode('gigyaLogOut'), \Drupal::time()->getRequestTime() + 31536000, '/', '', \Drupal::request()->isSecure());
   }
 
-  /**
-   *
-   */
-  public function getGigyaLanguages() {
+ public function getGigyaLanguages() {
     return [
       "en" => "English (default)",
       "ar" => "Arabic",
@@ -337,10 +308,8 @@ class GigyaHelper implements GigyaHelperInterface {
     return '{"cms_name":"Drupal","cms_version":"Drupal_' . \Drupal::VERSION . '","gigya_version":"Gigya_module_' . $info['version'] . '","php_version":"' . phpversion() . '"}';
   }
 
-  /**
-   *
-   */
-  public function sendEmail($subject, $body, $to) {
+
+ public function sendEmail($subject, $body, $to) {
     $mail_manager = \Drupal::service('plugin.manager.mail');
     $module = 'gigya_raas';
     $params['from'] = 'Gigya IdentitySync';
@@ -396,10 +365,7 @@ class GigyaHelper implements GigyaHelperInterface {
     return $stream->realpath();
   }
 
-  /**
-   *
-   */
-  private function dsProcessSearch($results) {
+ private function dsProcessSearch($results) {
     $processed = [];
     foreach ($results as $result) {
       if (isset($result['data']) && is_array($result['data'])) {

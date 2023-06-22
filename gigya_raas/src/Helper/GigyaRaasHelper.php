@@ -13,15 +13,9 @@ use Drupal\user\UserInterface;
 use Firebase\JWT\JWT;
 use Symfony\Component\HttpFoundation\Request;
 
-/**
- *
- */
 class GigyaRaasHelper {
   private $gigya_helper;
 
-  /**
-   *
-   */
   public static function getSessionConfig($type = 'regular') {
     if ($type == 'remember_me') {
       $session_type = \Drupal::config('gigya_raas.settings')->get('gigya_raas.remember_me_session_type');
@@ -38,9 +32,7 @@ class GigyaRaasHelper {
     ];
   }
 
-  /**
-   *
-   */
+
   public function __construct() {
     $this->gigya_helper = new GigyaHelper();
   }
@@ -79,9 +71,6 @@ class GigyaRaasHelper {
     }
   }
 
-  /**
-   *
-   */
   public function getUidByMail($mail) {
     return \Drupal::entityQuery('user')
       ->accessCheck()
@@ -89,9 +78,6 @@ class GigyaRaasHelper {
       ->execute();
   }
 
-  /**
-   *
-   */
   public function getUidByMails($mails) {
     return \Drupal::entityQuery('user')
       ->accessCheck()
@@ -128,9 +114,7 @@ class GigyaRaasHelper {
     return FALSE;
   }
 
-  /**
-   *
-   */
+
   public function getUidByName($name) {
     return \Drupal::entityQuery('user')
       ->accessCheck()
@@ -402,9 +386,6 @@ class GigyaRaasHelper {
     return $result;
   }
 
-  /**
-   *
-   */
   public function gigyaRaasExtCookie(Request $request, $login = FALSE) {
     if ($this->shouldAddExtCookie($request, $login)) {
       /* Retrieve config from Drupal */

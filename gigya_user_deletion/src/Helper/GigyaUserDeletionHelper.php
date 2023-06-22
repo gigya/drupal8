@@ -8,18 +8,12 @@ use Drupal;
 use Drupal\gigya\Helper\GigyaHelper;
 use Exception;
 
-/**
- *
- */
 class GigyaUserDeletionHelper implements GigyaUserDeletionHelperInterface {
 
   private GigyaHelper $helper;
 
   protected string $region;
 
-  /**
-   *
-   */
   public function __construct($helper = NULL) {
     if ($helper) {
       $this->helper = $helper;

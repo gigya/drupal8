@@ -42,10 +42,6 @@ abstract class GigyaJsonObject {
       throw new \Exception("Method $name does not exist");
     }
   }
-
-  /**
-   *
-   */
   public function __get($name) {
     $getter = $name;
     $prop = lcfirst(substr($name, 3));
@@ -55,9 +51,6 @@ abstract class GigyaJsonObject {
     return property_exists($this, $prop) ? $this->$prop : NULL;
   }
 
-  /**
-   *
-   */
   public function __set($name, $value) {
     $setter = 'set' . ucfirst($name);
     if (method_exists($this, $setter)) {

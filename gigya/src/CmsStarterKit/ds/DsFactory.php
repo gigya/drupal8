@@ -2,9 +2,6 @@
 
 namespace Drupal\gigya\CmsStarterKit\ds;
 
-/**
- *
- */
 class DsFactory {
 
   private $apiHelper;
@@ -18,19 +15,13 @@ class DsFactory {
     $this->apiHelper;
   }
 
-  /**
-   *
-   */
-  public function createDsqFromQuery($query) {
+ public function createDsqFromQuery($query) {
     $dsQueryObj = new DsQueryObject($this->apiHelper);
     $dsQueryObj->setQuery($query);
     return $dsQueryObj;
   }
 
-  /**
-   *
-   */
-  public function createDsqFromFields($type, $fields) {
+ public function createDsqFromFields($type, $fields) {
     $dsQueryObj = new DsQueryObject($this->apiHelper);
     $dsQueryObj->setFields($fields);
     $dsQueryObj->setTable($type);
@@ -38,10 +29,8 @@ class DsFactory {
 
   }
 
-  /**
-   *
-   */
-  public function createDsqFromWhere($type, $fields, $where, $op, $value, $valueType = "string") {
+
+ public function createDsqFromWhere($type, $fields, $where, $op, $value, $valueType = "string") {
     $dsQueryObj = new DsQueryObject($this->apiHelper);
     $dsQueryObj->setFields($fields);
     $dsQueryObj->setTable($type);
@@ -49,9 +38,6 @@ class DsFactory {
     return $dsQueryObj;
   }
 
-  /**
-   *
-   */
   public function createDsqFromOid($oid, $type) {
     $dsQueryObj = new DsQueryObject($this->apiHelper);
     $dsQueryObj->setOid($oid);

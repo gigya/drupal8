@@ -1,8 +1,5 @@
 <?php
 
-/**
- * @file
- */
 
 use Drupal\block\Entity\Block;
 use Drupal\gigya\CmsStarterKit\GSApiException;

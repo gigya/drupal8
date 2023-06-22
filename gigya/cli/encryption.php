@@ -1,11 +1,4 @@
 <?php
-
-/**
- * @file
- */
-?>
-
-<?php
 include_once __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "src/CmsStarterKit" . DIRECTORY_SEPARATOR . "GigyaApiHelper.php";
 
 set_error_handler('exceptions_error_handler');

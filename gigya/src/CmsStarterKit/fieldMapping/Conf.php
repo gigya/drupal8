@@ -2,9 +2,6 @@
 
 namespace Drupal\gigya\CmsStarterKit\fieldMapping;
 
-/**
- *
- */
 class Conf {
 
   private array $cmsKeyed;
@@ -30,10 +27,7 @@ class Conf {
     return $this->cmsKeyed;
   }
 
-  /**
-   *
-   */
-  protected function buildKeyedArrays($array) {
+ protected function buildKeyedArrays($array) {
     $cmsKeyedArray = [];
     $gigyaKeyedArray = [];
 
@@ -79,9 +73,6 @@ class Conf {
     return $this->mappingConf;
   }
 
-  /**
-   *
-   */
   public function __toString() {
     return json_encode(get_object_vars($this));
   }

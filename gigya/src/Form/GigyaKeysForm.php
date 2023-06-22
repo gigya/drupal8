@@ -9,9 +9,7 @@ use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\gigya\Helper\GigyaHelperInterface;
 use Gigya\PHP\GSObject;
 
-/**
- *
- */
+
 class GigyaKeysForm extends ConfigFormBase {
 
 

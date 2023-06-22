@@ -2,9 +2,7 @@
 include_once __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "src/CmsStarterKit" . DIRECTORY_SEPARATOR . "GigyaApiHelper.php";
 
 set_error_handler('exceptions_error_handler');
-/**
- *
- */
+
 function get_available_commands() {
   return [
     [
@@ -56,9 +54,6 @@ function exceptions_error_handler($severity, $message, $filename, $lineno) {
   }
 }
 
-/**
- *
- */
 function help() {
   $available_commands = get_available_commands();
 

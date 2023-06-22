@@ -9,9 +9,7 @@ use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\gigya\Helper\GigyaHelperInterface;
 use Drupal\gigya_raas\Helper\GigyaRaasHelper;
 
-/**
- *
- */
+
 class GigyaFieldmappingForm extends ConfigFormBase {
 
   private $raas_helper;

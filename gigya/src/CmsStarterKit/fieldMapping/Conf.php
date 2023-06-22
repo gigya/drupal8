@@ -10,10 +10,7 @@ class Conf {
 
   private mixed $mappingConf;
 
-  /**
-   *
-   */
-  public function __construct($json) {
+ public function __construct($json) {
     $this->mappingConf = $json != null? json_decode($json, TRUE): '';
   }
 

@@ -2,9 +2,7 @@
 
 namespace Drupal\gigya\CmsStarterKit\fieldMapping;
 
-/**
- *
- */
+
 class TestFiledMappingConf extends \PHPUnit_Framework_TestCase {
 
 

@@ -4,9 +4,6 @@ namespace Drupal\gigya\CmsStarterKit\fieldMapping;
 
 use Drupal\gigya\CmsStarterKit\User\GigyaUser as GigyaUserAlias;
 
-/**
- *
- */
 abstract class CmsUpdater {
 
   /**

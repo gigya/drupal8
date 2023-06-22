@@ -8,9 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\gigya\Helper\GigyaHelperInterface;
 
-/**
- *
- */
+
 class GigyaSessionForm extends ConfigFormBase {
 
  public $helper = FALSE;

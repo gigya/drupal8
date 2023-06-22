@@ -1,17 +1,9 @@
 <?php
 
 /**
- * @file
- * Created by PhpStorm.
- * User: Inbal.Zi
- * Date: 11/8/2017
- * Time: 7:16 PM
- */
-
-/**
  * Modify the data gigya_delete_user before it is added to the js.
  *
- * @param CMS $user
+ * @param $user (CMS)
  *
  * @see CKEditorPluginManager
  */

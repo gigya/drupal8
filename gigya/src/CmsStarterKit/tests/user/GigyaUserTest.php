@@ -8,9 +8,7 @@ include_once 'user/GigyaUserFactory.php';
 use Drupal\gigya\CmsStarterKit\user\GigyaUserFactory;
 use Gigya\PHP\GSObject;
 
-/**
- *
- */
+
 class GigyaUserTest extends PHPUnit_Framework_TestCase {
 
   /**

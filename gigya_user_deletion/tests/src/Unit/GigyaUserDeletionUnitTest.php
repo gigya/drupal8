@@ -13,9 +13,7 @@ use Drupal\gigya_user_deletion\Helper\GigyaUserDeletionHelper;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Logger\LoggerChannelFactory;
 
-/**
- *
- */
+
 class GigyaUserDeletionUnitTest extends UnitTestCase {
   private $configFactory;
   private $configContainer;

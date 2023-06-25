@@ -47,7 +47,7 @@
 			$request_time = Drupal::time()->getRequestTime();
 			/* Get last run */
 			$last_run = Drupal::state()->get('gigya_deletion_job.last_run', 0);
-			
+
 			/* Create new queues */
 			$queue_file = Drupal::queue('job_queue_file');
 			$queue_file->createQueue();
@@ -96,7 +96,7 @@
 											'time_processed' => time(),
 										])
 										->execute();
-								} catch (\Exception $e) {
+								} catch (Exception $e) {
 									Drupal::logger('gigya_user_deletion')
 										->error('Unable to insert file name: ' . $file_name . ' to database.');
 								}
@@ -179,7 +179,7 @@
 								Drupal::state()
 									->set('gigya_deletion_job.counter_succeeded', $counter_succeeded);
 							}
-						} catch (\Exception $e) {
+						} catch (Exception $e) {
 							Drupal::logger('gigya_user_deletion')
 							  ->error('Failed to delete UID ' . $user->get('uid')->value . ' from CMS with error - ' . $e);
 							$counter_failed++;

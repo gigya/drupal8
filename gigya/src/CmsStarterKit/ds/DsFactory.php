@@ -10,19 +10,18 @@ class DsFactory {
    * DsFactory constructor.
    *
    * @param $helper
-   *
    */
   public function __construct($helper) {
     $this->apiHelper;
   }
 
-  public function createDsqFromQuery($query) {
+ public function createDsqFromQuery($query) {
     $dsQueryObj = new DsQueryObject($this->apiHelper);
     $dsQueryObj->setQuery($query);
     return $dsQueryObj;
   }
 
-  public function createDsqFromFields($type, $fields) {
+ public function createDsqFromFields($type, $fields) {
     $dsQueryObj = new DsQueryObject($this->apiHelper);
     $dsQueryObj->setFields($fields);
     $dsQueryObj->setTable($type);
@@ -30,7 +29,8 @@ class DsFactory {
 
   }
 
-  public function createDsqFromWhere($type, $fields, $where, $op, $value, $valueType = "string") {
+
+ public function createDsqFromWhere($type, $fields, $where, $op, $value, $valueType = "string") {
     $dsQueryObj = new DsQueryObject($this->apiHelper);
     $dsQueryObj->setFields($fields);
     $dsQueryObj->setTable($type);
@@ -44,4 +44,5 @@ class DsFactory {
     $dsQueryObj->setTable($type);
     return $dsQueryObj;
   }
+
 }

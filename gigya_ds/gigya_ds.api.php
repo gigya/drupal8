@@ -6,8 +6,8 @@
  */
 function fetch_ds_data_only() {
   global $user;
-  $gigya_uid = Drupal::service('entity.repository')
-                     ->loadEntityByUuid('user', $user->id());
+  $gigya_uid = \Drupal::service('entity.repository')
+    ->loadEntityByUuid('user', $user->id());
   if (!empty($gigya_uid)) {
     $ds_data = gigya_ds_get_data($gigya_uid);
   }

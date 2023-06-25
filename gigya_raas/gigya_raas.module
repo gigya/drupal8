@@ -1,6 +1,6 @@
 <?php
 
-
+use Drupal\block\BlockInterface;
 use Drupal\block\Entity\Block;
 use Drupal\gigya\CmsStarterKit\GSApiException;
 use Drupal\gigya\Helper\GigyaHelper;
@@ -28,28 +28,25 @@ function gigya_raas_page_attachments(array &$attachments) {
       $attachments['#attached']['drupalSettings']['gigyaExtra']['logoutRedirect'] = Drupal::config('gigya_raas.settings')->get('gigya_raas.logout_redirect');
       $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin'] = Drupal::currentUser()->isAuthenticated();
 
-      $session_type = Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type');
-      $attachments['#attached']['drupalSettings']['gigyaExtra']['session_type'] = $session_type;
+			$session_type = Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type');
+			$attachments['#attached']['drupalSettings']['gigyaExtra']['session_type'] = $session_type;
 
-      $session_time = Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
-      $remember_me_session_time = Drupal::config('gigya_raas.settings')->get('gigya_raas.remember_me_session_time');
-      $attachments['#attached']['drupalSettings']['gigyaExtra']['session_time'] = $session_time;
+			$session_time = Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
+			$remember_me_session_time = Drupal::config('gigya_raas.settings')->get('gigya_raas.remember_me_session_time');
+			$attachments['#attached']['drupalSettings']['gigyaExtra']['session_time'] = $session_time;
       $attachments['#attached']['drupalSettings']['gigyaExtra']['remember_me_session_time'] = $remember_me_session_time;
 
       /* Get sessionExpiration from Raas settings and set globalParameters with the value */
-      switch ($session_type) {
+      switch ( $session_type ) {
         case "dynamic":
-          $expiration = -1;
+          $expiration = - 1;
           break;
-
         case  "forever":
-          $expiration = -2;
+          $expiration = - 2;
           break;
-
         case  "until_browser_close":
           $expiration = 0;
           break;
-
         case  "fixed":
         default:
           $expiration = $session_time;
@@ -61,83 +58,78 @@ function gigya_raas_page_attachments(array &$attachments) {
       $global_params['rememberSessionExpiration'] = $remember_me_session_time;
       $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
 
-      $default_login_screenset = 'Default-RegistrationLogin';
-      $default_profile_screenset = 'Default-ProfileUpdate';
-      $default_profile_screenset_mobile = 'Default-ProfileUpdate';
-      $login_screenset = Drupal::config('gigya_raas.screensets')->get('gigya.login_screenset');
-      $profile_screenset = Drupal::config('gigya_raas.screensets')->get('gigya.profile_screenset');
-      $profile_screenset_mobile = Drupal::config('gigya_raas.screensets')->get('gigya.profile_screenset_mobile');
+			$default_login_screenset = 'Default-RegistrationLogin';
+			$default_profile_screenset = 'Default-ProfileUpdate';
+			$default_profile_screenset_mobile = 'Default-ProfileUpdate';
+			$login_screenset = Drupal::config('gigya_raas.screensets')->get('gigya.login_screenset');
+			$profile_screenset = Drupal::config('gigya_raas.screensets')->get('gigya.profile_screenset');
+			$profile_screenset_mobile = Drupal::config('gigya_raas.screensets')->get('gigya.profile_screenset_mobile');
 
-      if (Drupal::currentUser()->isAnonymous()) {
-        $raas_login = [
-          'screenSet' => $login_screenset ?: $default_login_screenset,
-          'mobileScreenSet' => '',
-          'startScreen' => 'gigya-login-screen',
-          'sessionExpiration' => $expiration,
-          'rememberSessionExpiration' => $remember_me_session_time,
-          'include' => 'id_token',
-        ];
-        $raas_register = [
-          'screenSet' => $login_screenset ?: $default_login_screenset,
-          'mobileScreenSet' => '',
-          'startScreen' => 'gigya-register-screen',
-          'sessionExpiration' => $expiration,
-          'rememberSessionExpiration' => $remember_me_session_time,
-          'include' => 'id_token',
-        ];
-        Drupal::moduleHandler()->alter('gigya_raas_settings', $raas_login, $raas_register);
+			if (Drupal::currentUser()->isAnonymous()) {
+				$raas_login = [
+					'screenSet' => $login_screenset ?: $default_login_screenset,
+					'mobileScreenSet' => '',
+					'startScreen' => 'gigya-login-screen',
+					'sessionExpiration' => $expiration,
+					'rememberSessionExpiration' => $remember_me_session_time,
+					'include' => 'id_token',
+				];
+				$raas_register = [
+					'screenSet' => $login_screenset ?: $default_login_screenset,
+					'mobileScreenSet' => '',
+					'startScreen' => 'gigya-register-screen',
+					'sessionExpiration' => $expiration,
+					'rememberSessionExpiration' => $remember_me_session_time,
+					'include' => 'id_token',
+				];
+				Drupal::moduleHandler()->alter('gigya_raas_settings', $raas_login, $raas_register);
         $attachments['#attached']['drupalSettings']['gigya']['raas']['login']    = $raas_login;
         $attachments['#attached']['drupalSettings']['gigya']['raas']['register'] = $raas_register;
-        $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin']     = FALSE;
+        $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin'] = FALSE;
       }
       else {
         $attachments['#attached']['drupalSettings']['gigyaExtra']['bypassRaas'] = Drupal::currentUser()->hasPermission(
           'bypass gigya raas'
         );
-        $raas_profile = [
-          'screenSet'       => $profile_screenset ?: $default_profile_screenset,
-          'mobileScreenSet' => $profile_screenset_mobile ?: $default_profile_screenset_mobile,
-          'include'         => 'id_token',
-        ];
-        Drupal::moduleHandler()->alter('gigya_raas_profile_settings', $raas_profile);
+				$raas_profile = [
+					'screenSet'       => $profile_screenset ?: $default_profile_screenset,
+					'mobileScreenSet' => $profile_screenset_mobile ?: $default_profile_screenset_mobile,
+					'include'         => 'id_token',
+				];
+				Drupal::moduleHandler()->alter('gigya_raas_profile_settings', $raas_profile);
         $attachments['#attached']['drupalSettings']['gigya']['raas']['profile'] = $raas_profile;
       }
 
       /* Load screen-set config into front-end for custom screen-set in UI blocks functionality */
-      $custom_screensets = [];
-      /** @var \Drupal\block\BlockInterface[] $blocks; */
-      $blocks = Block::loadMultiple();
-      foreach ($blocks as $key => $block) {
-        $settings = $block->get('settings');
-        if ($settings['id'] == 'gigya_raas_custom_screenset') {
-          $custom_screensets[] = $settings;
-        }
-      }
-      $screenset_config = (array) json_decode(Drupal::config('gigya_raas.screensets')->get('gigya.custom_screensets') !== NULL ? : '', TRUE);
-      foreach ($screenset_config as $key => $screenset) {
-        if (isset($screenset->remove)) {
-          unset($screenset->remove);
-        }
-        $screenset = (array) $screenset;
-        if (array_key_exists('desktop', $screenset)) {
-          $screenset_config[$screenset['desktop']] = $screenset;
-          unset($screenset_config[$key]);
-        }
-      }
-      foreach ($custom_screensets as $key => $screenset) {
-        if (!empty($screenset_config[$screenset['desktop_screenset']])) {
-          $custom_screensets[$key]['sync_data'] = $screenset_config[$screenset['desktop_screenset']]['sync'];
-          if (!empty($screenset_config[$screenset['desktop_screenset']]['mobile'])) {
-            $custom_screensets[$key]['mobile_screenset'] = $screenset_config[$screenset['desktop_screenset']]['mobile'];
-          }
-          else {
-            $custom_screensets[$key]['mobile_screenset'] = $screenset_config[$screenset['desktop_screenset']]['desktop'];
-          }
-        }
+      $custom_screensets = array();
+			/** @var BlockInterface[] $blocks; */
+			$blocks = Block::loadMultiple();
+			foreach ($blocks as $key => $block) {
+				$settings = $block->get('settings');
+				if ($settings['id'] == 'gigya_raas_custom_screenset') {
+					$custom_screensets[] = $settings;
+				}
+			}
+			$screenset_config = (array)json_decode(Drupal::config('gigya_raas.screensets')->get('gigya.custom_screensets'));
+			foreach ($screenset_config as $key => $screenset) {
+				if (isset($screenset->remove))
+					unset($screenset->remove);
+				$screenset = (array)$screenset;
+				$screenset_config[$screenset['desktop']] = $screenset;
+				unset($screenset_config[$key]);
+			}
+			foreach ($custom_screensets as $key => $screenset) {
+				if (!empty($screenset_config[$screenset['desktop_screenset']])) {
+					$custom_screensets[$key]['sync_data'] = $screenset_config[$screenset['desktop_screenset']]['sync'];
+					if (!empty($screenset_config[$screenset['desktop_screenset']]['mobile']))
+						$custom_screensets[$key]['mobile_screenset'] = $screenset_config[$screenset['desktop_screenset']]['mobile'];
+					else
+						$custom_screensets[$key]['mobile_screenset'] = $screenset_config[$screenset['desktop_screenset']]['desktop'];
+				}
       }
       $attachments['#attached']['drupalSettings']['gigya']['raas']['customScreenSets'] = $custom_screensets;
       $attachments['#attached']['drupalSettings']['gigya']['raas']['origin']           = Drupal::request()
-        ->getSchemeAndHttpHost();
+                                                                                               ->getSchemeAndHttpHost();
       $attachments['#attached']['library'][]                                           = 'gigya_raas/gigyaRaas';
     }
   }
@@ -154,35 +146,35 @@ function gigya_raas_page_attachments(array &$attachments) {
  * @return array
  */
 function gigya_raas_theme($existing, $type, $theme, $path) {
-  return [
-    'gigya_raas_links_block'    => [
-      'variables' => ['links' => NULL, 'title' => NULL],
-    ],
-    'gigya_raas_login_block'    => [
-      'variables' => ['showDiv' => NULL],
-    ],
-    'gigya_raas_register_block' => [
-      'variables' => ['showDiv' => NULL],
-    ],
-    'gigya_raas_profile_block'  => [
-      'variables' => ['showDiv' => NULL],
-    ],
-    'gigya_raas_custom_screenset_block' => [
-      'variables' => ['title' => NULL, 'link' => NULL, 'display_type' => NULL, 'container_id' => NULL, 'screenset' => NULL],
-    ],
-  ];
+  return array(
+    'gigya_raas_links_block'    => array(
+      'variables' => array('links' => NULL, 'title' => NULL),
+    ),
+    'gigya_raas_login_block'    => array(
+      'variables' => array('showDiv' => NULL),
+    ),
+    'gigya_raas_register_block' => array(
+      'variables' => array('showDiv' => NULL),
+    ),
+    'gigya_raas_profile_block'  => array(
+      'variables' => array('showDiv' => NULL),
+    ),
+		'gigya_raas_custom_screenset_block' => array(
+			'variables' => array('title' => NULL, 'link' => NULL, 'display_type' => NULL, 'container_id' => NULL, 'screenset' => NULL),
+		),
+  );
 }
 
 /**
  * Implements hook_user_login().
  *
- * @param \Drupal\Core\Session\AccountProxyInterface $account
+ * @param $account \Drupal\Core\Session\AccountProxyInterface
  */
 function gigya_raas_user_login($account) {
   if (Drupal::config('gigya.global')->get('gigya.enableRaaS') == TRUE) {
     if (!$account->hasPermission('bypass gigya raas')) {
       /* If user didn't login via RaaS.
-      (if RaaS is enabled in Drupal admin, but a native login link was not disabled, and user still tried to login via Drupal login). */
+      	(if RaaS is enabled in Drupal admin, but a native login link was not disabled, and user still tried to login via Drupal login). */
       global $raas_login;
       if ($raas_login == NULL) {
         user_logout();
@@ -205,99 +197,96 @@ function gigya_raas_user_logout($account) {
  * Implements hook_cron().
  */
 function gigya_raas_cron() {
-  /* Retrieve config variables */
-  $config = Drupal::config('gigya_raas.fieldmapping');
-  $enable_offline_sync = $config->get('gigya.offline_sync.enable_job');
-  $email_on_success = $config->get('gigya.offline_sync.email_on_success');
-  $email_on_failure = $config->get('gigya.offline_sync.email_on_failure');
+	/* Retrieve config variables */
+	$config = Drupal::config('gigya_raas.fieldmapping');
+	$enable_offline_sync = $config->get('gigya.offline_sync.enable_job');
+	$email_on_success = $config->get('gigya.offline_sync.email_on_success');
+	$email_on_failure = $config->get('gigya.offline_sync.email_on_failure');
 
-  if ($enable_offline_sync) {
-    Drupal::logger('gigya_raas')->info('Gigya offline sync started');
+	if ($enable_offline_sync) {
+		Drupal::logger('gigya_raas')->info('Gigya offline sync started');
 
-    $helper = new GigyaRaasHelper();
-    try {
-      $gigya_query = "SELECT * FROM accounts";
-      $last_customer_update = Drupal::config('gigya_raas.offline_sync')
-        ->get('last_customer_update');
-      if ($last_customer_update) {
-        $gigya_query .= ' WHERE lastUpdatedTimestamp > ' . $last_customer_update;
-      }
-      $gigya_query .= " ORDER BY lastUpdatedTimestamp ASC LIMIT " . MAX_USERS;
-      $gigya_users = $helper->searchGigyaUsers($gigya_query);
-      $processed_users = 0;
-      $users_not_found = 0;
-      $uids_not_found = [];
+		$helper = new GigyaRaasHelper();
+		try {
+			$gigya_query = "SELECT * FROM accounts";
+			$last_customer_update = Drupal::config('gigya_raas.offline_sync')
+				->get('last_customer_update');
+			if ($last_customer_update) {
+				$gigya_query .= ' WHERE lastUpdatedTimestamp > ' . $last_customer_update;
+			}
+			$gigya_query .= " ORDER BY lastUpdatedTimestamp ASC LIMIT " . MAX_USERS;
+			$gigya_users = $helper->searchGigyaUsers($gigya_query);
+			$processed_users = 0;
+			$users_not_found = 0;
+			$uids_not_found = [];
 
-      foreach ($gigya_users as $gigya_user) {
-        $gigya_uid = $gigya_user->getUID();
-        $gigya_last_updated_timestamp = $gigya_user->getLastUpdatedTimestamp();
+			foreach ($gigya_users as $gigya_user) {
+				$gigya_uid = $gigya_user->getUID();
+				$gigya_last_updated_timestamp = $gigya_user->getLastUpdatedTimestamp();
 
-        if (!empty($gigya_uid) and !empty($gigya_last_updated_timestamp)) {
-          $user = $helper->getDrupalUidByGigyaUid($gigya_user->getUID());
-          if (!empty($user)) {
-            $helper->processFieldMapping($gigya_user, $user);
-            $user->save();
+				if (!empty($gigya_uid) and !empty($gigya_last_updated_timestamp)) {
+					$user = $helper->getDrupalUidByGigyaUid($gigya_user->getUID());
+					if (!empty($user)) {
+						$helper->processFieldMapping($gigya_user, $user);
+						$user->save();
 
-            $last_customer_update = $gigya_last_updated_timestamp;
-            if ($last_customer_update) {
-              $last_customer_update -= UPDATE_DELAY;
-              Drupal::configFactory()
-                ->getEditable('gigya_raas.offline_sync')
-                ->set('last_customer_update', $last_customer_update)
-                ->save();
-            }
+						$last_customer_update = $gigya_last_updated_timestamp;
+						if ($last_customer_update) {
+							$last_customer_update -= UPDATE_DELAY;
+							Drupal::configFactory()
+								->getEditable('gigya_raas.offline_sync')
+								->set('last_customer_update', $last_customer_update)
+								->save();
+						}
 
-            $processed_users++;
-          }
-          else {
-            $users_not_found++;
-            $uids_not_found[] = $gigya_user->getUID();
-          }
-        }
-        else {
-          Drupal::logger('gigya_raas')
-            ->warning('Gigya offline sync: unable to process user due to a lack of essential data. User data received: ' . json_encode($gigya_user, JSON_PRETTY_PRINT));
-        }
-      }
+						$processed_users++;
+					} else {
+						$users_not_found++;
+						$uids_not_found[] = $gigya_user->getUID();
+					}
+				}
+				else {
+					Drupal::logger('gigya_raas')
+						->warning('Gigya offline sync: unable to process user due to a lack of essential data. User data received: ' . json_encode($gigya_user, JSON_PRETTY_PRINT));
+				}
+			}
 
-      Drupal::configFactory()
-        ->getEditable('gigya_raas.offline_sync')
-        ->set('last_run', round(microtime(TRUE) * 1000))
-        ->save();
-      Drupal::logger('gigya_raas')
-        ->info('Gigya offline sync completed. Users processed: ' . $processed_users .
-       (($users_not_found)
-                        ? '. Users not found: ' . $users_not_found . PHP_EOL . implode(',' . PHP_EOL, $uids_not_found)
-                        : '')
-      );
-      $status = ($users_not_found > 0) ? 'completed with errors' : 'succeeded';
-      $helper->sendCronEmail('offline sync', $status, $email_on_success, $processed_users, $users_not_found);
-    }
-    catch (GSApiException $e) {
-      Drupal::logger('gigya_raas')
-        ->error('Offline sync failed: ' . $e->getErrorCode() . ' – ' . $e->getMessage() . '. Call ID: ' . $e->getCallId());
-      $status = 'failed';
-      $helper->sendCronEmail('offline sync', $status, $email_on_failure);
-    }
-    catch (Exception $e) {
-      Drupal::logger('gigya_raas')
-        ->error('Offline sync failed: ' . $e->getMessage());
-      $status = 'failed';
-      $helper->sendCronEmail('offline sync', $status, $email_on_failure);
-    }
-  }
+			Drupal::configFactory()
+				->getEditable('gigya_raas.offline_sync')
+				->set('last_run', round(microtime(TRUE) * 1000))
+				->save();
+			Drupal::logger('gigya_raas')
+				->info('Gigya offline sync completed. Users processed: ' . $processed_users .
+					(($users_not_found)
+						? '. Users not found: ' . $users_not_found . PHP_EOL . implode(',' . PHP_EOL, $uids_not_found)
+						: '')
+				);
+			$status = ($users_not_found > 0) ? 'completed with errors' : 'succeeded';
+			$helper->sendCronEmail('offline sync', $status, $email_on_success, $processed_users, $users_not_found);
+		} catch (GSApiException $e) {
+			Drupal::logger('gigya_raas')
+				->error('Offline sync failed: ' . $e->getErrorCode() . ' – ' . $e->getMessage() . '. Call ID: ' . $e->getCallId());
+			$status = 'failed';
+			$helper->sendCronEmail('offline sync', $status, $email_on_failure);
+		} catch (Exception $e) {
+			Drupal::logger('gigya_raas')
+				->error('Offline sync failed: ' . $e->getMessage());
+			$status = 'failed';
+			$helper->sendCronEmail('offline sync', $status, $email_on_failure);
+		}
+	}
 }
 
 /**
  * Implement hook_mail()
  */
 function gigya_raas_mail($key, &$message, $params) {
-  $options = [
-    'langcode' => $message['langcode'],
-  ];
+	$options = array(
+		'langcode' => $message['langcode'],
+	);
 
-  $message['subject'] = t($params['subject'], [], $options);
-  $message['body'][] = $params['message'];
+	$message['subject'] = t($params['subject'], array(), $options);
+	$message['body'][] = $params['message'];
 }
 
 /**
@@ -309,3 +298,5 @@ function gigya_preprocess_page(&$variables) {
 
   $variables['#attached']['drupalSettings']['gigya']['shouldValidateSession'] = ($validation_result['errorCode'] === 1);
 }
+
+

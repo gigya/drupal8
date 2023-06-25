@@ -9,4 +9,3 @@ gigyaRaas:
     - core/drupal
     - core/drupalSettings
     - core/drupal.ajax
-    - core/once

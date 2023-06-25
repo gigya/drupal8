@@ -7,6 +7,7 @@ use Exception;
 class GSApiException extends Exception {
 
   private $longMessage;
+
   private $callId;
 
   /**
@@ -23,15 +24,26 @@ class GSApiException extends Exception {
     $this->callId = $callId;
   }
 
+  /**
+   * @return int
+   */
   public function getErrorCode() {
     return $this->getCode();
   }
 
-  public function getLongMessage(){
+  /**
+   * @return null
+   */
+  public function getLongMessage() {
     return $this->longMessage;
   }
-  public function getCallId(){
+
+  /**
+   * @return null
+   */
+  public function getCallId() {
     return $this->callId;
   }
+
 
 }

@@ -19,7 +19,6 @@ use Drupal\gigya_raas\GigyaController;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\gigya\CmsStarterKit\GSApiException;
 use Drupal\gigya\CmsStarterKit\user\GigyaUserFactory;
-use Drupal\user\Entity\User;
 use Gigya\PHP\GSResponse;
 
 /**
@@ -66,7 +65,7 @@ class GigyaTest extends BrowserTestBase
     /**
      * {@inheritdoc}
      */
-    public function setUp(): void {
+    public function setUp(){
         parent::setUp();
 
         $this->successResponse = new AjaxResponse();
@@ -271,8 +270,8 @@ class GigyaTest extends BrowserTestBase
         $email = $this->gigyaUser->getProfile()->getEmail();
         $this->gigyaUser->getProfile()->setEmail($email);
         $res = $this->gigyaControl->gigyaRaasLoginAjax($this->requestMock);
-        $user = User::load(Drupal::currentUser()->id());
-        $this->assertTrue(Drupal::currentUser()->isAuthenticated());
+        $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+        $this->assertTrue(\Drupal::currentUser()->isAuthenticated());
 
         $this->assertEquals($this->successResponse->getCommands(), $res->getCommands());
         $this->assertEquals($this->gigyaUser->getProfile()->getEmail(), $user->getEmail());

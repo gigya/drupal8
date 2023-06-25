@@ -9,9 +9,8 @@
 namespace Drupal\gigya\CmsStarterKit\fieldMapping;
 
 use Drupal\gigya\CmsStarterKit\GigyaApiHelper;
-use PHPUnit_Framework_TestCase;
 
-class TestGigyaUpdater extends PHPUnit_Framework_TestCase
+class TestGigyaUpdater extends \PHPUnit_Framework_TestCase
 {
     /**
      * @var \PHPUnit_Framework_MockObject_MockObject $helper

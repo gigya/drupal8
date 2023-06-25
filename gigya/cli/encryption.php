@@ -102,8 +102,7 @@ function perform_key_operation_from_cli($cli_args) {
 
 try {
   echo perform_key_operation_from_cli($argv) . PHP_EOL;
-}
-catch (Error $e) {
+} catch (Error $e) {
   $stderr = fopen('php://stderr', 'w');
   fwrite($stderr, 'Error: ' . $e->getMessage() . PHP_EOL . 'Key not generated.');
   fclose($stderr);

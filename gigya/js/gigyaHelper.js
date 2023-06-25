@@ -9,7 +9,7 @@ var gigyaHelper = {
 
   addGigyaFunctionCall: function (method, params) {
     window.gigyaCmsInit = window.gigyaCmsInit || [];
-    var func = {function : method, parameters: params};
+    var func = {function: method, parameters: params};
     window.gigyaCmsInit.push(func);
   },
 

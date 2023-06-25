@@ -1,18 +1,25 @@
 <?php
+	/**
+	 * Created by PhpStorm.
+	 * User: Yan Nasonov
+	 * Date: 23/11/2017
+	 * Time: 11:50
+	 *
+	 * @file
+	 * Contains \Drupal\gigya_user_deletion\Helper\GigyaUserDeletionHelperInterface.
+	 */
 
-namespace Drupal\gigya_user_deletion\Helper;
+	namespace Drupal\gigya_user_deletion\Helper;
 
-interface GigyaUserDeletionHelperInterface {
+	interface GigyaUserDeletionHelperInterface
+	{
+		public function getFileList();
 
-  public function getFileList();
+		public function loadFileFromServer(string $fileName);
 
+		public function getUsers($fileName);
 
- public function loadFileFromServer(string $fileName);
+		public function sendEmail($subject, $body, $to);
 
- public function getUsers($fileName);
-
-  public function sendEmail($subject, $body, $to);
-
- public function getRegion();
-
-}
+		public function getRegion();
+	}

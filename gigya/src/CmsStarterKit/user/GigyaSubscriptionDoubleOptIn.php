@@ -73,4 +73,5 @@ class GigyaSubscriptionDoubleOptIn extends GigyaJsonObject {
       'status' => $this->getStatus(),
     ];
   }
+
 }

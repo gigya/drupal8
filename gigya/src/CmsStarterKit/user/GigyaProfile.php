@@ -157,7 +157,7 @@ class GigyaProfile extends GigyaJsonObject {
   private $username;
 
   /**
-   * @var boolean
+   * @var bool
    */
   private $verified;
 
@@ -622,14 +622,14 @@ class GigyaProfile extends GigyaJsonObject {
   }
 
   /**
-   * @return boolean
+   * @return bool
    */
   public function isVerified() {
     return $this->verified;
   }
 
   /**
-   * @param boolean $verified
+   * @param bool $verified
    */
   public function setVerified($verified) {
     $this->verified = $verified;
@@ -750,4 +750,5 @@ class GigyaProfile extends GigyaJsonObject {
   public function __toString() {
     return json_encode(get_object_vars($this));
   }
+
 }

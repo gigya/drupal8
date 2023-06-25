@@ -47,8 +47,8 @@ function hook_gigya_lang_alter(&$lang) {
   if ($lang == "en") {
     $lang = "en2";
   }
-}
 
+}
 
 
 /**

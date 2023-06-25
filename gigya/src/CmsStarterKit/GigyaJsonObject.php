@@ -2,16 +2,18 @@
 
 namespace Drupal\gigya\CmsStarterKit;
 
+
+#[\AllowDynamicProperties]
 abstract class GigyaJsonObject {
 
-	/**
-	 * GigyaJsonObject constructor.
-	 *
-	 * @param $json
-	 */
+  /**
+   * GigyaJsonObject constructor.
+   *
+   * @param $json
+   */
   public function __construct($json) {
     if (NULL != $json) {
-      $jsonArray = json_decode($json, TRUE);
+      $jsonArray = $json !== NULL ? json_decode($json, TRUE): [];
       foreach ($jsonArray as $key => $value) {
         $this->__set($key, $value);
       }
@@ -40,7 +42,6 @@ abstract class GigyaJsonObject {
       throw new \Exception("Method $name does not exist");
     }
   }
-
   public function __get($name) {
     $getter = $name;
     $prop = lcfirst(substr($name, 3));
@@ -59,4 +60,5 @@ abstract class GigyaJsonObject {
       $this->$name = $value;
     }
   }
+
 }

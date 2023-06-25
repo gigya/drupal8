@@ -1,4 +1,4 @@
-<?php /** @noinspection ALL */
+<?php
 
 namespace Drupal\gigya\CmsStarterKit\fieldMapping;
 
@@ -8,7 +8,7 @@ class Conf {
 
   private array $gigyaKeyed;
 
-  private mixed $mappingConf;
+  private $mappingConf;
 
  public function __construct($json) {
     $this->mappingConf = $json != null? json_decode($json, TRUE): '';

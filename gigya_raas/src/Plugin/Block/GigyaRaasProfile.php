@@ -1,4 +1,10 @@
 <?php
+
+namespace Drupal\gigya_raas\Plugin\Block;
+
+use Drupal\Core\Block\BlockBase;
+
+
 /**
  * Provides a 'Gigya RaaS Profile' Block
  *
@@ -8,21 +14,15 @@
  *   category = @Translation("Gigya")
  * )
  */
-
-namespace Drupal\gigya_raas\Plugin\Block;
-
-use Drupal\Core\Block\BlockBase;
-
-
 class GigyaRaasProfile extends BlockBase {
   /**
    * {@inheritdoc}
    */
   public function build() {
-    $build['block'] = array(
+    $build['block'] = [
       '#theme' => 'gigya_raas_profile_block',
-      '#showDiv' => \Drupal::currentUser()->isAuthenticated()
-    );
+      '#showDiv' => \Drupal::currentUser()->isAuthenticated(),
+    ];
     return $build;
   }
 }

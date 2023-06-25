@@ -1,7 +1,3 @@
-.gig-share-bar-container td iframe {
-  vertical-align: bottom;
-}
-
 .gigya-login {
   margin-bottom: 15px;
 }
@@ -17,4 +13,11 @@
 .gigya-msg-success {
   color: green;
   font-weight: bold;
+}
+
+.gigya-screen-dialog input[type="checkbox"] {
+  appearance: checkbox;
+}
+.gigya-screen-dialog input[type="radio"] {
+  appearance: radio;
 }

@@ -37,20 +37,20 @@ class GigyaController extends ControllerBase {
   /**
    * Construct method.
    *
-   * @param bool $helper
-   * @param bool $raas_helper
+   * @param GigyaRaasHelper|FALSE $helper
+   * @param GigyaHelper|FALSE $raas_helper
    */
   public function __construct($helper = FALSE, $raas_helper = FALSE) {
     if ($helper === FALSE and $raas_helper === FALSE) {
-      $this->helper       = new GigyaRaasHelper();
+      $this->helper = new GigyaRaasHelper();
       $this->gigya_helper = new GigyaHelper();
     }
     else {
-      $this->helper       = $raas_helper;
+      $this->helper = $raas_helper;
       $this->gigya_helper = $helper;
     }
 
-    $gigya_conf      = \Drupal::config('gigya.settings');
+    $gigya_conf = \Drupal::config('gigya.settings');
     $this->auth_mode = $gigya_conf->get('gigya.gigya_auth_mode');
   }
 
@@ -60,12 +60,12 @@ class GigyaController extends ControllerBase {
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The incoming request object.
    *
-   * @return \Drupal\Core\Ajax\AjaxResponse
+   * @return AjaxResponse
    *   The Ajax response
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function gigyaRaasProfileAjax(Request $request) {
+  public function gigyaRaasProfileAjax(Request $request): AjaxResponse {
     $gigya_data          = $request->get('gigyaData');
     $is_dummy_email_used = \Drupal::config('gigya_raas.settings')
       ->get('gigya_raas.should_use_dummy_email');
@@ -104,16 +104,16 @@ class GigyaController extends ControllerBase {
   }
 
   /**
-   * Raw method for processing field mapping. Currently an alias for
+   * Raw method for processing field mapping. Currently, an alias for
    * gigyaRaasProfileAjax, but could be modified in the future.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *
-   * @return \Drupal\Core\Ajax\AjaxResponse
+   * @return AjaxResponse
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function gigyaRaasProcessFieldMapping(Request $request) {
+  public function gigyaRaasProcessFieldMapping(Request $request): AjaxResponse {
     return $this->gigyaRaasProfileAjax($request);
   }
 

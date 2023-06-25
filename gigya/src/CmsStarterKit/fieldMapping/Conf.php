@@ -1,17 +1,17 @@
-<?php /** @noinspection ALL */
+<?php
 
 namespace Drupal\gigya\CmsStarterKit\fieldMapping;
 
 class Conf {
 
-  private array $cmsKeyed;
+  private $cmsKeyed;
 
-  private array $gigyaKeyed;
+  private $gigyaKeyed;
 
-  private mixed $mappingConf;
+  private $mappingConf;
 
- public function __construct($json) {
-    $this->mappingConf = $json != null? json_decode($json, TRUE): '';
+  public function __construct($json) {
+    $this->mappingConf = json_decode($json, TRUE);
   }
 
   /**
@@ -24,25 +24,23 @@ class Conf {
     return $this->cmsKeyed;
   }
 
- protected function buildKeyedArrays($array) {
+  protected function buildKeyedArrays($array) {
     $cmsKeyedArray = [];
     $gigyaKeyedArray = [];
 
     foreach ($array as $confItem) {
       $cmsKey = $confItem['cmsName'];
       $gigyaKey = $confItem['gigyaName'];
-      $direction = $confItem['direction'] ?? "g2cms";
+      $direction = isset($confItem['direction']) ? $confItem['direction'] : "g2cms";
       $conf = new ConfItem($confItem);
       switch ($direction) {
         case "cms2g":
           $cmsKeyedArray[$cmsKey][] = $conf;
           break;
-
         case "both":
           $gigyaKeyedArray[$gigyaKey][] = $conf;
           $cmsKeyedArray[$cmsKey][] = $conf;
           break;
-
         default:
           $gigyaKeyedArray[$gigyaKey][] = $conf;
           break;
@@ -73,5 +71,4 @@ class Conf {
   public function __toString() {
     return json_encode(get_object_vars($this));
   }
-
 }

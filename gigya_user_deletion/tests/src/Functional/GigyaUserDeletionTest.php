@@ -26,7 +26,7 @@
 		/**
 		 * {@inheritdoc}
 		 */
-		public function setUp(): void {
+		public function setUp() {
 			parent::setUp();
 
 			$this->gigyaAdmin = $this->drupalCreateUser(['gigya major admin', 'bypass gigya raas']);
@@ -46,7 +46,7 @@
 			$form_state = new FormState();
 			$values = $this->getSampleFormData();
 			$form_state->setValues($values);
-			Drupal::formBuilder()->submitForm('Drupal\gigya_user_deletion\Form\GigyaCronForm', $form_state);
+			\Drupal::formBuilder()->submitForm('Drupal\gigya_user_deletion\Form\GigyaCronForm', $form_state);
 
 			/* Get page again after values update */
 			$this->drupalGet('admin/config/gigya/cron');

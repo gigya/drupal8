@@ -37,5 +37,4 @@ class GigyaSubscriptionContainer extends GigyaJsonObject {
 
     return $result;
   }
-
 }

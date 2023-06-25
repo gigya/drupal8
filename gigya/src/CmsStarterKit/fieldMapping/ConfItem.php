@@ -2,6 +2,8 @@
 
 namespace Drupal\gigya\CmsStarterKit\fieldMapping;
 
+use Drupal\gigya\CmsStarterKit\GigyaJsonObject;
+
 class ConfItem {
 
   /**
@@ -107,10 +109,11 @@ class ConfItem {
   }
 
   /**
-   * @param \Drupal\gigya\CmsStarterKit\GigyaJsonObject $custom
+   * @param GigyaJsonObject $custom
    */
   public function setCustom($custom) {
     $this->custom = $custom;
   }
+
 
 }

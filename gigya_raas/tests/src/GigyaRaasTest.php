@@ -190,7 +190,7 @@
       $values['should_use_dummy_email'] = FALSE;
       $form_state->setValues($values);
 
-      Drupal::formBuilder()->submitForm('Drupal\gigya_raas\Form\GigyaSessionForm', $form_state, $this->helperMock);
+      \Drupal::formBuilder()->submitForm('Drupal\gigya_raas\Form\GigyaSessionForm', $form_state, $this->helperMock);
 
       $this->drupalLogout();
 
@@ -229,8 +229,8 @@
 			$this->gigyaUser->getProfile()->setEmail($email);
 			$this->gigyaUser->setLoginIDs($emailLoginIDs);
 			$res = $this->gigyaController->gigyaRaasLoginAjax($this->requestMock);
-			$user = User::load(Drupal::currentUser()->id());
-			$this->assertTrue(Drupal::currentUser()->isAuthenticated());
+			$user = User::load(\Drupal::currentUser()->id());
+			$this->assertTrue(\Drupal::currentUser()->isAuthenticated());
 
 			$this->assertEquals($this->successResponse->getCommands(), $res->getCommands());
 			$this->assertEquals($this->gigyaUser->getProfile()->getEmail(), $user->getEmail());
@@ -250,8 +250,8 @@
       $values['session_time'] = '1800';
       $form_state->setValues($values);
 
-      Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaSessionForm', $form_state, $this->helperMock);
-      $msg = Drupal::messenger()->all();
+      \Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaSessionForm', $form_state, $this->helperMock);
+      $msg = \Drupal::messenger()->all();
       $this->assertArrayNotHasKey('error', $msg);
       $this->drupalLogout();
     }
@@ -259,7 +259,7 @@
 		public function checkGoodLogin() {
 			$res = $this->gigyaController->gigyaRaasLoginAjax($this->requestMock);
 			$this->assertEquals($this->successResponse->getCommands(), $res->getCommands());
-			$this->assertTrue(Drupal::currentUser()->isAuthenticated());
+			$this->assertTrue(\Drupal::currentUser()->isAuthenticated());
 		}
 
     private function getGigyaAccountJson() {

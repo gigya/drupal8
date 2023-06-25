@@ -1,58 +1,65 @@
 <?php
 
+/**
+ * @file
+ * Contains \Drupal\gigya\Form\GigyaKeysForm.
+ */
+
 namespace Drupal\gigya\Form;
 
+use Drupal;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\gigya\Helper\GigyaHelperInterface;
+use Exception;
 use Gigya\PHP\GSObject;
-
 
 class GigyaKeysForm extends ConfigFormBase {
 
+	/**
+	 * @var Drupal\gigya\Helper\GigyaHelperInterface
+	 */
+	public $helper = FALSE;
 
-  /**
-   * @var \Drupal\gigya\Helper\GigyaHelperInterface
-   */
-  public $helper = FALSE;
-  /**
-   * Gets the configuration names that will be editable.
-   *
-   * @return array
-   *   An array of configuration object names that are editable if called in
-   *   conjunction with the trait's config() method.
-   */
-  protected function getEditableConfigNames() {
-    return [
-      'gigya.settings',
-    ];
-  }
+	/**
+	 * Gets the configuration names that will be editable.
+	 *
+	 * @return array
+	 *   An array of configuration object names that are editable if called in
+	 *   conjunction with the trait's config() method.
+	 */
+	protected function getEditableConfigNames() {
+		return [
+			'gigya.settings',
+		];
+	}
 
-  /**
-   * @param array $form
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   * @param \Drupal\gigya\Helper\GigyaHelperInterface | NULL $helper
-   *
-   * @return array
-   */
+	/**
+	 * @param array                                $form
+	 * @param \Drupal\Core\Form\FormStateInterface $form_state
+	 * @param GigyaHelperInterface | NULL          $helper
+	 *
+	 * @return array
+	 */
   public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL) {
-    // Form constructor.
+    // Form constructor
+
     if ($helper == NULL) {
       $this->helper = new GigyaHelper();
     }
     else {
       $this->helper = $helper;
     }
-    $messenger = \Drupal::service('messenger');
+    $messenger = Drupal::service('messenger');
 
     if (!class_exists('Gigya\\PHP\\GSObject')) {
       $messenger->addError($this->t('The required library Gigya PHP SDK cannot be found. Please install it via Composer.'));
     }
 
     /* Verify requirements */
-    $messenger = \Drupal::service('messenger');
+    $messenger = Drupal::service('messenger');
     if (!$this->helper->checkEncryptKey()) {
       $messenger->addError($this->t('Gigya\'s Encryption key doesn\'t exist. Please copy the key below and place it in the setting.php file as "gigya_encryption_key".'));
       $messenger->addWarning($this->t('This is the new encryption key: ' . $this->helper->getGigyaApiHelper()::genKeyFromString(NULL, 128)));
@@ -144,7 +151,7 @@ class GigyaKeysForm extends ConfigFormBase {
         $form['gigya_application_secret_key']['#default_value'] = "*********";
         $form['gigya_application_secret_key']['#description'] .= $this->t(". Current key first and last letters are @accessKey", [
           '@accessKey' => substr($access_key, 0, 2) . "****" .
-          substr($access_key, strlen($access_key) - 2, 2),
+            substr($access_key, strlen($access_key) - 2, 2),
         ]);
       }
 
@@ -179,181 +186,173 @@ class GigyaKeysForm extends ConfigFormBase {
     return $form;
   }
 
-  /**
-   * Returns a unique string identifying the form.
-   *
-   * @return string
-   *   The unique string identifying the form.
-   */
-  public function getFormId() {
-    return 'gigya_admin_keys';
+	/**
+	 * Returns a unique string identifying the form.
+	 *
+	 * @return string
+	 *   The unique string identifying the form.
+	 */
+	public function getFormId() {
+		return 'gigya_admin_keys';
 
-  }
+	}
 
-  /**
-   * @param array $form
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *
-   * @throws \Exception
-   */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    parent::validateForm($form, $form_state);
+	/**
+	 * @param array                                $form
+	 * @param \Drupal\Core\Form\FormStateInterface $form_state
+	 *
+	 * @throws Exception
+	 */
+	public function validateForm(array &$form, FormStateInterface $form_state) {
+		parent::validateForm($form, $form_state);
 
-    // Encrypt key error.
-    if (!$this->helper->checkEncryptKey()) {
-      $form_state->setErrorByName('gigya_api_key', "");
-      return;
-    }
-    // Check if the form has errors, if true we do not need to validate the user input because it has errors already.
-    if ($form_state->getErrors()) {
-      return;
-    }
+		//Encrypt key error.
+		if (!$this->helper->checkEncryptKey()) {
+			$form_state->setErrorByName('gigya_api_key', "");
+			return;
+		}
+		//Check if the form has errors, if true we do not need to validate the user input because it has errors already.
+		if ($form_state->getErrors()) {
+			return;
+		}
 
-    $config = $this->config('gigya.settings');
+		$config = $this->config('gigya.settings');
 
-    /* API key was changed ? */
-    if ($this->getValue($form_state, 'gigya_api_key') != $config->get('gigya.gigya_api_key')) {
-      $_gigya_api_key = $this->getValue($form_state, 'gigya_api_key');
-    }
-    else {
-      $_gigya_api_key = $config->get('gigya.gigya_api_key');
-    }
+		// API key was changed ?
+		if ($this->getValue($form_state, 'gigya_api_key') != $config->get('gigya.gigya_api_key')) {
+			$_gigya_api_key = $this->getValue($form_state, 'gigya_api_key');
+		}
+		else {
+			$_gigya_api_key = $config->get('gigya.gigya_api_key');
+		}
 
-    /* App/user key was changed ? */
-    if ($this->getValue($form_state, 'gigya_application_key') != $config->get('gigya.gigya_application_key')) {
-      $_gigya_application_key = $this->getValue($form_state, 'gigya_application_key');
-    }
-    else {
-      $_gigya_application_key = $config->get('gigya.gigya_application_key');
-    }
+		// APP key was changed ?
+		if ($this->getValue($form_state, 'gigya_application_key') != $config->get('gigya.gigya_application_key')) {
+			$_gigya_application_key = $this->getValue($form_state, 'gigya_application_key');
+		}
+		else {
+			$_gigya_application_key = $config->get('gigya.gigya_application_key');
+		}
 
-    /* App/user secret key was changed ? */
-    $_gigya_auth_mode = $this->getValue($form_state, 'gigya_auth_mode');
-    $temp_access_key = ($_gigya_auth_mode === 'user_rsa')
-      ? $this->getValue($form_state, 'gigya_rsa_private_key')
-      : $this->getValue($form_state, 'gigya_application_secret_key');
-    if (!empty($temp_access_key) && $temp_access_key !== "*********") { /* Auth key just entered */
-      $_gigya_auth_key = $temp_access_key;
-    }
-    else { /* Auth key not yet entered or is already found in the system */
-      $key = ($_gigya_auth_mode === 'user_rsa')
-        ? $config->get('gigya.gigya_rsa_private_key')
-        : $config->get('gigya.gigya_application_secret_key');
-      if (!empty($key)) {
-        $_gigya_auth_key = $this->helper->decrypt($key);
-      }
-      else {
-        $_gigya_auth_key = '';
-      }
-    }
+		// APP secret key was changed ?
+		$_gigya_auth_mode = $this->getValue($form_state, 'gigya_auth_mode');
+		$temp_access_key = ($_gigya_auth_mode === 'user_rsa')
+			? $this->getValue($form_state, 'gigya_rsa_private_key')
+			: $this->getValue($form_state, 'gigya_application_secret_key');
+		if (!empty($temp_access_key) && $temp_access_key !== "*********") { /* Auth key just entered */
+			$_gigya_auth_key = $temp_access_key;
+		}
+		else { /* Auth key not yet entered or is already found in the system */
+			$key = ($_gigya_auth_mode === 'user_rsa')
+				? $config->get('gigya.gigya_rsa_private_key')
+				: $config->get('gigya.gigya_application_secret_key');
+			if (!empty($key)) {
+				$_gigya_auth_key = $this->helper->decrypt($key);
+			}
+			else {
+				$_gigya_auth_key = '';
+			}
+		}
 
-    /* Data Center was changed ? */
-    if ($this->getValue($form_state, 'gigya_data_center') != $config->get('gigya.gigya_data_center')
-    || $this->getValue($form_state, 'gigya_other_data_center') != $config->get('gigya.gigya_other_data_center')
-    ) {
-      if ($this->getValue($form_state, 'gigya_data_center') == 'other') {
-        $_gigya_data_center = $this->getValue($form_state, 'gigya_other_data_center');
-      }
-      else {
-        $_gigya_data_center = $this->getValue($form_state, 'gigya_data_center');
-      }
-    }
-    else {
-      $_gigya_data_center = $config->get('gigya.gigya_data_center');
-    }
+		/* Data Center was changed ? */
+		if ($this->getValue($form_state, 'gigya_data_center') != $config->get('gigya.gigya_data_center')
+			|| $this->getValue($form_state, 'gigya_other_data_center') != $config->get('gigya.gigya_other_data_center')
+		) {
+			if ($this->getValue($form_state, 'gigya_data_center') == 'other') {
+				$_gigya_data_center = $this->getValue($form_state, 'gigya_other_data_center');
+			}
+			else {
+				$_gigya_data_center = $this->getValue($form_state, 'gigya_data_center');
+			}
+		}
+		else {
+			$_gigya_data_center = $config->get('gigya.gigya_data_center');
+		}
 
-    $access_params = [];
-    $access_params['api_key'] = $_gigya_api_key;
-    $access_params['auth_mode'] = $_gigya_auth_mode;
-    $access_params['auth_key'] = $_gigya_auth_key;
-    $access_params['app_key'] = $_gigya_application_key;
-    $access_params['data_center'] = $_gigya_data_center;
-    $params = new GSObject();
-    $params->put('filter', 'full');
+		$access_params = [];
+		$access_params['api_key'] = $_gigya_api_key;
+		$access_params['auth_mode'] = $_gigya_auth_mode;
+		$access_params['auth_key'] = $_gigya_auth_key;
+		$access_params['app_key'] = $_gigya_application_key;
+		$access_params['data_center'] = $_gigya_data_center;
+		$params = new GSObject();
+		$params->put('filter', 'full');
 
-    $valid = FALSE;
-    if ($_gigya_auth_mode !== 'user_rsa' || openssl_pkey_get_private($access_params['auth_key']) !== FALSE) {
-      try {
-        $res = $this->helper->sendApiCall('socialize.getProvidersConfig', $params, $access_params);
-        if ($res->getErrorCode() == 0) {
-          $valid = TRUE;
-        }
-      } catch (\Exception $e) {
-        $code = $e->getCode();
-        $msg = $e->getMessage();
-        $error_message = new TranslatableMarkup('Gigya error: @code – @msg', [
-          '@code' => $code,
-          '@message' => $msg,
-        ]);
-      }
-    } else {
-      $form_state->setErrorByName('gigya_api_key', $this->t('Invalid private key format. Please re-acquire a Gigya private key, or try a different authentication method.'));
-    }
+		$valid = FALSE;
+		try {
+			$res = $this->helper->sendApiCall('socialize.getProvidersConfig', $params, $access_params);
+			if ($res->getErrorCode() == 0) {
+				$valid = TRUE;
+			}
+		} catch (Exception $e) {
+			$code = $e->getCode();
+			$msg = $e->getMessage();
+			$error_message = new TranslatableMarkup('Gigya error: @code – @msg', ['@code' => $code, '@message' => $msg]);
+		}
 
-    if ($valid !== TRUE) {
-      if (!empty($res) and is_object($res)) {
-        if (!isset($error_message)) {
-          $code          = $res->getErrorCode();
-          $msg           = $res->getErrorMessage();
-          $error_message = new TranslatableMarkup('Gigya API error: @code – @msg. For more information, please refer to Gigya\'s documentation page on
+		if ($valid !== TRUE) {
+			if (!empty($res) and is_object($res)) {
+				if (!isset($error_message)) {
+					$code          = $res->getErrorCode();
+					$msg           = $res->getErrorMessage();
+					$error_message = new TranslatableMarkup('Gigya API error: @code – @msg. For more information, please refer to Gigya\'s documentation page on
 																	<a href="https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/8b8d6fffe113457094a17701f63e3d6a/416d41b170b21014bbc5a10ce4041860.html?q=Response%20Codes%20and%20Errors" target="_blank">Response Codes and Errors</a>.',
-          ['@code' => $code, '@msg' => $msg]);
-        }
+						['@code' => $code, '@msg' => $msg]);
+				}
 
-        $form_state->setErrorByName('gigya_api_key', $error_message);
-       \Drupal::logger('gigya')->error($error_message);
-      }
-      else {
-        $form_state->setErrorByName('gigya_api_key', $this->t('Your Gigya authentication details could not be validated. Please try again.'));
-      }
-    }
-    else {
-      $messenger = \Drupal::service('messenger');
-      $messenger->addMessage($this->t('Gigya validated properly. This site is authorized to use Gigya services.'));
-    }
-  }
+				$form_state->setErrorByName('gigya_api_key', $error_message);
+				Drupal::logger('gigya')->error($error_message);
+			}
+			else {
+				$form_state->setErrorByName('gigya_api_key', $this->t('Your Gigya authentication details could not be validated. Please try again.'));
+			}
+		}
+		else {
+			$messenger = Drupal::service('messenger');
+			$messenger->addMessage($this->t('Gigya validated properly. This site is authorized to use Gigya services.'));
+		}
+	}
 
-  /**
-   * @param array $form
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
-    $config = $this->config('gigya.settings');
-    $config->set('gigya.gigya_application_key', $this->getValue($form_state, 'gigya_application_key'));
-    $config->set('gigya.gigya_api_key', $this->getValue($form_state, 'gigya_api_key'));
-    $config->set('gigya.gigya_auth_mode', $this->getValue($form_state, 'gigya_auth_mode'));
-    $temp_access_key = $this->getValue($form_state, 'gigya_application_secret_key');
-    if (!empty($temp_access_key) && $temp_access_key !== "*********") {
-      $enc = $this->helper->enc($temp_access_key);
-      $config->set('gigya.gigya_application_secret_key', $enc);
-      $config->set('gigya.gigya_rsa_private_key', '');
-    }
-    $private_key = $this->getValue($form_state, 'gigya_rsa_private_key');
-    if (!empty($private_key)) {
-      $private_key = $this->helper->enc($private_key);
-      $config->set('gigya.gigya_rsa_private_key', $private_key);
-      $config->set('gigya.gigya_application_secret_key', '');
-    }
+	/**
+	 * @param array              $form
+	 * @param FormStateInterface $form_state
+	 */
+	public function submitForm(array &$form, FormStateInterface $form_state) {
+		$config = $this->config('gigya.settings');
+		$config->set('gigya.gigya_application_key', $this->getValue($form_state, 'gigya_application_key'));
+		$config->set('gigya.gigya_api_key', $this->getValue($form_state, 'gigya_api_key'));
+		$config->set('gigya.gigya_auth_mode', $this->getValue($form_state, 'gigya_auth_mode'));
+		$temp_access_key = $this->getValue($form_state, 'gigya_application_secret_key');
+		if (!empty($temp_access_key) && $temp_access_key !== "*********") {
+			$enc = $this->helper->enc($temp_access_key);
+			$config->set('gigya.gigya_application_secret_key', $enc);
+			$config->set('gigya.gigya_rsa_private_key', '');
+		}
+		$private_key = $this->getValue($form_state, 'gigya_rsa_private_key');
+		if (!empty($private_key)) {
+			$private_key = $this->helper->enc($private_key);
+			$config->set('gigya.gigya_rsa_private_key', $private_key);
+			$config->set('gigya.gigya_application_secret_key', '');
+		}
 
-    if ($this->getValue($form_state, 'gigya_data_center') == 'other') {
-      $config->set('gigya.gigya_data_center', $this->getValue($form_state, 'gigya_other_data_center'));
-    }
-    else {
-      $config->set('gigya.gigya_data_center', $this->getValue($form_state, 'gigya_data_center'));
-    }
+		if ($this->getValue($form_state, 'gigya_data_center') == 'other') {
+			$config->set('gigya.gigya_data_center', $this->getValue($form_state, 'gigya_other_data_center'));
+		}
+		else {
+			$config->set('gigya.gigya_data_center', $this->getValue($form_state, 'gigya_data_center'));
+		}
 
-    $config->save();
-    parent::submitForm($form, $form_state);
-  }
+		$config->save();
+		parent::submitForm($form, $form_state);
+	}
 
-  /**
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   * @param                    $prop_name
-   *
-   * @return string
-   */
-  private function getValue(FormStateInterface $form_state, $prop_name) {
-    return trim($form_state->getValue($prop_name));
-  }
-
+	/**
+	 * @param FormStateInterface $form_state
+	 * @param                    $prop_name
+	 *
+	 * @return string
+	 */
+	private function getValue(FormStateInterface $form_state, $prop_name) {
+		return trim($form_state->getValue($prop_name));
+	}
 }

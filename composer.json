@@ -18,6 +18,6 @@
   "require": {
     "ext-json": "*",
     "ext-openssl": "*",
-    "gigya/php-sdk": "~3.0.0"
+    "gigya/php-sdk": "^3.0"
   }
 }

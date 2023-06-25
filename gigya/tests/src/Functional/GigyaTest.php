@@ -70,7 +70,7 @@
 		/**
 		 * {@inheritdoc}
 		 */
-		public function setUp(): void {
+		public function setUp() {
 			parent::setUp();
 
 			$this->successResponse = new AjaxResponse();
@@ -324,7 +324,7 @@
 			$form_state->setValues($values);
 
 			/** @noinspection PhpMethodParametersCountMismatchInspection */
-			Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state, $this->helperMock);
+			\Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state, $this->helperMock);
 
 			$key = Drupal::service('config.factory')->getEditable('gigya.settings')->get('gigya.gigya_application_secret_key');
 			$this->assertNotEquals($values['gigya_application_secret_key'], $key, 'Key is not encrypted');
@@ -358,8 +358,8 @@
 
 			$this->gigyaUser->getProfile()->setEmail($email);
 			$res = $this->gigyaControl->gigyaRaasLoginAjax($this->requestMock);
-			$user = User::load(Drupal::currentUser()->id());
-			$this->assertTrue(Drupal::currentUser()->isAuthenticated());
+			$user = User::load(\Drupal::currentUser()->id());
+			$this->assertTrue(\Drupal::currentUser()->isAuthenticated());
 
 			$this->assertEquals($this->successResponse->getCommands(), $res->getCommands());
 			$this->assertEquals($this->gigyaUser->getProfile()->getEmail(), $user->getEmail());
@@ -396,9 +396,9 @@
 		 */
 		public function checkBadForm($form_state) {
 			$form_state->setValue('gigya_application_secret_key', '*********');
-			Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state);
+			\Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state);
 //			\Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state, $this->helperMock);
-      $msg = Drupal::messenger()->all();
+      $msg = \Drupal::messenger()->all();
 			$this->assertArrayHasKey('error', $msg);
 			$this->assertArrayHasKey('0', $msg['error']);
 			$this->assertStringStartsWith('Gigya API error', $msg['error'][0]);
@@ -410,13 +410,13 @@
 			$response = new AjaxResponse();
 			$response->addCommand(new AlertCommand($err_msg));
 			$this->assertEquals($response->getCommands(), $res->getCommands());
-			$this->assertTrue(Drupal::currentUser()->isAnonymous());
+			$this->assertTrue(\Drupal::currentUser()->isAnonymous());
 		}
 
 		public function checkGoodLogin() {
 			$res = $this->gigyaControl->gigyaRaasLoginAjax($this->requestMock);
 			$this->assertEquals($this->successResponse->getCommands(), $res->getCommands());
-			$this->assertTrue(Drupal::currentUser()->isAuthenticated());
+			$this->assertTrue(\Drupal::currentUser()->isAuthenticated());
 		}
 
 		public function testUI() {
@@ -435,8 +435,8 @@
 			$form_state->setValues($values);
 
 			/** @noinspection PhpMethodParametersCountMismatchInspection */
-			Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state, $this->helperMock);
-      $msg = Drupal::messenger()->all();
+			\Drupal::formBuilder()->submitForm('Drupal\gigya\Form\GigyaKeysForm', $form_state, $this->helperMock);
+      $msg = \Drupal::messenger()->all();
 			$this->assertArrayNotHasKey('error', $msg);
 
 			$this->drupalLogout();

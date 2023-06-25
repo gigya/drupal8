@@ -11,10 +11,8 @@ namespace Drupal\gigya\CmsStarterKit\ds;
 
 use Drupal\gigya\CmsStarterKit\GigyaApiHelper;
 use Gigya\PHP\GSResponse;
-use PHPUnit_Framework_TestCase;
-use ReflectionClass;
 
-class TestDsQueryObject extends PHPUnit_Framework_TestCase
+class TestDsQueryObject extends \PHPUnit_Framework_TestCase
 {
 
     /**
@@ -37,7 +35,7 @@ class TestDsQueryObject extends PHPUnit_Framework_TestCase
 
     protected static function getMethod($name)
     {
-        $class  = new ReflectionClass(DsQueryObject::class);
+        $class  = new \ReflectionClass(DsQueryObject::class);
         $method = $class->getMethod($name);
         $method->setAccessible(true);
 

@@ -128,7 +128,12 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 
     /* Field mapping */
 
-    $fieldmapping_config = $form_state->getValue('gigya_fieldmapping_config');
+    $fieldmapping_config         = $form_state->getValue('gigya_fieldmapping_config');
+    $global_field_mapping_config = json_encode(\Drupal::config('gigya.global')
+                                                      ->get('gigya.fieldMapping'));
+    $config                      = $this->config('gigya_raas.fieldmapping');
+    $messenger                   = \Drupal::service('messenger');
+
 
     if (!empty($fieldmapping_config) and $fieldmapping_config !== '{}') {
 
@@ -159,6 +164,21 @@ class GigyaFieldmappingForm extends ConfigFormBase {
         }
       }
     }
+    $this->validateUidMappingDestExists($form_state, $form_state->getValue('uid_mapping'));
+
+    if (json_encode(json_decode($fieldmapping_config)) !== json_encode(json_decode($global_field_mapping_config)) and empty($form_state->getErrors())) {
+      $messenger->addWarning("Duplicate field mapping configuration detected.
+      The field mapping is configured both on this page and in the gigya.global configuration settings.
+      It is recommended to work with this page only,
+      which in any case takes precedence over the global configuration.");
+    }
+
+    if ($form_state->getValue('uid_mapping') !== $config->get('gigya.uid_mapping')) {
+      $messenger->addWarning("Notice: Certain features may experience limited
+      functionality during the process of changing the UID mapping,
+      specifically for existing users.");
+    }
+
   }
   private function jsonFormValidation($json_text) {
     $after_decode_json = json_decode($json_text);
@@ -187,4 +207,15 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 
     parent::submitForm($form, $form_state);
   }
+
+  private function validateUidMappingDestExists($form_state, string $uid_dest_field_mapping) {
+
+    if (!$this->raas_helper->isFieldExist($uid_dest_field_mapping)) {
+      $form_state->setErrorByName('fieldmapping', $this->t("The UID mapping field does not exist in your database.
+      Therefore, it is necessary to create the field before proceeding"));
+      return FALSE;
+    }
+    return TRUE;
+  }
+
 }

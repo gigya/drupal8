@@ -12,6 +12,7 @@ use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Firebase\JWT\JWT;
 use Symfony\Component\HttpFoundation\Request;
+use Drupal\Core\Entity\FieldableEntityInterface;
 
 class GigyaRaasHelper {
   private $gigya_helper;
@@ -85,29 +86,44 @@ class GigyaRaasHelper {
       ->execute();
   }
 
+  public function isFieldExist(string $field_name) {
+
+    return \Drupal::service('entity_field.manager')
+                  ->getFieldDefinitions('user', 'user')[$field_name] ?? NULL;
+  }
+
   /**
    * @param $uuid
    *
    * @return \Drupal\user\Entity\User|false
    */
   public function getDrupalUidByGigyaUid($uuid) {
-    $uuid_field = \Drupal::config('gigya_raas.fieldmapping')->get('gigya.uid_mapping');
+
+    $uuid_field = \Drupal::config('gigya_raas.fieldmapping')
+                         ->get('gigya.uid_mapping');
     if (empty($uuid_field)) {
       $uuid_field = 'uuid';
+
     }
 
     if ($uuid_field === 'uuid') {
-      return \Drupal::service('entity.repository')->loadEntityByUuid('user', $uuid);
+      return \Drupal::service('entity.repository')
+                    ->loadEntityByUuid('user', $uuid);
+
     }
     else {
-      $ids = \Drupal::entityQuery('user')
-        ->accessCheck()
-        ->condition($uuid_field, $uuid)
-        ->execute();
+
+      $ids   = \Drupal::entityQuery('user')
+                      ->accessCheck()
+                      ->condition($uuid_field, $uuid, '=')
+                      ->execute();
       $users = User::loadMultiple($ids);
 
-      if ($users[0] instanceof User) {
-        return $users[0];
+      foreach ($users as $user) {
+        if ($user instanceof User) {
+          return $user;
+        }
+
       }
     }
 
@@ -161,9 +177,10 @@ class GigyaRaasHelper {
    */
   public function getFieldMappingConfig() {
     $config = json_decode(\Drupal::config('gigya_raas.fieldmapping')
-      ->get('gigya.fieldmapping_config') ?? '');
-    if (empty($config)) {
-      $config = (object) \Drupal::config('gigya.global')->get('gigya.fieldMapping');
+                                 ->get('gigya.fieldmapping_config') ?? '');
+    if (empty($config) or empty(get_object_vars($config))) {
+      $config = (object) \Drupal::config('gigya.global')
+                                ->get('gigya.fieldMapping');
     }
 
     return $config;
@@ -192,13 +209,19 @@ class GigyaRaasHelper {
           ->error('Error processing field map data: incorrect format entered. The format for field mapping is a JSON object of the form: &#123;"drupalField": "gigyaField"&#125;. Proceeding with default field mapping configuration.');
         $field_map = json_decode('{}');
       }
-      $field_map->uuid = 'UID';
-      if (!empty($uid_mapping = \Drupal::config('gigya_raas.fieldmapping')->get('gigya_uid_mapping'))) {
-        if ($drupal_user->hasField($uid_mapping)) {
-          $field_map->uuid = $uid_mapping;
-        }
-      }
+      $uid_mapping = \Drupal::config('gigya_raas.fieldmapping')
+                            ->get('gigya.uid_mapping');
 
+      if (!empty($uid_mapping)) {
+        if ($drupal_user->hasField($uid_mapping)) {
+
+          $field_map->{$uid_mapping} = 'UID';
+        }
+
+      }
+      else {
+        $field_map->uuid = 'UID';
+      }
       foreach ($field_map as $drupal_field => $raas_field) {
         /* Drupal fields to exclude even if configured in field mapping schema */
         if ($drupal_field == 'mail' or $drupal_field == 'name') {

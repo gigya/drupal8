@@ -66,14 +66,14 @@ class GigyaScreenSetsForm extends ConfigFormBase {
     $form['gigya_login_screensets']['gigya_login_screenset_desktop'] = [
       '#type'          => 'textfield',
       '#title'         => $this->t('Screen-Set'),
-      '#default_value' => $config->get('gigya.login_screenset'),
+      '#default_value' => $config->get('gigya.login_screenset')?? "Default-RegistrationLogin",
       '#required'      => TRUE,
     ];
 
     $form['gigya_login_screensets']['gigya_login_screenset_mobile'] = [
       '#type'          => 'textfield',
       '#title'         => $this->t('Mobile Screen-Set'),
-      '#default_value' => $config->get('gigya.login_screenset_mobile'),
+      '#default_value' => $config->get('gigya.login_screenset_mobile')?? "Default-RegistrationLogin",
       '#required'      => FALSE,
     ];
 
@@ -86,14 +86,14 @@ class GigyaScreenSetsForm extends ConfigFormBase {
     $form['gigya_profile_screensets']['gigya_profile_screenset_desktop'] = [
       '#type'          => 'textfield',
       '#title'         => $this->t('Edit Profile Screen-Set'),
-      '#default_value' => $config->get('gigya.profile_screenset'),
+      '#default_value' => $config->get('gigya.profile_screenset')?? "Default-ProfileUpdate",
       '#required'      => TRUE,
     ];
 
     $form['gigya_profile_screensets']['gigya_profile_screenset_mobile'] = [
       '#type'          => 'textfield',
       '#title'         => $this->t('Edit Profile Mobile Screen-Set'),
-      '#default_value' => $config->get('gigya.profile_screenset_mobile'),
+      '#default_value' => $config->get('gigya.profile_screenset_mobile')?? "Default-ProfileUpdate",
       '#required'      => FALSE,
     ];
 

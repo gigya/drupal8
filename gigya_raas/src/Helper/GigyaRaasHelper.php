@@ -97,7 +97,7 @@ class GigyaRaasHelper {
    *
    * @return \Drupal\user\Entity\User|false
    */
-  public function getDrupalUidByGigyaUid($uuid) {
+  public function getDrupalUserByGigyaUid($uuid) {
 
     $uuid_field = \Drupal::config('gigya_raas.fieldmapping')
                          ->get('gigya.uid_mapping');

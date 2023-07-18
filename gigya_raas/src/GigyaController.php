@@ -78,7 +78,7 @@ class GigyaController extends ControllerBase {
     }
     $gigyaUser = $this->helper->validateAndFetchRaasUser($gigya_data['UID'], $signature, $gigya_data['signatureTimestamp']);
     if ($gigyaUser) {
-      if ($user = $this->helper->getDrupalUidByGigyaUid($gigyaUser->getUID())) {
+      if ($user = $this->helper->getDrupalUserByGigyaUid($gigyaUser->getUID())) {
         if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, $user->id())) {
           if ($unique_email !== $user->mail) {
             $user->setEmail($unique_email);
@@ -198,7 +198,7 @@ class GigyaController extends ControllerBase {
         }
         /* loginIDs.emails or emails.verified is found in Gigya or using dummy email for mobile login */
         else {
-          $user = $this->helper->getDrupalUidByGigyaUid($gigyaUser->getUID());
+          $user = $this->helper->getDrupalUserByGigyaUid($gigyaUser->getUID());
 
           if ($user) {
             /* if a user has the permission of bypass gigya raas (admin user)

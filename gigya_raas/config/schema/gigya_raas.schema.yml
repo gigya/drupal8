@@ -1,0 +1,104 @@
+gigya_raas.settings:
+  type: config_object
+  label: 'Gigya RaaS session settings'
+  mapping:
+    gigya_raas:
+      type: mapping
+      mapping:
+        session_type:
+          type: text
+          label: 'Session Type'
+        session_time:
+          type: integer
+          label: 'Session Duration'
+        remember_me_session_type:
+          type: string
+          label: Remember Me Session Type
+        remember_me_session_time:
+          type: integer
+          label: Remember Me Session Duration (in seconds)
+        login_redirect_mode:
+          type: string
+          label: Post login redirect mode
+        login_redirect:
+          type: uri
+          label: Post login redirect URL
+        logout_redirect:
+          type: uri
+          label: Post logout redirect URL
+        should_use_dummy_email:
+          type: boolean
+          label: Create a dummy email to be used for non-email login
+        dummy_email_format:
+          type: string
+          label: Dummy Email Format
+
+
+gigya_raas.fieldmapping:
+  type: config_object
+  label: Gigya RaaS field mapping
+  mapping:
+    gigya:
+      type: mapping
+      mapping:
+        uid_mapping:
+          type: string
+          label: UID mapping
+        fieldmapping_config:
+          type: string
+          label: Field Mapping Configuration
+        offline_sync:
+          type: mapping
+          mapping:
+            enable_job:
+              type: boolean
+              label: Enable
+            email_on_success:
+              type: string
+              label: Email on success
+            email_on_failure:
+              type: string
+              label: Email on failure
+
+gigya_raas.screensets:
+  type: config_object
+  label: Registration–Login Screen-Set settings
+  mapping:
+    gigya:
+      type: mapping
+      mapping:
+        login_screenset:
+          type: string
+          label: Screen-Set
+        login_screenset_mobile:
+          type: string
+          label: Mobile Screen-Set
+        profile_screenset:
+          type: string
+          label: Edit Profile Screen-Set
+        profile_screenset_mobile:
+          type: string
+          label: Edit Profile Mobile Screen-Set
+        custom_screensets:
+          type: string
+          label: Custom / Consent Screen-Sets
+
+block.settings.gigya_raas_custom_screenset:
+  type: block_settings
+  label: 'Gigya RaaS Custom Screen-Set block'
+  mapping:
+    display_type:
+      type: string
+      label: 'Display Type'
+    desktop_screenset:
+      type: string
+      label: 'Desktop Screen-Set'
+    container_id:
+      type: string
+      label: 'Container ID'
+    link_id:
+      type: string
+      label: 'Link ID'
+    link_class:
+      type: string
+      label: 'Link CSS Class'

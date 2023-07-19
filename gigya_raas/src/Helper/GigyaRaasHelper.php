@@ -214,10 +214,7 @@ class GigyaRaasHelper {
       $uid_mapping = \Drupal::config('gigya_raas.fieldmapping')
                             ->get('gigya.uid_mapping');
 
-      \Drupal::logger("gigya_test")
-             ->debug("The Uid Mapping value: " . $uid_mapping);
       if (!empty($uid_mapping)) {
-        \Drupal::logger("gigya_test")->debug("There is  uid mapping");
 
         if ($drupal_user->hasField($uid_mapping)) {
 
@@ -226,8 +223,6 @@ class GigyaRaasHelper {
 
       }
       else {
-        \Drupal::logger("gigya_test")->debug("There is no uid mapping");
-
         $field_map->uuid = 'UID';
       }
       foreach ($field_map as $drupal_field => $raas_field) {

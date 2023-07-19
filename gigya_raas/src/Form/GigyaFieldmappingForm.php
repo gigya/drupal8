@@ -180,11 +180,13 @@ class GigyaFieldmappingForm extends ConfigFormBase {
     }
 
   }
+
   private function jsonFormValidation($json_text) {
     $after_decode_json = json_decode($json_text);
     if ($after_decode_json === NULL && json_last_error() !== JSON_ERROR_NONE) {
       return 'Invalid field mapping configuration: ' . json_last_error_msg();
-    }else {
+    }
+    else {
       return TRUE;
     }
   }

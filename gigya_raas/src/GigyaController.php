@@ -87,7 +87,7 @@ class GigyaController extends ControllerBase {
         }
         $this->helper->processFieldMapping($gigyaUser, $user);
         \Drupal::moduleHandler()
-          ->alter('gigya_profile_update', $gigyaUser, $user);
+               ->alter('gigya_profile_update', $gigyaUser, $user);
         $user->save();
 
         if (!$this->helper->checkEmailsUniqueness($gigyaUser, $user->id()) and $is_dummy_email_used) {

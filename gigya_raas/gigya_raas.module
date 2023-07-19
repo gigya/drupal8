@@ -222,14 +222,14 @@ function gigya_raas_cron() {
       if ($last_customer_update) {
         $gigya_query .= ' WHERE lastUpdatedTimestamp > ' . $last_customer_update;
       }
-      $gigya_query .= " ORDER BY lastUpdatedTimestamp ASC LIMIT " . MAX_USERS;
-      $gigya_users = $helper->searchGigyaUsers($gigya_query);
+      $gigya_query     .= " ORDER BY lastUpdatedTimestamp ASC LIMIT " . MAX_USERS;
+      $gigya_users     = $helper->searchGigyaUsers($gigya_query);
       $processed_users = 0;
       $users_not_found = 0;
-      $uids_not_found = [];
+      $uids_not_found  = [];
 
       foreach ($gigya_users as $gigya_user) {
-        $gigya_uid = $gigya_user->getUID();
+        $gigya_uid                    = $gigya_user->getUID();
         $gigya_last_updated_timestamp = $gigya_user->getLastUpdatedTimestamp();
 
         if (!empty($gigya_uid) and !empty($gigya_last_updated_timestamp)) {
@@ -242,9 +242,9 @@ function gigya_raas_cron() {
             if ($last_customer_update) {
               $last_customer_update -= UPDATE_DELAY;
               Drupal::configFactory()
-                ->getEditable('gigya_raas.offline_sync')
-                ->set('last_customer_update', $last_customer_update)
-                ->save();
+                    ->getEditable('gigya_raas.offline_sync')
+                    ->set('last_customer_update', $last_customer_update)
+                    ->save();
             }
 
             $processed_users++;

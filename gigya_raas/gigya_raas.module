@@ -216,20 +216,20 @@ function gigya_raas_cron() {
 
     $helper = new GigyaRaasHelper();
     try {
-      $gigya_query          = "SELECT * FROM accounts";
+      $gigya_query = "SELECT * FROM accounts";
       $last_customer_update = Drupal::config('gigya_raas.offline_sync')
         ->get('last_customer_update');
       if ($last_customer_update) {
         $gigya_query .= ' WHERE lastUpdatedTimestamp > ' . $last_customer_update;
       }
-      $gigya_query     .= " ORDER BY lastUpdatedTimestamp ASC LIMIT " . MAX_USERS;
-      $gigya_users     = $helper->searchGigyaUsers($gigya_query);
+      $gigya_query .= " ORDER BY lastUpdatedTimestamp ASC LIMIT " . MAX_USERS;
+      $gigya_users = $helper->searchGigyaUsers($gigya_query);
       $processed_users = 0;
       $users_not_found = 0;
-      $uids_not_found  = [];
+      $uids_not_found = [];
 
       foreach ($gigya_users as $gigya_user) {
-        $gigya_uid                    = $gigya_user->getUID();
+        $gigya_uid = $gigya_user->getUID();
         $gigya_last_updated_timestamp = $gigya_user->getLastUpdatedTimestamp();
 
         if (!empty($gigya_uid) and !empty($gigya_last_updated_timestamp)) {
@@ -260,16 +260,9 @@ function gigya_raas_cron() {
         }
       }
 
-      Drupal::configFactory()
-        ->getEditable('gigya_raas.offline_sync')
-        ->set('last_run', round(microtime(TRUE) * 1000))
-        ->save();
-      Drupal::logger('gigya_raas')
-        ->info('Gigya offline sync completed. Users processed: ' . $processed_users .
-          (($users_not_found)
-            ? '. Users not found: ' . $users_not_found . PHP_EOL . implode(',' . PHP_EOL, $uids_not_found)
-            : '')
-        );
+      Drupal::configFactory()->getEditable('gigya_raas.offline_sync')->set('last_run', round(microtime(TRUE) * 1000))->save();
+      Drupal::logger('gigya_raas') ->info('Gigya offline sync completed. Users processed: ' . $processed_users .
+          (($users_not_found) ? '. Users not found: ' . $users_not_found . PHP_EOL . implode(',' . PHP_EOL, $uids_not_found) : ''));
       $status = ($users_not_found > 0) ? 'completed with errors' : 'succeeded';
       $helper->sendCronEmail('offline sync', $status, $email_on_success, $processed_users, $users_not_found);
     }

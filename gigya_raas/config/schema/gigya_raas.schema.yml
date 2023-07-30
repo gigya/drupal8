@@ -21,10 +21,10 @@ gigya_raas.settings:
           type: string
           label: Post login redirect mode
         login_redirect:
-          type: uri
+          type: string
           label: Post login redirect URL
         logout_redirect:
-          type: uri
+          type: string
           label: Post logout redirect URL
         should_use_dummy_email:
           type: boolean

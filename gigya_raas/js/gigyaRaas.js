@@ -269,7 +269,7 @@ var getUrlPrefix = function () {
   var initCustomScreenSet = function () {
     if (drupalSettings.gigya.enableRaaS) {
       var customScreenSets = drupalSettings.gigya.raas.customScreenSets;
-      ``
+
       /**
        * @property custom_screenset.display_type
        * @property custom_screenset.link_id
@@ -314,13 +314,13 @@ var getUrlPrefix = function () {
     linkDataForMenuLinkScreen.forEach(showMenuLinkScreen);
   };
 
-  var showMenuLinkScreen = function (LinkData) {
-    if ($(location).attr('hash') === LinkData.hashLink) {
+  var showMenuLinkScreen = function (linkData) {
+    if ($(location).attr('hash') === linkData.hashLink) {
       if (typeof gigya !== 'undefined') {
-        if (LinkData.hashLink === '#gigya-editProfile') {
+        if (linkData.hashLink === '#gigya-editProfile') {
           drupalSettings.gigya.raas.profile.onAfterSubmit = profileUpdated;
         }
-        gigya.accounts.showScreenSet(LinkData.screen);
+        gigya.accounts.showScreenSet(linkData.screen);
         drupalSettings.gigya.raas.linkId = $(this).attr('id');
 
 

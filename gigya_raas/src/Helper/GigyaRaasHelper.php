@@ -57,13 +57,15 @@ class GigyaRaasHelper {
       ? $this->gigya_helper->getGigyaApiHelper()->validateJwtAuth($uid, $signature, NULL, NULL, $params)
       : $this->gigya_helper->getGigyaApiHelper()->validateUid($uid, $signature, $sig_timestamp, NULL, NULL, $params);
     } catch (GSApiException $e) {
-      \Drupal::logger('gigya')
-             ->error("Gigya API call error: @errorCode: @error, Call ID: @callId", [
-               '@callId'    => $e->getCallId(),
-               '@error'     => $e->getMessage(),
-               '@errorCode' => $e->getCode() ?? -1,
-             ]);
+      \Drupal::logger('gigya')->error("Gigya API call error: @errorCode: @error, Call ID: @callId",
+        [
+          '@callId'    => $e->getCallId(),
+          '@error'     => $e->getMessage(),
+          '@errorCode' => $e->getCode() ?? -1,
+          ]);
+
       return FALSE;
+
     } catch (\Exception $e) {
       \Drupal::logger('gigya')
              ->error("General error validating gigya UID: " . $e->getMessage());

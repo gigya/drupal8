@@ -125,7 +125,7 @@
 				->will($this->returnCallback(function($method, $params, $access_params) {
 					$aparams = array();
 					$aparams['api_key'] = 'apikey';
-					$aparams['session_time'] = 1000;
+					$aparams['session_time'] = 'appsecret';
 					$aparams['app_key'] = 'appkey';
 					$aparams['data_center'] = 'us1.gigya.com';
 					if ($access_params !== $aparams)

@@ -216,9 +216,9 @@ function gigya_raas_cron() {
 
     $helper = new GigyaRaasHelper();
     try {
-      $gigya_query = "SELECT * FROM accounts";
+      $gigya_query          = "SELECT * FROM accounts";
       $last_customer_update = Drupal::config('gigya_raas.offline_sync')
-        ->get('last_customer_update');
+                                    ->get('last_customer_update');
       if ($last_customer_update) {
         $gigya_query .= ' WHERE lastUpdatedTimestamp > ' . $last_customer_update;
       }
@@ -256,20 +256,20 @@ function gigya_raas_cron() {
         }
         else {
           Drupal::logger('gigya_raas')
-            ->warning('Gigya offline sync: unable to process user due to a lack of essential data. User data received: ' . json_encode($gigya_user, JSON_PRETTY_PRINT));
+                ->warning('Gigya offline sync: unable to process user due to a lack of essential data. User data received: ' . json_encode($gigya_user, JSON_PRETTY_PRINT));
         }
       }
 
       Drupal::configFactory()
-        ->getEditable('gigya_raas.offline_sync')
-        ->set('last_run', round(microtime(TRUE) * 1000))
-        ->save();
+            ->getEditable('gigya_raas.offline_sync')
+            ->set('last_run', round(microtime(TRUE) * 1000))
+            ->save();
       Drupal::logger('gigya_raas')
-        ->info('Gigya offline sync completed. Users processed: ' . $processed_users .
-       (($users_not_found)
-                        ? '. Users not found: ' . $users_not_found . PHP_EOL . implode(',' . PHP_EOL, $uids_not_found)
-                        : '')
-      );
+            ->info('Gigya offline sync completed. Users processed: ' . $processed_users .
+                   (($users_not_found)
+                     ? '. Users not found: ' . $users_not_found . PHP_EOL . implode(',' . PHP_EOL, $uids_not_found)
+                     : '')
+            );
       $status = ($users_not_found > 0) ? 'completed with errors' : 'succeeded';
       $helper->sendCronEmail('offline sync', $status, $email_on_success, $processed_users, $users_not_found);
     }

@@ -125,7 +125,7 @@
 				->will($this->returnCallback(function($method, $params, $access_params) {
 					$aparams = array();
 					$aparams['api_key'] = 'apikey';
-					$aparams['session_time'] = 'appsecret';
+					$aparams['session_time'] = 1000;
 					$aparams['app_key'] = 'appkey';
 					$aparams['data_center'] = 'us1.gigya.com';
 					if ($access_params !== $aparams)
@@ -170,6 +170,74 @@
 
 			$this->gigyaController = new GigyaController($this->helperMock, $this->raasHelperMock);
 		}
+
+
+
+
+    public function testScreenSetSettingDefaultValue()
+    {
+
+      $config = $this->config('gigya_raas.screensets');
+
+      $lastLoginScreenDesktop = $config->get('gigya.login_screenset');
+      $lastLoginScreenMobile = $config->get('gigya.login_screenset_mobile');
+      $lastProfileUpdateDesktop= $config->get('gigya.profile_screenset');
+      $lastProfileUpdateMobile = $config->get('gigya.profile_screenset_mobile');
+
+      $config->set('gigya.login_screenset', '');
+      $config->set('gigya.login_screenset_mobile', '');
+      $config->set('gigya.profile_screenset', '');
+      $config->set('gigya.profile_screenset_mobile', '');
+      $config->save();
+
+      $form_state = new FormState();
+      $values['gigya_login_screensets']['gigya_login_screenset_desktop'] = '';
+      $values['gigya_login_screensets']['gigya_login_screenset_mobile'] = '';
+      $values['gigya_profile_screensets']['gigya_profile_screenset_desktop'] = '';
+      $values['gigya_profile_screensets']['gigya_profile_screenset_mobile'] = '';
+      $form_state->setValues($values);
+      Drupal::formBuilder()->submitForm('Drupal\gigya_raas\Form\gigyaScreenSetsForm', $form_state, $this->helperMock);
+
+      $this->drupalLogin($this->gigyaAdmin);
+      $this->drupalGet('admin/config/gigya/screensets');
+      $this->assertSession()->statusCodeEquals('200');
+
+
+      $this->assertSession()->elementTextEquals('css', '#edit-gigya-login-screenset-desktop', 'Default-RegistrationLogin');
+      $this->assertSession()->elementTextEquals('css', '#edit-gigya-login-screenset-mobile', 'Default-RegistrationLogin');
+      $this->assertSession()->elementTextEquals('css', '#edit-gigya-profile-screenset-desktop', 'Default-ProfileUpdate');
+      $this->assertSession()->elementTextEquals('css', '#edit-gigya-profile-screenset-mobile', 'Default-ProfileUpdate');
+
+
+      $values['gigya_login_screensets']['gigya_login_screenset_desktop'] = $lastLoginScreenDesktop;
+      $values['gigya_login_screensets']['gigya_login_screenset_mobile'] = $lastLoginScreenMobile;
+      $values['gigya_profile_screensets']['gigya_profile_screenset_desktop'] = $lastProfileUpdateDesktop;
+      $values['gigya_profile_screensets']['gigya_profile_screenset_mobile'] = $lastProfileUpdateMobile;
+      $config->set('gigya.login_screenset',$lastLoginScreenDesktop );
+      $config->set('gigya.login_screenset_mobile', $lastLoginScreenMobile);
+      $config->set('gigya.profile_screenset', $lastProfileUpdateDesktop);
+      $config->set('gigya.profile_screenset_mobile',$lastProfileUpdateMobile);
+      $config->save();
+      $form_state->setValues($values);
+      $form_state = new FormState();
+      $form_state->setValues($values);
+
+      Drupal::formBuilder()->submitForm('Drupal\gigya_raas\Form\GigyaSessionForm', $form_state, $this->helperMock);
+
+      $this->drupalLogin($this->gigyaAdmin);
+      $this->drupalGet('admin/config/gigya/screensets');
+      $this->assertSession()->statusCodeEquals('200');
+
+
+
+      $this->assertSession()->elementTextEquals('css', '#edit-gigya-login-screenset-desktop',$lastLoginScreenDesktop );
+      $this->assertSession()->elementTextEquals('css', '#edit-gigya-login-screenset-mobile',$lastLoginScreenMobile );
+      $this->assertSession()->elementTextEquals('css', '#edit-gigya-profile-screenset-desktop', $lastProfileUpdateDesktop);
+      $this->assertSession()->elementTextEquals('css', '#edit-gigya-profile-screenset-mobile', $lastProfileUpdateMobile);
+
+
+    }
+
 
     /**
      * Tests various login scenarios and error messages

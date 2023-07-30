@@ -269,7 +269,7 @@ var getUrlPrefix = function () {
   var initCustomScreenSet = function () {
     if (drupalSettings.gigya.enableRaaS) {
       var customScreenSets = drupalSettings.gigya.raas.customScreenSets;
-
+      ``
       /**
        * @property custom_screenset.display_type
        * @property custom_screenset.link_id
@@ -304,7 +304,7 @@ var getUrlPrefix = function () {
   };
 
 
-  const LinkDataForMenuLinkScreen = [{
+  const linkDataForMenuLinkScreen = [{
     hashLink: "#gigya-login", screen: drupalSettings.gigya.raas.login
   },
     {hashLink: "#gigya-register", screen: drupalSettings.gigya.raas.register},
@@ -312,7 +312,7 @@ var getUrlPrefix = function () {
 
 
   var findTheRightScreenAndShowIt = function () {
-    LinkDataForMenuLinkScreen.forEach(showMenuLinkScreen);
+    linkDataForMenuLinkScreen.forEach(showMenuLinkScreen);
   };
 
   var showMenuLinkScreen = function (LinkData) {

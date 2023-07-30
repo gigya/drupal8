@@ -305,8 +305,7 @@ var getUrlPrefix = function () {
 
 
   const linkDataForMenuLinkScreen = [{
-    hashLink: "#gigya-login", screen: drupalSettings.gigya.raas.login
-  },
+    hashLink: "#gigya-login", screen: drupalSettings.gigya.raas.login},
     {hashLink: "#gigya-register", screen: drupalSettings.gigya.raas.register},
     {hashLink: "#gigya-editProfile", screen: drupalSettings.gigya.raas.profile},]
 
@@ -334,7 +333,7 @@ var getUrlPrefix = function () {
   /**
    * This is run when the link is change.
    * */
-  addEventListener('hashchange', findTheRightScreenAndShowIt);
+  addEventListener('hashChange', findTheRightScreenAndShowIt);
   $('.menu a').click(function () {
     findTheRightScreenAndShowIt();
   })

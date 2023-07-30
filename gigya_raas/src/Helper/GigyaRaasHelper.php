@@ -87,7 +87,7 @@ class GigyaRaasHelper {
                   ->execute();
   }
 
-  public function isFieldExist(string $field_name) {
+  public function doesFieldExist(string $field_name) {
 
     return \Drupal::service('entity_field.manager')
                   ->getFieldDefinitions('user', 'user')[$field_name] ?? NULL;

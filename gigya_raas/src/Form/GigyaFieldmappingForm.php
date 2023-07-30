@@ -212,7 +212,7 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 
   private function validateUidMappingDestExists($form_state, string $uid_dest_field_mapping) {
 
-    if (!empty($uid_dest_field_mapping) and !$this->raas_helper->isFieldExist($uid_dest_field_mapping)) {
+    if (!empty($uid_dest_field_mapping) and !$this->raas_helper->doesFieldExist($uid_dest_field_mapping)) {
       $form_state->setErrorByName('fieldmapping', $this->t("The UID mapping field does not exist in your database.
       Therefore, it is necessary to create the field before proceeding"));
     }

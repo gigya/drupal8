@@ -54,37 +54,36 @@ class GigyaRaasHelper {
 
     try {
       return ($auth_mode == 'user_rsa')
-      ? $this->gigya_helper->getGigyaApiHelper()->validateJwtAuth($uid, $signature, NULL, NULL, $params)
-      : $this->gigya_helper->getGigyaApiHelper()->validateUid($uid, $signature, $sig_timestamp, NULL, NULL, $params);
-    } catch (GSApiException $e) {
-      \Drupal::logger('gigya')->error("Gigya API call error: @errorCode: @error, Call ID: @callId",
-        [
-          '@callId'    => $e->getCallId(),
-          '@error'     => $e->getMessage(),
-          '@errorCode' => $e->getCode() ?? -1,
-          ]);
-
-      return FALSE;
-
-    } catch (\Exception $e) {
+        ? $this->gigya_helper->getGigyaApiHelper()->validateJwtAuth($uid, $signature, NULL, NULL, $params)
+        : $this->gigya_helper->getGigyaApiHelper()->validateUid($uid, $signature, $sig_timestamp, NULL, NULL, $params);
+    }
+    catch (GSApiException $e) {
       \Drupal::logger('gigya')
-             ->error("General error validating gigya UID: " . $e->getMessage());
+        ->error("Gigya API call error: @errorCode: @error, Call ID: @callId", [
+          '@callId' => $e->getCallId(),
+          '@error' => $e->getMessage(),
+          '@errorCode' => $e->getCode() ?? -1,
+        ]);
+      return FALSE;
+    }
+    catch (\Exception $e) {
+      \Drupal::logger('gigya')->error("General error validating gigya UID: " . $e->getMessage());
       return FALSE;
     }
   }
 
   public function getUidByMail($mail) {
     return \Drupal::entityQuery('user')
-                  ->accessCheck()
-                  ->condition('mail', $mail)
-                  ->execute();
+      ->accessCheck()
+      ->condition('mail', $mail)
+      ->execute();
   }
 
   public function getUidByMails($mails) {
     return \Drupal::entityQuery('user')
-                  ->accessCheck()
-                  ->condition('mail', $mails, 'IN')
-                  ->execute();
+      ->accessCheck()
+      ->condition('mail', $mails, 'IN')
+      ->execute();
   }
 
   public function doesFieldExist(string $field_name) {
@@ -134,12 +133,12 @@ class GigyaRaasHelper {
 
   public function getUidByName($name) {
     return \Drupal::entityQuery('user')
-                  ->accessCheck()
-                  ->condition('name', Database::getConnection()
-                                              ->escapeLike($name), 'LIKE')
-                  ->execute();
+      ->accessCheck()
+      ->condition('name', Database::getConnection()->escapeLike($name), 'LIKE')
+      ->execute();
   }
 
+  /**
   /**
    * @param \Drupal\gigya\CmsStarterKit\user\GigyaUser $gigyaUser
    * @param int $uid
@@ -147,8 +146,7 @@ class GigyaRaasHelper {
    * @return string | false
    */
   public function checkEmailsUniqueness($gigyaUser, $uid) {
-    if ($this->checkProfileEmail($gigyaUser->getProfile()
-                                           ->getEmail(), $gigyaUser->getLoginIDs()['emails'])) {
+    if ($this->checkProfileEmail($gigyaUser->getProfile()->getEmail(), $gigyaUser->getLoginIDs()['emails'])) {
       $uid_check = $this->getUidByMail($gigyaUser->getProfile()->getEmail());
       if (empty($uid_check) || isset($uid_check[$uid])) {
         return $gigyaUser->getProfile()->getEmail();
@@ -213,8 +211,7 @@ class GigyaRaasHelper {
                ->error('Error processing field map data: incorrect format entered. The format for field mapping is a JSON object of the form: &#123;"drupalField": "gigyaField"&#125;. Proceeding with default field mapping configuration.');
         $field_map = json_decode('{}');
       }
-      $uid_mapping = \Drupal::config('gigya_raas.fieldmapping')
-                            ->get('gigya.uid_mapping');
+      $uid_mapping = \Drupal::config('gigya_raas.fieldmapping')->get('gigya.uid_mapping');
 
       if (!empty($uid_mapping)) {
 

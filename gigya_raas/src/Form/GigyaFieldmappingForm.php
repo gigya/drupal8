@@ -164,7 +164,7 @@ class GigyaFieldmappingForm extends ConfigFormBase {
         }
       }
     }
-    $this->validateUidMappingDestExists($form_state, $form_state->getValue('uid_mapping'));
+    $this->validateMappedUidFieldExists($form_state, $form_state->getValue('uid_mapping'));
 
     if ($global_field_mapping_config !== '[]' and json_encode(json_decode($fieldmapping_config)) !== json_encode(json_decode($global_field_mapping_config)) and empty($form_state->getErrors())) {
       $messenger->addWarning("Duplicate field mapping configuration detected.
@@ -209,9 +209,9 @@ class GigyaFieldmappingForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
   }
 
-  private function validateUidMappingDestExists($form_state, string $uid_dest_field_mapping) {
+  private function validateMappedUidFieldExists ($form_state, string $uid__field_mapping) {
 
-    if (!empty($uid_dest_field_mapping) and !$this->raas_helper->doesFieldExist($uid_dest_field_mapping)) {
+    if (!empty($uid__field_mapping) and !$this->raas_helper->doesFieldExist($uid__field_mapping)) {
       $form_state->setErrorByName('fieldmapping', $this->t("The UID mapping field does not exist in your database.
       Therefore, it is necessary to create the field before proceeding"));
     }

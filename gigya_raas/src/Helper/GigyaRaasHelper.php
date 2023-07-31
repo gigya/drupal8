@@ -45,7 +45,7 @@ class GigyaRaasHelper {
    * @param $signature
    * @param $sig_timestamp
    *
-   * @return bool | GigyaUser
+   * @return bool | GigyaUser| null
    */
   public function validateAndFetchRaasUser($uid, $signature, $sig_timestamp) {
     $params = ['environment' => $this->gigya_helper->getEnvString()];
@@ -95,7 +95,7 @@ class GigyaRaasHelper {
   /**
    * @param $uuid
    *
-   * @return \Drupal\user\Entity\User|false
+   * @return \Drupal\user\Entity\User|false| null
    */
   public function getDrupalUserByGigyaUid($uuid) {
 

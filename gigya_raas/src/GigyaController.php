@@ -126,9 +126,9 @@ class GigyaController extends ControllerBase {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function gigyaRaasLoginAjax(Request $request) {
-    $is_session_validation_process = $request->get('is_session_validation_process');
+    $should_validate_session = $request->get('is_session_validation_process');
     if (\Drupal::currentUser()
-      ->isAnonymous() || $is_session_validation_process) {
+      ->isAnonymous() || $should_validate_session) {
 
       global $raas_login;
       $err_msg       = FALSE;
@@ -137,7 +137,7 @@ class GigyaController extends ControllerBase {
       $uid_sig       = $request->get('uid_sig');
       $id_token      = $request->get('id_token');
 
-      if (!$is_session_validation_process) {
+      if (!$should_validate_session) {
         $session_type = ($request->get('remember') == 'true') ? 'remember_me' : 'regular';
       }
 
@@ -176,7 +176,7 @@ class GigyaController extends ControllerBase {
 
         /* loginIDs.emails and emails.verified is missing in Gigya */
         if (empty($userEmails) and !$is_dummy_email_used) {
-          if (!$is_session_validation_process) {
+          if (!$should_validate_session) {
             $err_msg        = $this->t(
               'Email address is required by Drupal and is missing, please contact the site administrator.');
             $logger_message = [
@@ -205,7 +205,7 @@ class GigyaController extends ControllerBase {
              *  they can't log in via gigya
              */
             if ($user->hasPermission('bypass gigya raas')) {
-              if ($is_session_validation_process) {
+              if ($should_validate_session) {
                 $logger_message = [
                   'type'    => 'gigya_raas',
                   'message' => 'Apparently someone trying to steal permission of admin user. the user email: ' . $user->getEmail(),
@@ -274,14 +274,14 @@ class GigyaController extends ControllerBase {
 
             $user->save();
             user_login_finalize($user);
-            if (!$is_session_validation_process) {
+            if (!$should_validate_session) {
 
               /* Set user session */
               $this->gigyaRaasSetLoginSession($session_type);
             }
 
           }
-          elseif (!$is_session_validation_process) {/* User does not exist - register */
+          elseif (!$should_validate_session) {/* User does not exist - register */
             $uids = '';
 
             if (!empty($userEmails)) {
@@ -369,13 +369,13 @@ class GigyaController extends ControllerBase {
               $this->helper->gigyaRaasExtCookie($request, $raas_login);
               user_login_finalize($user);
 
-              if (!$is_session_validation_process) {
+              if (!$should_validate_session) {
                 /* Set user session */
                 $this->gigyaRaasSetLoginSession($session_type);
               }
             }
             catch (\Exception $e) {
-              if ($is_session_validation_process) {
+              if ($should_validate_session) {
                 $logger_message = [
                   'type'    => 'gigya_raas',
                   'message' => 'can not save the user.',
@@ -411,7 +411,7 @@ class GigyaController extends ControllerBase {
         }
       }
       else {/* No valid Gigya user found */
-        if (!$is_session_validation_process) {
+        if (!$should_validate_session) {
           $this->gigya_helper->saveUserLogoutCookie();
           $logger_message = [
             'type'    => 'gigya_raas',
@@ -433,7 +433,7 @@ class GigyaController extends ControllerBase {
 
       if ($err_msg === FALSE) {
         /* Post-login redirect hook */
-        if (!$is_session_validation_process) {
+        if (!$should_validate_session) {
           \Drupal::moduleHandler()
             ->alter('gigya_post_login_redirect', $login_redirect);
           $response->addCommand(new InvokeCommand(NULL, 'loginRedirect', [$login_redirect]));

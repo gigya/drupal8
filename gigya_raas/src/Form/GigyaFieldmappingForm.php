@@ -166,7 +166,7 @@ class GigyaFieldmappingForm extends ConfigFormBase {
     }
     $this->validateUidMappingDestExists($form_state, $form_state->getValue('uid_mapping'));
 
-    if (json_encode(json_decode($fieldmapping_config)) !== json_encode(json_decode($global_field_mapping_config)) and empty($form_state->getErrors())) {
+    if ($global_field_mapping_config !== '[]' and json_encode(json_decode($fieldmapping_config)) !== json_encode(json_decode($global_field_mapping_config)) and empty($form_state->getErrors())) {
       $messenger->addWarning("Duplicate field mapping configuration detected.
       The field mapping is configured both on this page and in the gigya.global configuration settings.
       It is recommended to work with this page only,
@@ -178,7 +178,6 @@ class GigyaFieldmappingForm extends ConfigFormBase {
       functionality during the process of changing the UID mapping,
       specifically for existing users.");
     }
-
   }
 
   private function jsonFormValidation($json_text) {

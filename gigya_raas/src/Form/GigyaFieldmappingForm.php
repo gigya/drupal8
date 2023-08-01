@@ -174,9 +174,7 @@ class GigyaFieldmappingForm extends ConfigFormBase {
     }
 
     if ($form_state->getValue('uid_mapping') !== $config->get('gigya.uid_mapping')) {
-      $messenger->addWarning("Notice: Certain features may experience limited
-      functionality during the process of changing the UID mapping,
-      specifically for existing users.");
+      $messenger->addWarning("Warning: Changing the UID field mapping may require a full migration of existing users, without which users will not be able to log in.");
     }
   }
 

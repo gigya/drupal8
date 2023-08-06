@@ -303,30 +303,41 @@ var getUrlPrefix = function () {
     }
   };
 
-  var showMenuLinkLoginScreenSet = function (e, hashLink = '#gigya-login') {
-    if ($(location).attr('hash') === hashLink) {
-      if (typeof gigya !== 'undefined') {
-        gigya.accounts.showScreenSet({
-          'include': 'id_token',
-          'mobileScreenSet': 'Default-RegistrationLogin',
-          'screenSet': 'Default-RegistrationLogin',
-        });
 
+  const linkDataForMenuLinkScreen = [
+    {hashLink: "#gigya-login", screen: drupalSettings.gigya.raas.login},
+    {hashLink: "#gigya-register", screen: drupalSettings.gigya.raas.register},
+    {hashLink: "#gigya-editProfile", screen: drupalSettings.gigya.raas.profile},]
+
+
+  var findTheRightScreenAndShowIt = function () {
+    linkDataForMenuLinkScreen.forEach(showMenuLinkScreen);
+  };
+
+  var showMenuLinkScreen = function (linkData) {
+    if ($(location).attr('hash') === linkData.hashLink) {
+      if (typeof gigya !== 'undefined') {
+        if (linkData.hashLink === '#gigya-editProfile') {
+          drupalSettings.gigya.raas.profile.onAfterSubmit = profileUpdated;
+        }
+        gigya.accounts.showScreenSet(linkData.screen);
         drupalSettings.gigya.raas.linkId = $(this).attr('id');
+
+
       } else {
-        setTimeout(showMenuLinkLoginScreenSet, 200);
+        setTimeout(showMenuLinkScreen, 200);
       }
     }
   }
 
-  var hashLink = '#gigya-login';
-  showMenuLinkLoginScreenSet();
-  addEventListener('hashchange', showMenuLinkLoginScreenSet);
+  /**
+   * This is run when the link is change.
+   **/
+  addEventListener('hashChange', findTheRightScreenAndShowIt);
   $('.menu a').click(function () {
-    if ($(this).attr('href').includes(hashLink)) {
-      showMenuLinkLoginScreenSet();
-    }
-  });
+    findTheRightScreenAndShowIt();
+  })
+
 
   var processFieldMapping = function (data) {
     var gigyaData = {

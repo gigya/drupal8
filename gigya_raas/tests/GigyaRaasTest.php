@@ -171,6 +171,7 @@
 			$this->gigyaController = new GigyaController($this->helperMock, $this->raasHelperMock);
 		}
 
+
     /**
      * Tests various login scenarios and error messages
      */

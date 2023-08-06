@@ -128,7 +128,12 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 
     /* Field mapping */
 
-    $fieldmapping_config = $form_state->getValue('gigya_fieldmapping_config');
+    $fieldmapping_config         = $form_state->getValue('gigya_fieldmapping_config');
+    $global_field_mapping_config = json_encode(\Drupal::config('gigya.global')
+                                                      ->get('gigya.fieldMapping'));
+    $config                      = $this->config('gigya_raas.fieldmapping');
+    $messenger                   = \Drupal::service('messenger');
+
 
     if (!empty($fieldmapping_config) and $fieldmapping_config !== '{}') {
 
@@ -159,12 +164,26 @@ class GigyaFieldmappingForm extends ConfigFormBase {
         }
       }
     }
+    $this->validateMappedUidFieldExists($form_state, $form_state->getValue('uid_mapping'));
+
+    if ($global_field_mapping_config !== '[]' and json_encode(json_decode($fieldmapping_config)) !== json_encode(json_decode($global_field_mapping_config)) and empty($form_state->getErrors())) {
+      $messenger->addWarning("Duplicate field mapping configuration detected.
+      The field mapping is configured both on this page and in the gigya.global configuration settings.
+      It is recommended to work with this page only,
+      which in any case takes precedence over the global configuration.");
+    }
+
+    if ($form_state->getValue('uid_mapping') !== $config->get('gigya.uid_mapping')) {
+      $messenger->addWarning("Warning: Changing the UID field mapping may require a full migration of existing users, without which users will not be able to log in.");
+    }
   }
+
   private function jsonFormValidation($json_text) {
     $after_decode_json = json_decode($json_text);
     if ($after_decode_json === NULL && json_last_error() !== JSON_ERROR_NONE) {
       return 'Invalid field mapping configuration: ' . json_last_error_msg();
-    }else {
+    }
+    else {
       return TRUE;
     }
   }
@@ -187,4 +206,13 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 
     parent::submitForm($form, $form_state);
   }
+
+  private function validateMappedUidFieldExists ($form_state, string $uid__field_mapping) {
+
+    if (!empty($uid__field_mapping) and !$this->raas_helper->doesFieldExist($uid__field_mapping)) {
+      $form_state->setErrorByName('fieldmapping', $this->t("The UID mapping field does not exist in your database.
+      Therefore, it is necessary to create the field before proceeding"));
+    }
+  }
+
 }

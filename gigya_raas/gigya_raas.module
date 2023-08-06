@@ -233,7 +233,7 @@ function gigya_raas_cron() {
         $gigya_last_updated_timestamp = $gigya_user->getLastUpdatedTimestamp();
 
         if (!empty($gigya_uid) and !empty($gigya_last_updated_timestamp)) {
-          $user = $helper->getDrupalUidByGigyaUid($gigya_user->getUID());
+          $user = $helper->getDrupalUserByGigyaUid($gigya_user->getUID());
           if (!empty($user)) {
             $helper->processFieldMapping($gigya_user, $user);
             $user->save();
@@ -260,16 +260,9 @@ function gigya_raas_cron() {
         }
       }
 
-      Drupal::configFactory()
-        ->getEditable('gigya_raas.offline_sync')
-        ->set('last_run', round(microtime(TRUE) * 1000))
-        ->save();
-      Drupal::logger('gigya_raas')
-        ->info('Gigya offline sync completed. Users processed: ' . $processed_users .
-       (($users_not_found)
-                        ? '. Users not found: ' . $users_not_found . PHP_EOL . implode(',' . PHP_EOL, $uids_not_found)
-                        : '')
-      );
+      Drupal::configFactory()->getEditable('gigya_raas.offline_sync')->set('last_run', round(microtime(TRUE) * 1000))->save();
+      Drupal::logger('gigya_raas') ->info('Gigya offline sync completed. Users processed: ' . $processed_users .
+          (($users_not_found) ? '. Users not found: ' . $users_not_found . PHP_EOL . implode(',' . PHP_EOL, $uids_not_found) : ''));
       $status = ($users_not_found > 0) ? 'completed with errors' : 'succeeded';
       $helper->sendCronEmail('offline sync', $status, $email_on_success, $processed_users, $users_not_found);
     }

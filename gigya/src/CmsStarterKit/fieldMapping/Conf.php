@@ -10,7 +10,7 @@ class Conf {
 
   private $mappingConf;
 
- public function __construct($json) {
+  public function __construct($json) {
     $this->mappingConf = $json != null? json_decode($json, TRUE): '';
   }
 
@@ -24,7 +24,7 @@ class Conf {
     return $this->cmsKeyed;
   }
 
- protected function buildKeyedArrays($array) {
+  protected function buildKeyedArrays($array) {
     $cmsKeyedArray = [];
     $gigyaKeyedArray = [];
 

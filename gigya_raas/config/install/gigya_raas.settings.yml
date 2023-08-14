@@ -1,7 +1,7 @@
 gigya_raas:
   session_type: 'dynamic'
-  session_time: '1800'
+  session_time: 1800
   remember_me_session_type: 'dynamic'
-  remember_me_session_time: '20000000'
+  remember_me_session_time: 20000000
   login_redirect: '/'
   logout_redirect: '/'

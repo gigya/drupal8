@@ -10,6 +10,7 @@ use Drupal\gigya_raas\Helper\GigyaRaasHelper;
 use Drupal\user\Entity\User;
 use Firebase\JWT\JWT;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Drupal\gigya\Helper\GigyaHelper;
 
 define('MINUTE_IN_SECONDS', 60);

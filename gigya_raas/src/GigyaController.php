@@ -38,8 +38,8 @@ class GigyaController extends ControllerBase {
   /**
    * Construct method.
    *
-   * @param GigyaRaasHelper|FALSE $helper
-   * @param GigyaHelper|FALSE $raas_helper
+   * @param GigyaRaasHelper|NULL $helper
+   * @param GigyaHelper|NULL $raas_helper
    */
   public function __construct( #[Autowire(service: 'gigya_raas.helper')] GigyaRaasHelper $helper = NULL, #[Autowire(service: 'gigya.helper')] GigyaHelper $raas_helper = NULL) {
     $this->helper = $helper ?? new GigyaRaasHelper();

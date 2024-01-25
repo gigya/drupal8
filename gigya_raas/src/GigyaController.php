@@ -40,16 +40,9 @@ class GigyaController extends ControllerBase {
    * @param GigyaRaasHelper|FALSE $helper
    * @param GigyaHelper|FALSE $raas_helper
    */
-  public function __construct($helper = FALSE, $raas_helper = FALSE) {
-    if ($helper === FALSE and $raas_helper === FALSE) {
-      $this->helper = new GigyaRaasHelper();
-      $this->gigya_helper = new GigyaHelper();
-    }
-    else {
-      $this->helper = $raas_helper;
-      $this->gigya_helper = $helper;
-    }
-
+  public function __construct( #[Autowire(service: 'gigya_raas.helper')] GigyaRaasHelper $helper = NULL, #[Autowire(service: 'gigya.helper')] GigyaHelper $raas_helper = NULL) {
+    $this->helper = $helper ?? new GigyaRaasHelper();
+    $this->gigya_helper = $raas_helper ?? new GigyaHelper();
     $gigya_conf = \Drupal::config('gigya.settings');
     $this->auth_mode = $gigya_conf->get('gigya.gigya_auth_mode');
   }

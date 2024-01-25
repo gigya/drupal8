@@ -3,3 +3,5 @@ services:
     class: Drupal\gigya_raas\EventSubscriber\GigyaRaasEventSubscriber
     tags:
       - { name: 'event_subscriber' }
+  gigya_raas.helper:
+    class: 'Drupal\gigya_raas\Helper\GigyaRaasHelper'

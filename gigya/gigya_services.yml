@@ -1,0 +1,3 @@
+services:
+  gigya.helper:
+    class: Drupal\gigya\Helper\GigyaHelper

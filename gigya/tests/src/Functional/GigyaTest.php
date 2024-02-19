@@ -291,7 +291,8 @@
 					return $res;
 				}));
 
-			$this->gigyaControl = new GigyaController($this->helperMock);
+			$this->gigyaControl = new GigyaController();
+      $this->gigyaControl->setGigyaHelper($this->helperMock);
 		}
 
 		/**

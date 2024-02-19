@@ -415,7 +415,7 @@ class GigyaController extends ControllerBase {
         else {
           $logger_message = [
             'type'    => 'gigya_raas',
-            'message' => 'Invalid user try to get session.',
+            'message' => 'Invalid user trying to get session.',
           ];
           $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
         }

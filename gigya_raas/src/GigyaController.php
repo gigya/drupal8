@@ -34,25 +34,34 @@ class GigyaController extends ControllerBase {
 
   protected $auth_mode;
 
-  /**
-   * Construct method.
-   *
-   * @param GigyaRaasHelper|FALSE $helper
-   * @param GigyaHelper|FALSE $raas_helper
-   */
-  public function __construct($helper = FALSE, $raas_helper = FALSE) {
-    if ($helper === FALSE and $raas_helper === FALSE) {
-      $this->helper = new GigyaRaasHelper();
-      $this->gigya_helper = new GigyaHelper();
-    }
-    else {
-      $this->helper = $raas_helper;
-      $this->gigya_helper = $helper;
-    }
+
+  public function __construct()
+  {
+    $this->helper = new GigyaRaasHelper();
+    $this->gigya_helper = new GigyaHelper();
+
 
     $gigya_conf = \Drupal::config('gigya.settings');
     $this->auth_mode = $gigya_conf->get('gigya.gigya_auth_mode');
   }
+
+  // for tests
+//  /**F
+//   * Construct method.
+//   *
+//   * @param GigyaRaasHelper $helper
+//   * @param GigyaHelper $raas_helper
+//   */
+//  public function __construct(GigyaRaasHelper $helper, GigyaHelper $raas_helper)
+//  {
+//
+//    $this->helper = $raas_helper;
+//    $this->gigya_helper = $helper;
+//
+//    $gigya_conf = \Drupal::config('gigya.settings');
+//    $this->auth_mode = $gigya_conf->get('gigya.gigya_auth_mode');
+//  }
+
 
   /**
    * Process Gigya RaaS login.
@@ -425,7 +434,7 @@ class GigyaController extends ControllerBase {
         else {
           $logger_message = [
             'type'    => 'gigya_raas',
-            'message' => 'Invalid user try to get session.',
+            'message' => 'Invalid user trying to get session.',
           ];
           $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
         }

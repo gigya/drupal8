@@ -729,16 +729,14 @@ class GigyaController extends ControllerBase {
   /**
    * @param GigyaRaasHelper $gigya_raas_helper
    */
-  public function setGigyaRaasHelper(GigyaRaasHelper $gigya_raas_helper): void
-  {
+  public function setGigyaRaasHelper(GigyaRaasHelper $gigya_raas_helper): void {
     $this->gigya_raas_helper = $gigya_raas_helper;
   }
 
   /**
    * @param GigyaHelper $gigya_helper
    */
-  public function setGigyaHelper(GigyaHelper $gigya_helper): void
-  {
+  public function setGigyaHelper(GigyaHelper $gigya_helper): void {
     $this->gigya_helper = $gigya_helper;
   }
 

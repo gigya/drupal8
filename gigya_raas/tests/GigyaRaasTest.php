@@ -168,10 +168,10 @@
 					return $res;
 				}));
 
-			$this->gigyaController = new GigyaController();
+      $this->gigyaController = new GigyaController();
       $this->gigyaController->setGigyaHelper($this->helperMock);
       $this->gigyaController->setGigyaRaasHelper($this->raasHelperMock);
-		}
+    }
 
 
     /**

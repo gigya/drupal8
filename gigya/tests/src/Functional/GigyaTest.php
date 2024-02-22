@@ -291,9 +291,9 @@
 					return $res;
 				}));
 
-			$this->gigyaControl = new GigyaController();
+      $this->gigyaControl = new GigyaController();
       $this->gigyaControl->setGigyaHelper($this->helperMock);
-		}
+    }
 
 		/**
 		 * Tests encrypt.

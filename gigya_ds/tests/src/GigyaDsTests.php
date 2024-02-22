@@ -260,8 +260,8 @@ class GigyaTest extends BrowserTestBase
                 return $res;
             }));
 
-        $this->gigyaControl = new GigyaController();
-        $this->gigyaControl->setGigyaHelper($this->helperMock);
+      $this->gigyaControl = new GigyaController();
+      $this->gigyaControl->setGigyaHelper($this->helperMock);
     }
 
     /**

@@ -26,11 +26,13 @@ define('YEAR_IN_SECONDS', 365 * DAY_IN_SECONDS);
 class GigyaController extends ControllerBase {
 
   /**
-   * @var \Drupal\gigya_raas\Helper\GigyaRaasHelper*/
+   * @var \Drupal\gigya_raas\Helper\GigyaRaasHelper
+   */
   protected $helper;
 
   /**
-   * @var \Drupal\gigya\Helper\GigyaHelper*/
+   * @var \Drupal\gigya\Helper\GigyaHelper
+   */
   protected $gigya_helper;
 
   protected $auth_mode;
@@ -41,7 +43,7 @@ class GigyaController extends ControllerBase {
    * @param GigyaRaasHelper|NULL $helper
    * @param GigyaHelper|NULL $raas_helper
    */
-  public function __construct( #[Autowire(service: 'gigya_raas.helper')] GigyaRaasHelper $helper = NULL, #[Autowire(service: 'gigya.helper')] GigyaHelper $raas_helper = NULL) {
+  public function __construct(#[Autowire(service: 'gigya_raas.helper')] GigyaRaasHelper $helper = NULL, #[Autowire(service: 'gigya.helper')] GigyaHelper $raas_helper = NULL) {
     $this->helper = $helper ?? new GigyaRaasHelper();
     $this->gigya_helper = $raas_helper ?? new GigyaHelper();
     $gigya_conf = \Drupal::config('gigya.settings');

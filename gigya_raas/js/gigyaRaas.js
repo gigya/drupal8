@@ -46,7 +46,7 @@ var getUrlPrefix = function () {
         redirectTarget = redirectTarget.substring(drupalSettings.path.baseUrl.length);
       }
 
-      redirectTarget = drupalSettings.gigya.raas.origin + drupalSettings.path.baseUrl + redirectTarget;
+      redirectTarget = drupalSettings.gigya.raas.origin + getUrlPrefix() + redirectTarget;
     }
     if (typeof sendSetSSOToken === 'undefined' || sendSetSSOToken === false) {
       location.replace(redirectTarget);
@@ -61,7 +61,7 @@ var getUrlPrefix = function () {
       redirectTarget = redirectTarget.substring(drupalSettings.path.baseUrl.length);
     }
 
-    redirectTarget = drupalSettings.gigya.raas.origin + drupalSettings.path.baseUrl + redirectTarget;
+    redirectTarget = drupalSettings.gigya.raas.origin + getUrlPrefix() + redirectTarget;
     document.location = redirectTarget;
   };
 

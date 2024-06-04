@@ -10,6 +10,7 @@ use Drupal\gigya_raas\Helper\GigyaRaasHelper;
 use Drupal\user\Entity\User;
 use Firebase\JWT\JWT;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Drupal\gigya\Helper\GigyaHelper;
 
 define('MINUTE_IN_SECONDS', 60);
@@ -25,24 +26,39 @@ define('YEAR_IN_SECONDS', 365 * DAY_IN_SECONDS);
 class GigyaController extends ControllerBase {
 
   /**
-   * @var \Drupal\gigya_raas\Helper\GigyaRaasHelper*/
-  protected $gigya_raas_helper;
+   * @var \Drupal\gigya_raas\Helper\GigyaRaasHelper
+   */
+  protected $helper;
+
   /**
-   * @var \Drupal\gigya\Helper\GigyaHelper*/
+   * @var \Drupal\gigya\Helper\GigyaHelper
+   */
   protected $gigya_helper;
 
-  protected $auth_mode;
+  protected mixed $auth_mode;
 
-  public function __construct()
-  {
-    $this->gigya_raas_helper = new GigyaRaasHelper();
-    $this->gigya_helper = new GigyaHelper();
-
-
+  /**
+   * Construct method.
+   *
+   * @param \Drupal\gigya_raas\Helper\GigyaRaasHelper|null $helper
+   * @param \Drupal\gigya\Helper\GigyaHelper|null $raas_helper
+   */
+  public function __construct(GigyaRaasHelper $helper = NULL, GigyaHelper $raas_helper = NULL) {
+    $this->helper = $helper;
+    $this->gigya_helper = $raas_helper;
     $gigya_conf = \Drupal::config('gigya.settings');
     $this->auth_mode = $gigya_conf->get('gigya.gigya_auth_mode');
   }
 
+//  /**
+//   * {@inheritdoc}
+//   */
+//  public static function create(ContainerInterface $container) {
+//    return new static(
+//      $container->get('gigya_raas.gigya_raas_helper'),
+//      $container->get('gigya.helper')
+//    );
+//  }
 
   /**
    * Process Gigya RaaS login.
@@ -66,21 +82,21 @@ class GigyaController extends ControllerBase {
     else {
       $signature = $gigya_data['UIDSignature'];
     }
-    $gigyaUser = $this->gigya_raas_helper->validateAndFetchRaasUser($gigya_data['UID'], $signature, $gigya_data['signatureTimestamp']);
+    $gigyaUser = $this->helper->validateAndFetchRaasUser($gigya_data['UID'], $signature, $gigya_data['signatureTimestamp']);
     if ($gigyaUser) {
-      if ($user = $this->gigya_raas_helper->getDrupalUserByGigyaUid($gigyaUser->getUID())) {
-        if ($unique_email = $this->gigya_raas_helper->checkEmailsUniqueness($gigyaUser, $user->id())) {
+      if ($user = $this->helper->getDrupalUserByGigyaUid($gigyaUser->getUID())) {
+        if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, $user->id())) {
           if ($unique_email !== $user->mail) {
             $user->setEmail($unique_email);
             $user->save();
           }
         }
-        $this->gigya_raas_helper->processFieldMapping($gigyaUser, $user);
+        $this->helper->processFieldMapping($gigyaUser, $user);
         \Drupal::moduleHandler()
                ->alter('gigya_profile_update', $gigyaUser, $user);
         $user->save();
 
-        if (!$this->gigya_raas_helper->checkEmailsUniqueness($gigyaUser, $user->id()) and $is_dummy_email_used) {
+        if (!$this->helper->checkEmailsUniqueness($gigyaUser, $user->id()) and $is_dummy_email_used) {
           $dummy_mail = $this->getDummyEmail($gigyaUser);
           if (empty($user->mail)) {
             $user->setEmail($dummy_mail);
@@ -157,7 +173,7 @@ class GigyaController extends ControllerBase {
         ->get('gigya.gigya_auth_mode') ?? 'user_secret';
       $signature = ($auth_mode == 'user_rsa') ? $id_token : $uid_sig;
       /** @var \Drupal\gigya\CmsStarterKit\user\GigyaUser $gigyaUser */
-      $gigyaUser = $this->gigya_raas_helper->validateAndFetchRaasUser($guid, $signature, $sig_timestamp);
+      $gigyaUser = $this->helper->validateAndFetchRaasUser($guid, $signature, $sig_timestamp);
       if ($gigyaUser) {
         $userEmails = $gigyaUser->getAllVerifiedEmails();
 
@@ -188,7 +204,7 @@ class GigyaController extends ControllerBase {
         }
         /* loginIDs.emails or emails.verified is found in Gigya or using dummy email for mobile login */
         else {
-          $user = $this->gigya_raas_helper->getDrupalUserByGigyaUid($gigyaUser->getUID());
+          $user = $this->helper->getDrupalUserByGigyaUid($gigyaUser->getUID());
 
           if ($user) {
             /* if a user has the permission of bypass gigya raas (admin user)
@@ -224,7 +240,7 @@ class GigyaController extends ControllerBase {
               $unique_email = $user->getEmail();
             }
             else {
-              $unique_email = $this->gigya_raas_helper->checkEmailsUniqueness($gigyaUser, $user->id());
+              $unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, $user->id());
             }
 
             if (!$is_dummy_email_used and !$unique_email) {
@@ -247,7 +263,7 @@ class GigyaController extends ControllerBase {
             $raas_login = TRUE;
 
             /* Log the user in */
-            $this->gigya_raas_helper->processFieldMapping($gigyaUser, $user);
+            $this->helper->processFieldMapping($gigyaUser, $user);
 
             $session_exp_type = \Drupal::config('gigya_raas.settings')
               ->get('gigya_raas.session_type');
@@ -257,9 +273,9 @@ class GigyaController extends ControllerBase {
               $this->gigyaRaasCreateUbcCookie($request, $raas_login);
 
             }
-            elseif ($this->gigya_raas_helper->shouldAddExtCookie($request, $raas_login)) {/*Handle dynamic session*/
+            elseif ($this->helper->shouldAddExtCookie($request, $raas_login)) {/*Handle dynamic session*/
 
-              $this->gigya_raas_helper->gigyaRaasExtCookie($request, $raas_login);
+              $this->helper->gigyaRaasExtCookie($request, $raas_login);
             }
 
             $user->save();
@@ -275,7 +291,7 @@ class GigyaController extends ControllerBase {
             $uids = '';
 
             if (!empty($userEmails)) {
-              $uids = $this->gigya_raas_helper->getUidByMails($userEmails);
+              $uids = $this->helper->getUidByMails($userEmails);
             }
 
             if (!empty($uids)) {
@@ -292,7 +308,7 @@ class GigyaController extends ControllerBase {
             }
 
             $email = '';
-            if ($unique_email = $this->gigya_raas_helper->checkEmailsUniqueness($gigyaUser, 0)) {
+            if ($unique_email = $this->helper->checkEmailsUniqueness($gigyaUser, 0)) {
               $email = $unique_email;
             }
             elseif (!$is_dummy_email_used) {
@@ -316,7 +332,7 @@ class GigyaController extends ControllerBase {
               $uname = $this->editPhoneNumber($gigyaUser->getPhoneNumber());
             }
 
-            if (!$this->gigya_raas_helper->getUidByName($uname)) {
+            if (!$this->helper->getUidByName($uname)) {
               $username = $uname;
             }
             else {
@@ -324,7 +340,7 @@ class GigyaController extends ControllerBase {
               $gigya_firstname = $gigyaUser->getProfile()->getFirstName();
 
               if (!empty($gigya_firstname)
-                  && (!$this->gigya_raas_helper->getUidByName(
+                  && (!$this->helper->getUidByName(
                   $gigyaUser->getProfile()->getFirstName()))) {
 
                 $username = $gigyaUser->getProfile()->getFirstName();
@@ -347,7 +363,7 @@ class GigyaController extends ControllerBase {
               ]
             );
             $user->save();
-            $this->gigya_raas_helper->processFieldMapping($gigyaUser, $user);
+            $this->helper->processFieldMapping($gigyaUser, $user);
 
             /* Allow other modules to modify the data before user is created in the Drupal database (create user hook). */
             \Drupal::moduleHandler()
@@ -356,7 +372,7 @@ class GigyaController extends ControllerBase {
 
               $user->save();
               $raas_login = TRUE;
-              $this->gigya_raas_helper->gigyaRaasExtCookie($request, $raas_login);
+              $this->helper->gigyaRaasExtCookie($request, $raas_login);
               user_login_finalize($user);
 
               if (!$should_validate_session) {
@@ -415,7 +431,7 @@ class GigyaController extends ControllerBase {
         else {
           $logger_message = [
             'type'    => 'gigya_raas',
-            'message' => 'Invalid user trying to get session.',
+            'message' => 'Invalid user try to get session.',
           ];
           $this->writeErrorValidationMessageToLoggerAndLogout($logger_message);
         }
@@ -548,7 +564,7 @@ class GigyaController extends ControllerBase {
       $auth_mode    = $gigya_conf->get('gigya.gigya_auth_mode');
       $auth_key     = $helper->decrypt(($auth_mode === 'user_rsa') ? $gigya_conf->get('gigya.gigya_rsa_private_key') : $gigya_conf->get('gigya.gigya_application_secret_key'));
 
-      $token              = $this->gigya_raas_helper->getGigyaLoginToken($request);
+      $token              = $this->helper->getGigyaLoginToken($request);
       $now                = \Drupal::time()->getRequestTime();;
       $session_expiration = strval($now + $session_time);
       $gltexp_cookie      = $request->cookies->get('gltexp_' . $api_key);
@@ -644,7 +660,7 @@ class GigyaController extends ControllerBase {
       if ($request == NULL) {
         $request = \Drupal::request();
       }
-      $token = $this->gigya_raas_helper->getGigyaLoginToken($request);
+      $token = $this->helper->getGigyaLoginToken($request);
 
       if (!empty($token)) {
 
@@ -723,21 +739,6 @@ class GigyaController extends ControllerBase {
     }
 
     return $phoneNumber;
-  }
-
-
-  /**
-   * @param GigyaRaasHelper $gigya_raas_helper
-   */
-  public function setGigyaRaasHelper(GigyaRaasHelper $gigya_raas_helper): void {
-    $this->gigya_raas_helper = $gigya_raas_helper;
-  }
-
-  /**
-   * @param GigyaHelper $gigya_helper
-   */
-  public function setGigyaHelper(GigyaHelper $gigya_helper): void {
-    $this->gigya_helper = $gigya_helper;
   }
 
 }

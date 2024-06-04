@@ -3,3 +3,13 @@ services:
     class: Drupal\gigya_raas\EventSubscriber\GigyaRaasEventSubscriber
     tags:
       - { name: 'event_subscriber' }
+  gigya_raas.gigya_controller:
+    class: Drupal\gigya_raas\GigyaController
+    arguments: ['@gigya_raas.gigya_raas_helper', '@gigya.helper']
+    tags:
+      - { name: controller.service_arguments }
+  gigya_raas.gigya_raas_helper:
+    class: Drupal\gigya_raas\Helper\GigyaRaasHelper
+
+  gigya.helper:
+    class: Drupal\gigya\Helper\GigyaHelper

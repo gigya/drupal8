@@ -178,10 +178,11 @@ class GigyaRaasHelper {
    */
   public function getFieldMappingConfig() {
     $config = json_decode(\Drupal::config('gigya_raas.fieldmapping')
-                                 ->get('gigya.fieldmapping_config') ?? '');
-    if (empty($config) or empty(get_object_vars($config))) {
+      ->get('gigya.fieldmapping_config') ?? '');
+    \Drupal::logger("gigya test")->debug("config: " . var_export($config));
+    if (gettype($config) == "array" and (empty($config) or empty(get_object_vars($config)))) {
       $config = (object) \Drupal::config('gigya.global')
-                                ->get('gigya.fieldMapping');
+        ->get('gigya.fieldMapping');
     }
 
     return $config;

@@ -140,6 +140,9 @@ class GigyaFieldmappingForm extends ConfigFormBase {
       if ($this->jsonFormValidation($fieldmapping_config) !== TRUE) {
         $form_state->setErrorByName('fieldmapping', $this->t($this->jsonFormValidation($fieldmapping_config)));
       }
+      if (is_array(json_decode($fieldmapping_config)) and !empty(json_decode($fieldmapping_config))) {
+        $form_state->setErrorByName('fieldmapping', $this->t('Using array is not allowed, Please follow the  <a href="@documentation."><u>documentation</u></a>', ['@documentation.' => 'https://github.com/gigya/drupal8/wiki#field-mapping']));
+      }
 
       /* Offline sync */
 

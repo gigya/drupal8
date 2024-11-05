@@ -38,7 +38,8 @@ class GigyaFieldmappingForm extends ConfigFormBase {
    * @return array
    */
   public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL) {
-    if ($this->raas_helper== NULL) {
+
+    if ($this->raas_helper == NULL) {
       $this->raas_helper = new GigyaRaasHelper();
     }
 
@@ -127,7 +128,7 @@ class GigyaFieldmappingForm extends ConfigFormBase {
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
 
-    if ($this->raas_helper== NULL) {
+    if ($this->raas_helper == NULL) {
       $this->raas_helper = new GigyaRaasHelper();
     }
 
@@ -223,6 +224,10 @@ class GigyaFieldmappingForm extends ConfigFormBase {
   }
 
   private function validateMappedUidFieldExists ($form_state, string $uid__field_mapping) {
+
+    if ($this->raas_helper == NULL) {
+      $this->raas_helper = new GigyaRaasHelper();
+    }
 
     if (!empty($uid__field_mapping) and !$this->raas_helper->doesFieldExist($uid__field_mapping)) {
       $form_state->setErrorByName('fieldmapping', $this->t("The UID mapping field does not exist in your database.

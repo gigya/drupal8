@@ -15,7 +15,7 @@ class GigyaFieldmappingForm extends ConfigFormBase {
 
   private $raas_helper= NULL;
 
-  public $api_helper = FALSE;
+  public $api_helper = NULL;
 
 
   /**

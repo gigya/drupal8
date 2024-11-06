@@ -8,19 +8,15 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\gigya\Helper\GigyaHelper;
 use Drupal\gigya\Helper\GigyaHelperInterface;
 use Drupal\gigya_raas\Helper\GigyaRaasHelper;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 
 
 class GigyaFieldmappingForm extends ConfigFormBase {
 
-  private $raas_helper;
+  private $raas_helper= NULL;
 
-  public $api_helper = FALSE;
+  public $api_helper = NULL;
 
-  public function __construct(ConfigFactoryInterface $config_factory) {
-    parent::__construct($config_factory);
-
-    $this->raas_helper = new GigyaRaasHelper();
-  }
 
   /**
    * Gets the configuration names that will be editable.
@@ -42,8 +38,10 @@ class GigyaFieldmappingForm extends ConfigFormBase {
    * @return array
    */
   public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL) {
-    $config              = $this->config('gigya_raas.fieldmapping');
-    $fieldmapping_config = json_encode($this->raas_helper->getFieldMappingConfig(), JSON_PRETTY_PRINT);
+
+    if ($this->raas_helper == NULL) {
+      $this->raas_helper = new GigyaRaasHelper();
+    }
 
     if ($helper == NULL) {
       $this->api_helper = new GigyaHelper();
@@ -51,6 +49,10 @@ class GigyaFieldmappingForm extends ConfigFormBase {
     else {
       $this->api_helper = $helper;
     }
+
+    $config              = $this->config('gigya_raas.fieldmapping');
+    $fieldmapping_config = json_encode($this->raas_helper->getFieldMappingConfig(), JSON_PRETTY_PRINT);
+
 
     if (!$this->api_helper->checkEncryptKey()) {
       $messenger = \Drupal::service('messenger');
@@ -125,6 +127,17 @@ class GigyaFieldmappingForm extends ConfigFormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
+
+    if ($this->raas_helper == NULL) {
+      $this->raas_helper = new GigyaRaasHelper();
+    }
+
+    if ($helper == NULL) {
+      $this->api_helper = new GigyaHelper();
+    }
+    else {
+      $this->api_helper = $helper;
+    }
 
     /* Field mapping */
 
@@ -211,6 +224,10 @@ class GigyaFieldmappingForm extends ConfigFormBase {
   }
 
   private function validateMappedUidFieldExists ($form_state, string $uid__field_mapping) {
+
+    if ($this->raas_helper == NULL) {
+      $this->raas_helper = new GigyaRaasHelper();
+    }
 
     if (!empty($uid__field_mapping) and !$this->raas_helper->doesFieldExist($uid__field_mapping)) {
       $form_state->setErrorByName('fieldmapping', $this->t("The UID mapping field does not exist in your database.

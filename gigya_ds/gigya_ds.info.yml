@@ -5,5 +5,5 @@ package: Gigya
 dependencies:
   - gigya
   - gigya_raas
-version: '1.8.1'
-core_version_requirement: ^8 || ^9 || ^10
+version: '1.9.0'
+core_version_requirement: ^8 || ^9 || ^10 || ^11

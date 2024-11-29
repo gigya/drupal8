@@ -438,7 +438,7 @@ class GigyaController extends ControllerBase {
 
       return $response;
     }
-    return FALSE;
+    return new AjaxResponse();
   }
 
   /**

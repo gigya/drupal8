@@ -213,7 +213,11 @@ var getUrlPrefix = function () {
     if (drupalSettings.gigya.enableRaaS) {
       var id;
       if (drupalSettings.gigya.shouldValidateSession) {
-        gigya.accounts.getAccountInfo({include: 'id_token'}, {callback: validateSessionAndCreateUbcCookie});
+        if(drupalSettings.gigya.atype === 1){
+          gigya.accounts.getAccountInfo({callback: validateSessionAndCreateUbcCookie});
+        } else {
+          gigya.accounts.getAccountInfo({include: 'id_token'}, {callback: validateSessionAndCreateUbcCookie});
+        }
       }
 
       $(once('gigya-raas', '.gigya-raas-login')).each(function () {

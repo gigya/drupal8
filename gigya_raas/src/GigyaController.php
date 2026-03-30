@@ -117,7 +117,8 @@ class GigyaController extends ControllerBase {
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The incoming request object.
    *
-   * @return bool|AjaxResponse    The Ajax response
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   The Ajax response
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
@@ -438,7 +439,8 @@ class GigyaController extends ControllerBase {
 
       return $response;
     }
-    return FALSE;
+
+    return $this->signedInAlertResponse();
   }
 
   /**
@@ -729,6 +731,26 @@ class GigyaController extends ControllerBase {
     }
 
     return $phoneNumber;
+  }
+
+  /**
+   * Ajax alert shown when an already-authenticated user attempts to log in.
+   *
+   * This method logs and returns an Ajax response containing an alert
+   * message to inform the user that they are already signed in.
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   The Ajax response with an alert command.
+   */
+  protected function signedInAlertResponse(): AjaxResponse {
+    // Log the event for debugging.
+    \Drupal::logger('gigya_raas')->notice('User attempted to log in while already authenticated.');
+
+    // Return the AjaxResponse with alert.
+    $response = new AjaxResponse();
+    $response->addCommand(new AlertCommand($this->t("You're already signed in.")));
+
+    return $response;
   }
 
 }

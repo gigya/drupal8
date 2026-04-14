@@ -1,5 +1,6 @@
 drupalGigya:
   version: VERSION
+  header: true
   js:
     js/gigyaHelper.js: {}
     js/gigya.js: {}
@@ -7,8 +8,4 @@ drupalGigya:
     component:
       css/gigya.css: {}
   dependencies:
-    - core/jquery
-    - core/jquery.once
-    - core/drupal
     - core/drupalSettings
-    - core/drupal.ajax

@@ -1,30 +1,18 @@
 /**
  * @file
- * Handles AJAX submission and response in Views UI.
+ * Initialises the Gigya script.
  */
 
-(function ($, Drupal, drupalSettings) {
+(function (drupalSettings) {
 
   'use strict';
 
-    /**
-     * @property drupalSettings.gigya.globalParameters
-     * @property drupalSettings.gigya.apiKey
-     * @property drupalSettings.gigya.dataCenter
-     */
-    var init = function () {
-    window.__gigyaConf = drupalSettings.gigya.globalParameters;
+  /**
+   * @property drupalSettings.gigya.globalParameters
+   * @property drupalSettings.gigya.apiKey
+   * @property drupalSettings.gigya.dataCenter
+   */
+  window.__gigyaConf = drupalSettings.gigya.globalParameters;
+  gigyaHelper.addGigyaScript(drupalSettings.gigya.apiKey, drupalSettings.gigya.lang, drupalSettings.gigya.dataCenter);
 
-    gigyaHelper.addGigyaScript(drupalSettings.gigya.apiKey, drupalSettings.gigya.lang, drupalSettings.gigya.dataCenter);
-    drupalSettings.gigya.isInit = true;
-  };
-
-  Drupal.behaviors.gigyaInit = {
-    attach: function (context, settings) {
-      if (!('isInit' in drupalSettings.gigya)) {
-        init();
-      }
-    }
-  };
-
-})(jQuery, Drupal, drupalSettings);
+})(drupalSettings);

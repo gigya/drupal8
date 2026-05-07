@@ -151,10 +151,10 @@ class GigyaController extends ControllerBase {
       $base_path     = base_path();
       $redirect_path = ($base_path === '/') ? '/' : $base_path . '/';
       if (substr($login_redirect, 0, 4) !== 'http') {
-        $login_redirect = $redirect_path . $login_redirect;
+        $login_redirect = $redirect_path . ltrim($login_redirect, '/');
       }
       if (substr($logout_redirect, 0, 4) !== 'http') {
-        $logout_redirect = $redirect_path . $logout_redirect;
+        $logout_redirect = $redirect_path . ltrim($logout_redirect, '/');
       }
 
       $response = new AjaxResponse();
@@ -461,7 +461,7 @@ class GigyaController extends ControllerBase {
     $base_path     = base_path();
     $redirect_path = ($base_path === '/') ? '/' : $base_path . '/';
     if (substr($logout_redirect, 0, 4) !== 'http') {
-      $logout_redirect = $redirect_path . $logout_redirect;
+      $logout_redirect = $redirect_path . ltrim($logout_redirect, '/');
     }
 
     $response = new AjaxResponse();
@@ -557,7 +557,7 @@ class GigyaController extends ControllerBase {
       $auth_key     = $helper->decrypt(($auth_mode === 'user_rsa') ? $gigya_conf->get('gigya.gigya_rsa_private_key') : $gigya_conf->get('gigya.gigya_application_secret_key'));
 
       $token              = $this->helper->getGigyaLoginToken($request);
-      $now                = \Drupal::time()->getRequestTime();;
+      $now                = \Drupal::time()->getRequestTime();
       $session_expiration = strval($now + $session_time);
       $gltexp_cookie      = $request->cookies->get('gltexp_' . $api_key);
 

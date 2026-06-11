@@ -376,6 +376,19 @@ var getUrlPrefix = function () {
    *
    * @property Drupal.behaviors
    */
+  var preloadScreenSets = function () {
+    if (!drupalSettings.gigyaExtra || !drupalSettings.gigyaExtra.preloadScreenSets) { return; }
+    if (!drupalSettings.gigya.raas) { return; }
+    var seen = {};
+    ['login', 'register', 'profile'].forEach(function (k) {
+      var p = drupalSettings.gigya.raas[k];
+      if (p && p.screenSet && !seen[p.screenSet]) {
+        seen[p.screenSet] = true;
+        gigya.accounts.loadScreenSet({ screenSet: p.screenSet });
+      }
+    });
+  };
+
   Drupal.behaviors.gigyaRaasInit = {
     attach: function (context, settings) {
       if (!('isRaasInit' in drupalSettings.gigya)) {
@@ -388,6 +401,7 @@ var getUrlPrefix = function () {
           initLoginUI();
           initRaaS();
           initCustomScreenSet();
+          preloadScreenSets();
         };
         init();
       }

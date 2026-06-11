@@ -82,6 +82,9 @@ gigya_raas.screensets:
         custom_screensets:
           type: string
           label: Custom / Consent Screen-Sets
+        preload_screensets:
+          type: boolean
+          label: 'Preload screen-sets in background'
 
 block.settings.gigya_raas_custom_screenset:
   type: block_settings

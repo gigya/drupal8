@@ -43,7 +43,7 @@ class GigyaController extends ControllerBase {
    * @param GigyaRaasHelper|NULL $helper
    * @param GigyaHelper|NULL $raas_helper
    */
-  public function __construct(#[Autowire(service: 'gigya_raas.helper')] GigyaRaasHelper $helper = NULL, #[Autowire(service: 'gigya.helper')] GigyaHelper $raas_helper = NULL) {
+  public function __construct(#[Autowire(service: 'gigya_raas.helper')] ?GigyaRaasHelper $helper = NULL, #[Autowire(service: 'gigya.helper')] ?GigyaHelper $raas_helper = NULL) {
     $this->helper = $helper ?? new GigyaRaasHelper();
     $this->gigya_helper = $raas_helper ?? new GigyaHelper();
     $gigya_conf = \Drupal::config('gigya.settings');
@@ -640,7 +640,7 @@ class GigyaController extends ControllerBase {
    *
    * @return \Drupal\Core\Ajax\AjaxResponse
    */
-  public function gigyaRaasCreateUBCCookie(Request $request = NULL, $login = FALSE): AjaxResponse {
+  public function gigyaRaasCreateUBCCookie(?Request $request = NULL, $login = FALSE): AjaxResponse {
 
     if ('until_browser_close' === \Drupal::config('gigya_raas.settings')
       ->get('gigya_raas.session_type')) {

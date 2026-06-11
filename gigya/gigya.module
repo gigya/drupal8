@@ -14,9 +14,11 @@ function gigya_page_attachments(array &$attachments): void {
     $global_params = Drupal::config('gigya.global')->get('gigya.globalParameters');
     Drupal::moduleHandler()->alter('gigya_global_parameters', $global_params);
 
+    $data_center = Drupal::config('gigya.settings')->get('gigya.gigya_data_center');
+
     $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
-    $attachments['#attached']['drupalSettings']['gigya']['apiKey'] = Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
-    $attachments['#attached']['drupalSettings']['gigya']['dataCenter'] = Drupal::config('gigya.settings')->get('gigya.gigya_data_center');
+    $attachments['#attached']['drupalSettings']['gigya']['apiKey'] = $api_key;
+    $attachments['#attached']['drupalSettings']['gigya']['dataCenter'] = $data_center;
     $attachments['#attached']['drupalSettings']['gigya']['atype'] = (Drupal::config('gigya.settings')->get('gigya.gigya_auth_mode') == 'user_secret')? 1 : 2;
 
     $lang = Drupal::config('gigya.global')->get('gigya.language');
@@ -37,6 +39,33 @@ function gigya_page_attachments(array &$attachments): void {
 
     Drupal::moduleHandler()->alter('gigya_lang', $lang);
     $attachments['#attached']['drupalSettings']['gigya']['lang'] = $lang;
+
+    /* Preconnect / DNS-prefetch the Gigya CDN host so TLS+DNS overlap with HTML parse. */
+    $cdn_host = 'https://cdns.' . $data_center;
+    $attachments['#attached']['html_head'][] = [
+      ['#tag' => 'link', '#attributes' => ['rel' => 'preconnect', 'href' => $cdn_host, 'crossorigin' => '']],
+      'gigya_preconnect',
+    ];
+    $attachments['#attached']['html_head'][] = [
+      ['#tag' => 'link', '#attributes' => ['rel' => 'dns-prefetch', 'href' => $cdn_host]],
+      'gigya_dns_prefetch',
+    ];
+
+    /* Inline boot: kick off the CDN gigya.js download from <head> immediately,
+       instead of waiting for body-bottom Drupal.behaviors to inject the tag. */
+    $boot_payload = [
+      'apiKey' => $api_key,
+      'dataCenter' => $data_center,
+      'lang' => $lang,
+      'globalParameters' => $global_params,
+    ];
+    $attachments['#attached']['html_head'][] = [
+      [
+        '#tag' => 'script',
+        '#value' => '!function(){if(window.__gigyaBootInline)return;window.__gigyaBootInline=!0;var c=' . json_encode($boot_payload, JSON_UNESCAPED_SLASHES) . ';window.__gigyaConf=window.__gigyaConf||{};for(var k in c.globalParameters)window.__gigyaConf[k]=c.globalParameters[k];var s=document.createElement("script");s.async=!0;s.src="https://cdns."+c.dataCenter+"/js/gigya.js?apiKey="+encodeURIComponent(c.apiKey)+"&lang="+encodeURIComponent(c.lang);document.head.appendChild(s);}();',
+      ],
+      'gigya_inline_boot',
+    ];
 
     // Add Library.
     $attachments['#attached']['library'][] = 'gigya/drupalGigya';

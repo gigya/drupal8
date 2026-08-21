@@ -351,6 +351,7 @@ class GigyaController extends ControllerBase {
                   ->generate(),
                 'status' => 1,
                 'mail'   => $email,
+                'uuid' => $gigyaUser->getUID(),
               ]
             );
             $user->save();

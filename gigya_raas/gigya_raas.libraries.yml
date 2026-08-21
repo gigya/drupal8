@@ -1,5 +1,6 @@
 gigyaRaas:
   version: VERSION
+  header: true
   js:
     js/gigyaRaas.js: {}
   dependencies:

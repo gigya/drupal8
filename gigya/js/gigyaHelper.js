@@ -1,5 +1,6 @@
 var gigyaHelper = {
   addGigyaScript: function (apiKey, lang, apiDomain) {
+    if (window.__gigyaBootInline) { return; }
     var gig = document.createElement('script');
     gig.type = 'text/javascript';
     gig.async = true;

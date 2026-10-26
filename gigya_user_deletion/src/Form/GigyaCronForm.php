@@ -73,7 +73,7 @@ class GigyaCronForm extends ConfigFormBase {
    *
    * @return array
    */
-  public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?GigyaHelperInterface $helper = NULL) {
     if ($helper == NULL) {
       $this->helper = new GigyaHelper();
     }

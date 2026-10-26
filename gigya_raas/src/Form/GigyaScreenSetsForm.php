@@ -39,7 +39,7 @@ class GigyaScreenSetsForm extends ConfigFormBase {
    *
    * @return array
    */
-  public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?GigyaHelperInterface $helper = NULL) {
 
     if ($helper == NULL) {
       $this->helper = new GigyaHelper();
@@ -95,6 +95,13 @@ class GigyaScreenSetsForm extends ConfigFormBase {
       '#title'         => $this->t('Edit Profile Mobile Screen-Set'),
       '#default_value' => $config->get('gigya.profile_screenset_mobile') ?? 'Default-ProfileUpdate',
       '#required'      => FALSE,
+    ];
+
+    $form['gigya_preload_screensets'] = [
+      '#type'          => 'checkbox',
+      '#title'         => $this->t('Preload screen-sets in background'),
+      '#description'   => $this->t('When enabled, the login, register and profile screen-sets are fetched in the background as soon as the Gigya SDK is ready, so opening them on click is near-instant. Costs one extra Gigya API call per page where the SDK loads.'),
+      '#default_value' => (bool) $config->get('gigya.preload_screensets'),
     ];
 
     $form['gigya_custom_screensets'] = [
@@ -300,6 +307,7 @@ class GigyaScreenSetsForm extends ConfigFormBase {
     $config->set('gigya.profile_screenset', $form_state->getValue('gigya_profile_screenset_desktop'));
     $config->set('gigya.profile_screenset_mobile', $form_state->getValue('gigya_profile_screenset_mobile'));
     $config->set('gigya.custom_screensets', json_encode($custom_screensets, JSON_FORCE_OBJECT));
+    $config->set('gigya.preload_screensets', (bool) $form_state->getValue('gigya_preload_screensets'));
 
     $config->save();
 

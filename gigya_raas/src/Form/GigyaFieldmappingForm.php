@@ -37,7 +37,7 @@ class GigyaFieldmappingForm extends ConfigFormBase {
    *
    * @return array
    */
-  public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?GigyaHelperInterface $helper = NULL) {
 
     if ($this->raas_helper == NULL) {
       $this->raas_helper = new GigyaRaasHelper();

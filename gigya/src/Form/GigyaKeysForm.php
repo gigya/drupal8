@@ -37,7 +37,7 @@ class GigyaKeysForm extends ConfigFormBase {
    *
    * @return array
    */
-  public function buildForm(array $form, FormStateInterface $form_state, GigyaHelperInterface $helper = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?GigyaHelperInterface $helper = NULL) {
     // Form constructor.
     if ($helper == NULL) {
       $this->helper = new GigyaHelper();

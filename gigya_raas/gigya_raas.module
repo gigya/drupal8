@@ -147,6 +147,25 @@ function gigya_raas_page_attachments(array &$attachments) {
       $attachments['#attached']['drupalSettings']['gigya']['raas']['customScreenSets'] = $custom_screensets;
       $attachments['#attached']['drupalSettings']['gigya']['raas']['origin']           = Drupal::request()
         ->getSchemeAndHttpHost();
+
+      /* Expose the optional screen-set preload flag to gigyaRaas.js. */
+      $preload_screensets = (bool) Drupal::config('gigya_raas.screensets')->get('gigya.preload_screensets');
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['preloadScreenSets'] = $preload_screensets;
+
+      /* Augment the inline __gigyaConf (set by gigya's inline boot in <head>)
+         with RaaS session expirations, so the SDK has them when it initializes. */
+      $raas_conf = [
+        'sessionExpiration' => $expiration,
+        'rememberSessionExpiration' => $remember_me_session_time,
+      ];
+      $attachments['#attached']['html_head'][] = [
+        [
+          '#tag' => 'script',
+          '#value' => '!function(){window.__gigyaConf=window.__gigyaConf||{};var r=' . json_encode($raas_conf) . ';for(var k in r)window.__gigyaConf[k]=r[k];}();',
+        ],
+        'gigya_raas_inline_boot',
+      ];
+
       $attachments['#attached']['library'][]                                           = 'gigya_raas/gigyaRaas';
     }
   }

@@ -124,7 +124,7 @@ class GigyaApiHelper {
    *
    * @throws Exception|GSApiException
    */
-  public function validateJwtAuth(string $uid, string $idToken, string $include = NULL, $extraProfileFields = NULL, $orgParams = NULL) {
+  public function validateJwtAuth(string $uid, string $idToken, ?string $include = NULL, $extraProfileFields = NULL, $orgParams = NULL) {
     $jwt = JWTUtils::validateSignature($idToken, $this->apiKey, $this->dataCenter);
 
     if ($jwt && !empty($jwt->sub) && $jwt->sub === $uid) {
